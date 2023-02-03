@@ -203,9 +203,9 @@ class WarthogEnv(gym.Env):
             theta = theta - 2 * math.pi
         return theta
 
-    def get_distance(self, waypoint, x2, y2):
-        x_diff = x2 - waypoint.x
-        y_diff = y2 - waypoint.y
+    def get_distance(self, x1, y1, x2, y2):
+        x_diff = x2 - x1
+        y_diff = y2 - y1
         return math.sqrt(x_diff * x_diff + y_diff * y_diff)
 
     def update_closest_index(self, x, y):
@@ -392,10 +392,11 @@ class WarthogEnv(gym.Env):
                 xcoord =  raw_x_input * math.cos(phi) + raw_y_input * math.sin(phi)
                 ycoord = -raw_x_input * math.sin(phi) + raw_y_input * math.cos(phi)
                 self.waypoints_list.append(
-                    waypoint_entry([raw_x_input, raw_y_input, raw_angle, raw_velocity])
+                    Waypoint([raw_x_input, raw_y_input, raw_angle, raw_velocity])
                 )
                 self.desired_velocities.append(raw_velocity)
             
+            index = 0
             for index in range(0, len(self.waypoints_list) - 1):
                 current_waypoint = self.waypoints_list[index]
                 next_waypoint    = self.waypoints_list[index+1]
@@ -404,6 +405,6 @@ class WarthogEnv(gym.Env):
                 y_diff = next_waypoint.y - current_waypoint.y
                 current_waypoint.angle = self.zero_to_2pi(self.get_angle_from_origin(x_diff, y_diff))
             
-            assert self.waypoints_list[index+1] == self.waypoints_list[-1]
+            assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
             final_waypoint = self.waypoints_list[index + 1]
             final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
