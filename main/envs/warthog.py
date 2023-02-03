@@ -1,126 +1,193 @@
+import numpy
+numpy.float = float # workaround for having a newer version of numpy
+
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
+import matplotlib as mpl
 import gym
 import numpy as np
 import math
 from gym import spaces
 import csv
-import matplotlib as mpl
 import time
 
 
+
+# Questions:
+    # what is: phi (currently hardcoded to 0)
+
+magic_number_4         = 4.0
+magic_number_2_point_5 = 2.5
+magic_number_2_point_0 = 2.0
+magic_number_1_point_5 = 1.5
+magic_number_0_point_5 = 0.5
+
+
+def Waypoint(a_list):
+    waypoint_entry = WaypointEntry(len(a_list))
+    for index, each in enumerate(a_list):
+        waypoint_entry[index] = each
+    return waypoint_entry
+
+class WaypointEntry(numpy.ndarray):
+    @property
+    def x(self): return self[0]
+    @x.setter
+    def x(self, value): self[0] = value
+    
+    @property
+    def y(self): return self[1]
+    @y.setter
+    def y(self, value): self[1] = value
+    
+    @property
+    def angle(self): return self[2]
+    @angle.setter
+    def angle(self, value): self[2] = value
+    
+    @property
+    def velocity(self): return self[3]
+    @velocity.setter
+    def velocity(self, value): self[3] = value
+
+    
 class WarthogEnv(gym.Env):
-    def __init__(self, waypoint_file, file_name):
+    warthog_length = 0.5 / 2.0 # TODO: length in meters?
+    warthog_width  = 1.0 / 2.0  # TODO: length in meters?
+    action_bound   = 1.5
+    random_start_position_offset = 0.1
+    random_start_angle_offset = 0.01
+    
+    action_space = spaces.Box(
+        low=np.array([0.0, -action_bound]),
+        high=np.array([1.0, action_bound]),
+        shape=(2,),
+    )
+    observation_space = spaces.Box(
+        low=-100,
+        high=1000,
+        shape=(42,),
+        dtype=np.float
+    )
+    
+    def __init__(self, waypoint_file, trajectory_output_path, render=False):
         super(WarthogEnv, self).__init__()
-        self.action_space = spaces.Box(low=np.array([0.0, -1.5]), high=np.array([1.0, 1.5]), shape=(2,))
-        self.observation_space = spaces.Box(low=-100, high=1000, shape=(42,), dtype=np.float)
-        self.filename = waypoint_file
-        self.out_traj_file = file_name
-        plt.ion
-        self.waypoints_list = []
-        self.num_waypoints = 0
-        self.pose = [0, 0, 0]
-        self.twist = [0, 0]
-        self.closest_idx = 0
-        self.prev_closest_idx = 0
-        self.closest_dist = math.inf
-        self.num_waypoints = 0
-        self.horizon = 10
-        self.dt = 0.06
-        self.ref_vel = []
-        self.axis_size = 20
-        if self.filename is not None:
-            self._read_waypoint_file(self.filename)
-        self.max_vel = 1
-        self.fig = plt.figure(dpi=100, figsize=(10, 10))
-        self.ax = self.fig.add_subplot(111)
-        # self.ax.set_box_aspect(1)
-        self.ax.set_xlim([-4, 4])
-        self.ax.set_ylim([-4, 4])
-        self.warthog_length = 0.5 / 2.0
-        self.warthog_width = 1.0 / 2.0
-        self.warthog_diag = math.sqrt(self.warthog_width**2 + self.warthog_length**2)
-        if self.filename is not None:
-            self.plot_waypoints()
-        self.rect = Rectangle((0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False)
-        self.diag_ang = math.atan2(self.warthog_length, self.warthog_width)
-        self.ax.add_artist(self.rect)
-        self.prev_ang = 0
-        self.n_traj = 100
-        self.xpose = [0.0] * 100
-        self.ypose = [0.0] * 100
-        (self.cur_pos,) = self.ax.plot(self.xpose, self.ypose, "+g")
-        self.t_start = self.ax.transData
+        self.waypoint_file = waypoint_file
+        self.out_trajectory_file = trajectory_output_path
+        
+        self.waypoints_list   = []
+        self.x                = 0
+        self.y                = 0
+        self.angle            = 0
+        self.velocity         = 0
+        self.spin             = 0
+        
+        self.max_episode_steps    = 700
+        self.save_data            = True
+        self.dt                   = 0.06  # TODO: why is dt 0.06?
+        self.is_delayed_dynamics  = False
+        self.delay_steps          = 5
+        self.horizon              = 10 # number of waypoints in the observation
+        self.render_axis_size     = 20
+        self.closest_index        = 0
+        self.prev_closest_index   = 0
+        self.closest_distance     = math.inf
+        self.desired_velocities   = []
+        self.max_velocity         = 1  # TODO: currently increases over time, not sure if thats intended
+        self.episode_steps        = 0
+        self.total_episode_reward = 0
+        self.reward               = 0
+        self.action_spin          = 0
+        self.action_velocity      = 0
+        self.prev_action_spin     = 0
+        self.prev_action_velocity = 0
+        self.omega_reward         = 0
+        self.velocity_reward      = 0
+        self.velocity_delay_data  = [0.0] * self.delay_steps
+        self.spin_delay_data      = [0.0] * self.delay_steps
+        self.is_episode_start     = 1
+        
+        if self.waypoint_file is not None:
+            self._read_waypoint_file(self.waypoint_file)
+        
+        self.warthog_diag   = math.sqrt(self.warthog_width**2 + self.warthog_length**2)
+        self.diagonal_angle = math.atan2(self.warthog_length, self.warthog_width)
+        self.prev_angle = 0
+        self.number_of_trajectories = 100
+        self.x_pose = [0.0] * self.number_of_trajectories
+        self.y_pose = [0.0] * self.number_of_trajectories
         self.crosstrack_error = 0
-        self.vel_error = 0
-        self.phi_error = 0
-        self.text = self.ax.text(1, 2, f"vel_error={self.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
-        # self.ax.add_artist(self.text)
-        self.ep_steps = 0
-        self.max_ep_steps = 700
-        self.tprev = time.time()
-        self.total_ep_reward = 0
-        self.reward = 0
-        self.action = [0.0, 0.0]
-        self.prev_action = [0.0, 0.0]
-        self.omega_reward = 0
-        self.vel_reward = 0
-        self.is_delayed_dynamics = False
-        self.delay_steps = 5
-        self.v_delay_data = [0.0] * self.delay_steps
-        self.w_delay_data = [0.0] * self.delay_steps
-        self.save_data = True
-        self.ep_start = 1
-        self.traj_file = None
-        if self.out_traj_file is not None:
-            self.traj_file = open(file_name, "w")
-
-    #    def __del__(self):
-    #        self.fig.clear()
-
-    def set_pose(self, x, y, th):
-        self.pose = [x, y, th]
-
-    def set_twist(self, v, w):
-        self.tiwst = [v, w]
+        self.velocity_error   = 0
+        self.phi_error        = 0
+        
+        if render:
+            plt.ion
+            self.fig = plt.figure(dpi=100, figsize=(10, 10))
+            self.ax  = self.fig.add_subplot(111)
+            self.ax.set_xlim([-4, 4])
+            self.ax.set_ylim([-4, 4])
+            
+            if self.waypoint_file is not None:
+                self.plot_waypoints()
+        
+            self.rect = Rectangle((0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False)
+            self.ax.add_artist(self.rect)
+        
+            (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
+            
+            self.text = self.ax.text(1, 2, f"vel_error={self.velocity_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
+        
+        self.prev_timestamp       = time.time()
+        
+        # 
+        # trajectory_file
+        # 
+        self.trajectory_file = None
+        if self.out_trajectory_file is not None:
+            self.trajectory_file = open(trajectory_output_path, "w")
+    
+    @property
+    def number_of_waypoints(self):
+        return len(self.waypoints_list)
+    
+    def __del__(self):
+        self.trajectory_file.close()
 
     def plot_waypoints(self):
         x = []
         y = []
-        for i in range(0, self.num_waypoints):
-            x.append(self.waypoints_list[i][0])
-            y.append(self.waypoints_list[i][1])
+        for each_waypoint in self.waypoints_list:
+            x.append(each_waypoint.x)
+            y.append(each_waypoint.y)
         self.ax.plot(x, y, "+r")
 
-    def sim_warthog(self, v, w):
-        x = self.pose[0]
-        y = self.pose[1]
-        th = self.pose[2]
-        v_ = self.twist[0]
-        w_ = self.twist[1]
-        self.twist[0] = v
-        self.twist[1] = w
+    def sim_warthog(self, velocity, spin):
+        old_velocity = self.velocity
+        old_spin     = self.spin
+        old_x        = self.x
+        old_y        = self.y
+        old_angle    = self.angle
+        
+        self.velocity = velocity
+        self.spin     = spin
+        
         if self.is_delayed_dynamics:
-            v_ = self.v_delay_data[0]
-            w_ = self.w_delay_data[0]
-            del self.v_delay_data[0]
-            del self.w_delay_data[0]
-            self.v_delay_data.append(v)
-            self.w_delay_data.append(w)
-            self.twist[0] = self.v_delay_data[0]
-            self.twist[1] = self.v_delay_data[1]
-        dt = self.dt
-        self.prev_ang = self.pose[2]
-        self.pose[0] = x + v_ * math.cos(th) * dt
-        self.pose[1] = y + v_ * math.sin(th) * dt
-        self.pose[2] = th + w_ * dt
-        self.pose[2] = self.zero_to_2pi(self.pose[2])
-        if self.save_data and self.traj_file is not None:
-            self.traj_file.writelines(f"{x}, {y}, {th}, {v_}, {w_}, {v}, {w}, {self.ep_start}\n")
-        self.ep_start = 0
-
-    def close_files(self):
-        self.traj_file.close()
+            old_velocity = self.velocity_delay_data[0]
+            old_spin     = self.spin_delay_data[0]
+            del self.velocity_delay_data[0]
+            del self.spin_delay_data[0]
+            self.velocity_delay_data.append(velocity)
+            self.spin_delay_data.append(spin)
+            self.velocity = self.velocity_delay_data[0]
+            self.spin     = self.spin_delay_data[0] # TODO: I dont think this old version worked -> self.spin     = self.velocity_delay_data[1]
+        
+        self.prev_angle = self.angle
+        self.x          = old_x + old_velocity * math.cos(old_angle) * self.dt
+        self.y          = old_y + old_velocity * math.sin(old_angle) * self.dt
+        self.angle      = self.zero_to_2pi(old_angle + old_spin * self.dt)
+        if self.save_data and self.trajectory_file is not None:
+            self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity}, {spin}, {self.is_episode_start}\n")
+        self.is_episode_start = 0
 
     def zero_to_2pi(self, theta):
         if theta < 0:
@@ -136,195 +203,207 @@ class WarthogEnv(gym.Env):
             theta = theta - 2 * math.pi
         return theta
 
-    def get_dist(self, waypoint, pose):
-        xdiff = pose[0] - waypoint[0]
-        ydiff = pose[1] - waypoint[1]
-        return math.sqrt(xdiff * xdiff + ydiff * ydiff)
+    def get_distance(self, waypoint, x2, y2):
+        x_diff = x2 - waypoint.x
+        y_diff = y2 - waypoint.y
+        return math.sqrt(x_diff * x_diff + y_diff * y_diff)
 
-    def update_closest_idx(self, pose):
-        idx = self.closest_idx
-        self.closest_dist = math.inf
-        for i in range(self.closest_idx, self.num_waypoints):
-            dist = self.get_dist(self.waypoints_list[i], pose)
-            if dist <= self.closest_dist:
-                self.closest_dist = dist
-                idx = i
+    def update_closest_index(self, x, y):
+        closest_index = self.closest_index
+        self.closest_distance = math.inf
+        for index in range(self.closest_index, self.number_of_waypoints):
+            waypoint = self.waypoints_list[index]
+            distance = self.get_distance(waypoint.x, waypoint.y, x, y)
+            if distance <= self.closest_distance:
+                self.closest_distance = distance
+                closest_index = index
             else:
                 break
-        self.closest_idx = idx
+        self.closest_index = closest_index
 
-    def get_theta(self, xdiff, ydiff):
-        theta = math.atan2(ydiff, xdiff)
+    def get_angle_from_origin(self, x, y):
+        theta = math.atan2(y, x)
         return self.zero_to_2pi(theta)
 
     def get_observation(self):
-        obs = [0] * (self.horizon * 4 + 2)
-        pose = self.pose
-        twist = self.twist
-        self.update_closest_idx(pose)
-        j = 0
-        for i in range(0, self.horizon):
-            k = i + self.closest_idx
-            if k < self.num_waypoints:
-                r = self.get_dist(self.waypoints_list[k], pose)
-                xdiff = self.waypoints_list[k][0] - pose[0]
-                ydiff = self.waypoints_list[k][1] - pose[1]
-                th = self.get_theta(xdiff, ydiff)
-                vehicle_th = self.zero_to_2pi(pose[2])
-                # vehicle_th = -vehicle_th
-                # vehicle_th = 2*math.pi - vehicle_th
-                yaw_error = self.pi_to_pi(self.waypoints_list[k][2] - vehicle_th)
-                vel = self.waypoints_list[k][3]
-                obs[j] = r
-                obs[j + 1] = self.pi_to_pi(th - vehicle_th)
-                obs[j + 2] = yaw_error
-                obs[j + 3] = vel - twist[0]
+        magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
+        magic_number_2 = 2
+        obs = [0] * ((self.horizon * magic_number_4) + magic_number_2)
+        original_velocity = self.velocity
+        original_spin     = self.spin
+        self.update_closest_index(x=self.x, y=self.y)
+        observation_index = 0
+        for horizon_index in range(0, self.horizon):
+            waypoint_index = horizon_index + self.closest_index
+            if waypoint_index < self.number_of_waypoints:
+                waypoint = self.waypoints_list[waypoint_index]
+                x_diff = waypoint.x - self.x
+                y_diff = waypoint.y - self.y
+                radius = self.get_distance(waypoint.x, waypoint.y, self.x, self.y)
+                angle_to_next_point = self.get_angle_from_origin(x_diff, y_diff)
+                current_angle       = self.zero_to_2pi(self.angle)
+                
+                yaw_error = self.pi_to_pi(waypoint.angle - current_angle)
+                velocity = waypoint.velocity
+                obs[observation_index + 0] = radius
+                obs[observation_index + 1] = self.pi_to_pi(angle_to_next_point - current_angle)
+                obs[observation_index + 2] = yaw_error
+                obs[observation_index + 3] = velocity - original_velocity
             else:
-                obs[j] = 0.0
-                obs[j + 1] = 0.0
-                obs[j + 2] = 0.0
-                obs[j + 3] = 0.0
-            j = j + 4
-        obs[j] = twist[0]
-        obs[j + 1] = twist[1]
+                obs[observation_index + 0] = 0.0
+                obs[observation_index + 1] = 0.0
+                obs[observation_index + 2] = 0.0
+                obs[observation_index + 3] = 0.0
+            observation_index = observation_index + magic_number_4
+        obs[observation_index] = original_velocity
+        obs[observation_index + 1] = original_spin
         return obs
 
     def step(self, action):
-        self.ep_steps = self.ep_steps + 1
-        action[0] = np.clip(action[0], 0, 1) * 4.0
-        action[1] = np.clip(action[1], -1, 1) * 2.5
-        self.action = action
-        self.sim_warthog(action[0], action[1])
-        self.prev_closest_idx = self.closest_idx
-        obs = self.get_observation()
+        self.episode_steps = self.episode_steps + 1
+        self.action_velocity, self.action_spin = action
+        
+        self.sim_warthog(
+            velocity=np.clip(self.action_velocity,  0, 1) * magic_number_4,
+            spin=    np.clip(self.action_spin,     -1, 1) * magic_number_2_point_5,
+        )
+        self.prev_closest_index = self.closest_index
+        observation = self.get_observation()
         done = False
-        if self.closest_idx >= self.num_waypoints - 1:
+        if self.closest_index >= self.number_of_waypoints - 1:
             done = True
-        # Calculating reward
-        k = self.closest_idx
-        xdiff = self.waypoints_list[k][0] - self.pose[0]
-        ydiff = self.waypoints_list[k][1] - self.pose[1]
-        th = self.get_theta(xdiff, ydiff)
-        yaw_error = self.pi_to_pi(th - self.pose[2])
-        self.phi_error = self.pi_to_pi(self.waypoints_list[self.closest_idx][2] - self.pose[2])
-        self.vel_error = self.waypoints_list[k][3] - self.twist[0]
-        self.crosstrack_error = self.closest_dist * math.sin(yaw_error)
-        if math.fabs(self.crosstrack_error) > 1.5 or math.fabs(self.phi_error) > 1.4:
+        
+        # 
+        # Reward Calculation
+        # 
+        closest_waypoint = self.waypoints_list[self.closest_index]
+        
+        x_diff     = closest_waypoint.x - self.x
+        y_diff     = closest_waypoint.y - self.y
+        angle_diff = self.get_angle_from_origin(x_diff, y_diff)
+        yaw_error  = self.pi_to_pi(angle_diff - self.angle)
+        
+        self.velocity_error   = closest_waypoint.velocity - self.velocity
+        self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
+        self.phi_error        = self.pi_to_pi(closest_waypoint.angle - self.angle)
+        if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > 1.4:
             done = True
-        if self.ep_steps == self.max_ep_steps:
+        if self.episode_steps == self.max_episode_steps:
             done = True
-            self.ep_steps = 0
-        # following is the best reward we can get
-        """self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (
-            4.5 - math.fabs(self.vel_error)) * (
-                math.pi / 3. - math.fabs(self.phi_error)) - math.fabs(
-                    self.action[0] -
-                    self.prev_action[0]) - 2 * math.fabs(self.action[1])"""
-        self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (4.5 - math.fabs(self.vel_error)) * (math.pi / 3.0 - math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 0.5 * math.fabs(self.action[1] - self.prev_action[1]) - math.fabs(self.action[1])
+            self.episode_steps = 0
+        
+        magic_number_2 = 2.0
+        magic_number_3 = 3.0
+        magic_number_0_point_5 = 0.5
+        magic_number_4_point_5 = 4.5
+        
+        crosstrack_reward = magic_number_2           - math.fabs(self.crosstrack_error)
+        velocity_reward   = magic_number_4_point_5   - math.fabs(self.velocity_error)
+        angle_reward      = math.pi / magic_number_3 - math.fabs(self.phi_error)
+        
+        running_reward = crosstrack_reward * velocity_reward * angle_reward
+        
+        # penalties
+        running_reward -= math.fabs(self.action_velocity - self.prev_action_velocity)                  # velocity penalty
+        running_reward -= magic_number_0_point_5 * math.fabs(self.action_spin - self.prev_action_spin) # spin penalty
+        running_reward -= math.fabs(self.action_spin)                                                  # TODO: ??? penalty
+        
+        self.reward = running_reward
 
-        self.omega_reward = -2 * math.fabs(self.action[1])
-        self.vel_reward = -math.fabs(self.action[0] - self.prev_action[0])
-        # self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (
-        #    4.0 - math.fabs(self.vel_error)) * (math.pi / 3. -
-        #                                        math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 1.3*math.fabs(self.action[1] - self.prev_action[1])
-        self.prev_action = self.action
-        # if (self.prev_closest_idx == self.closest_idx
-        #        or math.fabs(self.vel_error) > 1.5):
-        if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
+        self.omega_reward         = -2 * math.fabs(self.action_spin)
+        self.velocity_reward      = -math.fabs(self.action_velocity - self.prev_action_velocity)
+        self.prev_action_spin     = self.action_spin
+        self.prev_action_velocity = self.action_velocity
+        
+        if closest_waypoint.velocity >= magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_1_point_5:
             self.reward = 0
-        elif self.waypoints_list[k][3] < 2.5 and math.fabs(self.vel_error) > 0.5:
+        elif closest_waypoint.velocity < magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_0_point_5:
             self.reward = 0
-        self.total_ep_reward = self.total_ep_reward + self.reward
-        # self.render()
-        return obs, self.reward, done, {}
+        self.total_episode_reward = self.total_episode_reward + self.reward
+        
+        return observation, self.reward, done, {}
 
     def reset(self):
-        self.ep_start = 1
-        self.total_ep_reward = 0
-        if self.max_vel >= 5:
-            self.max_vel = 1
-        idx = np.random.randint(self.num_waypoints, size=1)
-        # idx = [0]
-        idx = idx[0]
-        # idx = 880
-        self.closest_idx = idx
-        self.prev_closest_idx = idx
-        self.pose[0] = self.waypoints_list[idx][0] + 0.1
-        self.pose[1] = self.waypoints_list[idx][1] + 0.1
-        self.pose[2] = self.waypoints_list[idx][2] + 0.01
-        self.xpose = [self.pose[0]] * self.n_traj
-        self.ypose = [self.pose[1]] * self.n_traj
-        self.twist = [0.0, 0.0, 0.0]
-        for i in range(0, self.num_waypoints):
-            if self.ref_vel[i] > self.max_vel:
-                self.waypoints_list[i][3] = self.max_vel
+        self.is_episode_start = 1
+        self.total_episode_reward = 0
+        if self.max_velocity >= 5:
+            self.max_velocity = 1
+        
+        # pick a random waypoint
+        index = np.random.randint(self.number_of_waypoints, size=1)[0]
+        self.closest_index      = index
+        self.prev_closest_index = index
+        waypoint = self.waypoints_list[index]
+        
+        self.x      = waypoint.x + self.random_start_position_offset
+        self.y      = waypoint.y + self.random_start_position_offset
+        self.angle  = waypoint.angle + self.random_start_angle_offset
+        self.x_pose = [self.x] * self.number_of_trajectories
+        self.y_pose = [self.y] * self.number_of_trajectories
+        self.velocity = 0
+        self.spin     = 0
+        for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
+            if desired_velocity > self.max_velocity:
+                waypoint.velocity = self.max_velocity
             else:
-                self.waypoints_list[i][3] = self.ref_vel[i]
-        # self.max_vel = 2
-        self.max_vel = self.max_vel + 1
-        obs = self.get_observation()
-        return obs
+                waypoint.velocity = desired_velocity
+        
+        self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
+        return self.get_observation()
 
     def render(self, mode="human"):
-        self.ax.set_xlim([self.pose[0] - self.axis_size / 2.0, self.pose[0] + self.axis_size / 2.0])
-        self.ax.set_ylim([self.pose[1] - self.axis_size / 2.0, self.pose[1] + self.axis_size / 2.0])
-        total_diag_ang = self.diag_ang + self.pose[2]
-        xl = self.pose[0] - self.warthog_diag * math.cos(total_diag_ang)
-        yl = self.pose[1] - self.warthog_diag * math.sin(total_diag_ang)
-        # self.rect.set_xy((0, 0))
-        # t = mpl.transforms.Affine2D().rotate_around(xl, yl, self.pose[2])
-        # t = mpl.transforms.Affine2D().rotate(self.pose[2])
-        # self.rect._angle = self.pose[2]
-        # self.rect.set_xy((xl, yl))
-        # t = rect.get_patch_transform()
-        # self.rect.set_transform(t + self.t_start)
-        # self.rect.set_transform(t)
-        # self.rect.set_width(self.warthog_width * 2)
-        # self.rect.set_height(self.warthog_length * 2)
-        # del self.rect
+        self.ax.set_xlim([self.x - self.render_axis_size / 2.0, self.x + self.render_axis_size / 2.0])
+        self.ax.set_ylim([self.y - self.render_axis_size / 2.0, self.y + self.render_axis_size / 2.0])
+        total_diag_ang = self.diagonal_angle + self.angle
+        xl = self.x - self.warthog_diag * math.cos(total_diag_ang)
+        yl = self.y - self.warthog_diag * math.sin(total_diag_ang)
         self.rect.remove()
-        self.rect = Rectangle((xl, yl), self.warthog_width * 2, self.warthog_length * 2, 180.0 * self.pose[2] / math.pi, facecolor="blue")
+        self.rect = Rectangle((xl, yl), self.warthog_width * 2, self.warthog_length * 2, 180.0 * self.angle / math.pi, facecolor="blue")
         self.text.remove()
         self.text = self.ax.text(
-            self.pose[0] + 1,
-            self.pose[1] + 2,
-            f"vel_error={self.vel_error:.3f}\nclosest_idx={self.closest_idx}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.twist[0]:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.tprev:.4f}\nep_reward={self.total_ep_reward:.4f}\nmax_vel={self.max_vel:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
+            self.x + 1,
+            self.y + 2,
+            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
         )
-        # print(time.time() - self.tprev)
-        self.tprev = time.time()
-        # self.ax.add_artist(self.text)
+        self.prev_timestamp = time.time()
         self.ax.add_artist(self.rect)
-        self.xpose.append(self.pose[0])
-        self.ypose.append(self.pose[1])
-        del self.xpose[0]
-        del self.ypose[0]
-        self.cur_pos.set_xdata(self.xpose)
-        self.cur_pos.set_ydata(self.ypose)
+        self.x_pose.append(self.x)
+        self.y_pose.append(self.y)
+        del self.x_pose[0]
+        del self.y_pose[0]
+        self.cur_pos.set_xdata(self.x_pose)
+        self.cur_pos.set_ydata(self.y_pose)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
     def _read_waypoint_file(self, filename):
         with open(filename) as csv_file:
-            pos = csv.reader(csv_file, delimiter=",")
-            for row in pos:
-                # utm_cord = utm.from_latlon(float(row[0]), float(row[1]))
-                utm_cord = [float(row[0]), float(row[1])]
-                # phi = math.pi/4
+            for row in csv.reader(csv_file, delimiter=","):
+                # convert to all-floats
+                row = [ float(each_element) for each_element in row ]
+                # extract into variables
+                raw_x_input, raw_y_input, raw_angle, raw_velocity = row
+                
+                # phi = math.pi/4 # TODO: 
                 phi = 0.0
-                xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
-                ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
-                #   self.waypoints_list.append(np.array([xcoord, ycoord, float(row[2]),float(row[3])]))
-                # self.waypoints_list.append(np.array([xcoord, ycoord, float(row[2]),2.5]))
-                self.waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])]))
-                self.ref_vel.append(float(row[3]))
-            # self.waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
-            for i in range(0, len(self.waypoints_list) - 1):
-                xdiff = self.waypoints_list[i + 1][0] - self.waypoints_list[i][0]
-                ydiff = self.waypoints_list[i + 1][1] - self.waypoints_list[i][1]
-                self.waypoints_list[i][2] = self.zero_to_2pi(self.get_theta(xdiff, ydiff))
-            self.waypoints_list[i + 1][2] = self.waypoints_list[i][2]
-            self.num_waypoints = i + 2
-        pass
+                xcoord =  raw_x_input * math.cos(phi) + raw_y_input * math.sin(phi)
+                ycoord = -raw_x_input * math.sin(phi) + raw_y_input * math.cos(phi)
+                self.waypoints_list.append(
+                    waypoint_entry([raw_x_input, raw_y_input, raw_angle, raw_velocity])
+                )
+                self.desired_velocities.append(raw_velocity)
+            
+            for index in range(0, len(self.waypoints_list) - 1):
+                current_waypoint = self.waypoints_list[index]
+                next_waypoint    = self.waypoints_list[index+1]
+                
+                x_diff = next_waypoint.x - current_waypoint.x
+                y_diff = next_waypoint.y - current_waypoint.y
+                current_waypoint.angle = self.zero_to_2pi(self.get_angle_from_origin(x_diff, y_diff))
+            
+            assert self.waypoints_list[index+1] == self.waypoints_list[-1]
+            final_waypoint = self.waypoints_list[index + 1]
+            final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
