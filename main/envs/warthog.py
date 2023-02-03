@@ -11,8 +11,6 @@ from gym import spaces
 import csv
 import time
 
-
-
 # Questions:
     # what is: phi (currently hardcoded to 0)
 
@@ -23,34 +21,6 @@ magic_number_1_point_5 = 1.5
 magic_number_0_point_5 = 0.5
 
 
-def Waypoint(a_list):
-    waypoint_entry = WaypointEntry(len(a_list))
-    for index, each in enumerate(a_list):
-        waypoint_entry[index] = each
-    return waypoint_entry
-
-class WaypointEntry(numpy.ndarray):
-    @property
-    def x(self): return self[0]
-    @x.setter
-    def x(self, value): self[0] = value
-    
-    @property
-    def y(self): return self[1]
-    @y.setter
-    def y(self, value): self[1] = value
-    
-    @property
-    def angle(self): return self[2]
-    @angle.setter
-    def angle(self, value): self[2] = value
-    
-    @property
-    def velocity(self): return self[3]
-    @velocity.setter
-    def velocity(self, value): self[3] = value
-
-    
 class WarthogEnv(gym.Env):
     warthog_length = 0.5 / 2.0 # TODO: length in meters?
     warthog_width  = 1.0 / 2.0  # TODO: length in meters?
@@ -119,6 +89,7 @@ class WarthogEnv(gym.Env):
         self.crosstrack_error = 0
         self.velocity_error   = 0
         self.phi_error        = 0
+        self.prev_timestamp   = time.time()
         
         if render:
             plt.ion
@@ -126,18 +97,12 @@ class WarthogEnv(gym.Env):
             self.ax  = self.fig.add_subplot(111)
             self.ax.set_xlim([-4, 4])
             self.ax.set_ylim([-4, 4])
-            
-            if self.waypoint_file is not None:
-                self.plot_waypoints()
-        
             self.rect = Rectangle((0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False)
             self.ax.add_artist(self.rect)
-        
             (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
-            
             self.text = self.ax.text(1, 2, f"vel_error={self.velocity_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
-        
-        self.prev_timestamp       = time.time()
+            if self.waypoint_file is not None:
+                self.plot_waypoints()
         
         # 
         # trajectory_file
@@ -408,3 +373,31 @@ class WarthogEnv(gym.Env):
             assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
             final_waypoint = self.waypoints_list[index + 1]
             final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
+
+
+def Waypoint(a_list):
+    waypoint_entry = WaypointEntry(len(a_list))
+    for index, each in enumerate(a_list):
+        waypoint_entry[index] = each
+    return waypoint_entry
+
+class WaypointEntry(numpy.ndarray):
+    @property
+    def x(self): return self[0]
+    @x.setter
+    def x(self, value): self[0] = value
+    
+    @property
+    def y(self): return self[1]
+    @y.setter
+    def y(self, value): self[1] = value
+    
+    @property
+    def angle(self): return self[2]
+    @angle.setter
+    def angle(self, value): self[2] = value
+    
+    @property
+    def velocity(self): return self[3]
+    @velocity.setter
+    def velocity(self, value): self[3] = value
