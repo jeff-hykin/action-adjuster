@@ -1,15 +1,15 @@
-import numpy
-numpy.float = float # workaround for having a newer version of numpy
-
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import gym
+import numpy
 import numpy as np
 import math
 from gym import spaces
 import csv
 import time
+from config import config
+from blissful_basics import Csv
 
 # Questions:
     # what is: phi (currently hardcoded to 0)
@@ -22,27 +22,26 @@ magic_number_0_point_5 = 0.5
 
 
 class WarthogEnv(gym.Env):
-    warthog_length = 0.5 / 2.0 # TODO: length in meters?
-    warthog_width  = 1.0 / 2.0  # TODO: length in meters?
-    action_bound   = 1.5
-    random_start_position_offset = 0.1
-    random_start_angle_offset = 0.01
+    warthog_length               = config.warthog.length # 0.5 / 2.0 # TODO: length in meters? why the division?
+    warthog_width                = config.warthog.width  # 1.0 / 2.0  # TODO: length in meters?
+    random_start_position_offset = config.simulator.random_start_position_offset
+    random_start_angle_offset    = config.simulator.random_start_angle_offset
     
     action_space = spaces.Box(
-        low=np.array([0.0, -action_bound]),
-        high=np.array([1.0, action_bound]),
-        shape=(2,),
+        low=np.array(config.simulator.action_space.low),
+        high=np.array(config.simulator.action_space.high),
+        shape=np.array(config.simulator.action_space.low).shape,
     )
     observation_space = spaces.Box(
-        low=-100,
-        high=1000,
-        shape=(42,),
-        dtype=np.float
+        low=config.simulator.observation_space.low,
+        high=config.simulator.observation_space.high,
+        shape=config.simulator.observation_space.shape,
+        dtype=float,
     )
     
-    def __init__(self, waypoint_file, trajectory_output_path, render=False):
+    def __init__(self, waypoint_file_path, trajectory_output_path, render=False):
         super(WarthogEnv, self).__init__()
-        self.waypoint_file = waypoint_file
+        self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
         
         self.waypoints_list   = []
@@ -52,38 +51,39 @@ class WarthogEnv(gym.Env):
         self.velocity         = 0
         self.spin             = 0
         
-        self.max_episode_steps    = 700
-        self.save_data            = True
-        self.dt                   = 0.06  # TODO: why is dt 0.06?
-        self.is_delayed_dynamics  = False
-        self.delay_steps          = 5
-        self.horizon              = 10 # number of waypoints in the observation
-        self.render_axis_size     = 20
-        self.closest_index        = 0
-        self.prev_closest_index   = 0
-        self.closest_distance     = math.inf
-        self.desired_velocities   = []
-        self.max_velocity         = 1  # TODO: currently increases over time, not sure if thats intended
-        self.episode_steps        = 0
-        self.total_episode_reward = 0
-        self.reward               = 0
-        self.action_spin          = 0
-        self.action_velocity      = 0
-        self.prev_action_spin     = 0
-        self.prev_action_velocity = 0
-        self.omega_reward         = 0
-        self.velocity_reward      = 0
-        self.velocity_delay_data  = [0.0] * self.delay_steps
-        self.spin_delay_data      = [0.0] * self.delay_steps
-        self.is_episode_start     = 1
+        self.max_episode_steps      = config.simulator.max_episode_steps
+        self.save_data              = config.simulator.save_data
+        self.dt                     = config.simulator.dt  # TODO: why is dt 0.06?
+        self.use_delayed_dynamics   = config.simulator.use_delayed_dynamics
+        self.delay_steps            = config.simulator.delay_steps
+        self.horizon                = config.simulator.horizon # number of waypoints in the observation
+        self.number_of_trajectories = config.simulator.number_of_trajectories
+        self.render_axis_size       = 20
+        self.closest_index          = 0
+        self.prev_closest_index     = 0
+        self.closest_distance       = math.inf
+        self.desired_velocities     = []
+        self.max_velocity           = 1  # TODO: currently increases over time, not sure if thats intended
+        self.episode_steps          = 0
+        self.total_episode_reward   = 0
+        self.reward                 = 0
+        self.action_spin            = 0
+        self.action_velocity        = 0
+        self.prev_action_spin       = 0
+        self.prev_action_velocity   = 0
+        self.omega_reward           = 0
+        self.velocity_reward        = 0
+        self.velocity_delay_data    = [0.0] * self.delay_steps
+        self.spin_delay_data        = [0.0] * self.delay_steps
+        self.is_episode_start       = 1
+        self.trajectory_file        = None
         
-        if self.waypoint_file is not None:
-            self._read_waypoint_file(self.waypoint_file)
+        if self.waypoint_file_path is not None:
+            self._read_waypoint_file_path(self.waypoint_file_path)
         
         self.warthog_diag   = math.sqrt(self.warthog_width**2 + self.warthog_length**2)
         self.diagonal_angle = math.atan2(self.warthog_length, self.warthog_width)
         self.prev_angle = 0
-        self.number_of_trajectories = 100
         self.x_pose = [0.0] * self.number_of_trajectories
         self.y_pose = [0.0] * self.number_of_trajectories
         self.crosstrack_error = 0
@@ -101,13 +101,12 @@ class WarthogEnv(gym.Env):
             self.ax.add_artist(self.rect)
             (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
             self.text = self.ax.text(1, 2, f"vel_error={self.velocity_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
-            if self.waypoint_file is not None:
+            if self.waypoint_file_path is not None:
                 self.plot_waypoints()
         
         # 
         # trajectory_file
         # 
-        self.trajectory_file = None
         if self.out_trajectory_file is not None:
             self.trajectory_file = open(trajectory_output_path, "w")
     
@@ -116,7 +115,8 @@ class WarthogEnv(gym.Env):
         return len(self.waypoints_list)
     
     def __del__(self):
-        self.trajectory_file.close()
+        if self.trajectory_file:
+            self.trajectory_file.close()
 
     def plot_waypoints(self):
         x = []
@@ -136,7 +136,7 @@ class WarthogEnv(gym.Env):
         self.velocity = velocity
         self.spin     = spin
         
-        if self.is_delayed_dynamics:
+        if self.use_delayed_dynamics:
             old_velocity = self.velocity_delay_data[0]
             old_spin     = self.spin_delay_data[0]
             del self.velocity_delay_data[0]
@@ -192,7 +192,7 @@ class WarthogEnv(gym.Env):
 
     def get_observation(self):
         magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
-        magic_number_2 = 2
+        magic_number_2 = 2 # TODO: I have no idea what this 2 is for
         obs = [0] * ((self.horizon * magic_number_4) + magic_number_2)
         original_velocity = self.velocity
         original_spin     = self.spin
@@ -229,7 +229,7 @@ class WarthogEnv(gym.Env):
         self.action_velocity, self.action_spin = action
         
         self.sim_warthog(
-            velocity=np.clip(self.action_velocity,  0, 1) * magic_number_4,
+            velocity=np.clip(self.action_velocity,  0, 1) * magic_number_4, # TODO: is it supposed to be clipped to self.max_velocity?
             spin=    np.clip(self.action_spin,     -1, 1) * magic_number_2_point_5,
         )
         self.prev_closest_index = self.closest_index
@@ -344,35 +344,25 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-    def _read_waypoint_file(self, filename):
-        with open(filename) as csv_file:
-            for row in csv.reader(csv_file, delimiter=","):
-                # convert to all-floats
-                row = [ float(each_element) for each_element in row ]
-                # extract into variables
-                raw_x_input, raw_y_input, raw_angle, raw_velocity = row
-                
-                # phi = math.pi/4 # TODO: 
-                phi = 0.0
-                xcoord =  raw_x_input * math.cos(phi) + raw_y_input * math.sin(phi)
-                ycoord = -raw_x_input * math.sin(phi) + raw_y_input * math.cos(phi)
-                self.waypoints_list.append(
-                    Waypoint([raw_x_input, raw_y_input, raw_angle, raw_velocity])
-                )
-                self.desired_velocities.append(raw_velocity)
+    def _read_waypoint_file_path(self, filename):
+        for row in Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True):
+            self.desired_velocities.append(row.velocity)
+            self.waypoints_list.append(
+                Waypoint([row.x, row.y, row.angle, row.velocity])
+            )
+        
+        index = 0
+        for index in range(0, len(self.waypoints_list) - 1):
+            current_waypoint = self.waypoints_list[index]
+            next_waypoint    = self.waypoints_list[index+1]
             
-            index = 0
-            for index in range(0, len(self.waypoints_list) - 1):
-                current_waypoint = self.waypoints_list[index]
-                next_waypoint    = self.waypoints_list[index+1]
-                
-                x_diff = next_waypoint.x - current_waypoint.x
-                y_diff = next_waypoint.y - current_waypoint.y
-                current_waypoint.angle = self.zero_to_2pi(self.get_angle_from_origin(x_diff, y_diff))
-            
-            assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
-            final_waypoint = self.waypoints_list[index + 1]
-            final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
+            x_diff = next_waypoint.x - current_waypoint.x
+            y_diff = next_waypoint.y - current_waypoint.y
+            current_waypoint.angle = self.zero_to_2pi(self.get_angle_from_origin(x_diff, y_diff))
+        
+        assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
+        final_waypoint = self.waypoints_list[index + 1]
+        final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
 
 
 def Waypoint(a_list):

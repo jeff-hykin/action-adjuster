@@ -1,4 +1,4 @@
-x,y,th,vel,w,v_cmd,w_cmd
+x,y,angle,velocity,spin,velocity_action,spin_action
 0, 0, 0, 0, 0, 0.0, 0.0
 0.0, 0.0, 0.0, 0.0, 0.0, -0.0, -0.0
 0.0, 0.0, 0.0, -0.0, -0.0, -0.0, -0.0

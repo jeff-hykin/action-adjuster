@@ -1,0 +1,37 @@
+# NOTE: names in parentheses are special, all other names are not!
+(project):
+    
+    # a central place for filepaths
+    (path_to):
+        default_waypoints: "./waypoint_paths/real1.csv"
+    
+    # git-ignore this file path! (file will be generated automatically)
+    (local_data): ./local_data.ignore.yaml
+            # this^ is where you choose which profile(s)
+            # and is where to store auth tokens and other secrets
+    
+    (profiles):
+        (default):
+            warthog:
+                length: 0.25 # TODO: length in meters?
+                width: 0.5  # TODO: length in meters?
+            simulator:
+                save_data: True
+                random_start_position_offset: 0.1 # TODO: units?
+                random_start_angle_offset: 0.01 # TODO: units?
+                action_space:
+                    low:  [ 0.0, -1.5 ] # TODO: units?
+                    high: [ 1.0,  1.5 ]
+                observation_space:
+                    low: -100
+                    high: 1000
+                    shape: [ 42 ]
+                max_episode_steps: 700
+                use_delayed_dynamics: false
+                delay_steps: 5
+                horizon: 10 # number of waypoints in the observation
+                number_of_trajectories: 100
+                dt: 0.06 # TODO: why 0.06? what units?
+                
+        PROFILE1:
+            mode: testing
