@@ -27,7 +27,7 @@ def predict_next_observation_and_spacial_info(current_spacial_info, velocity_act
 # returns a list of [horizon] observations 
 def project(policy, current_spacial_info, additional_info):
     remaining_waypoints, horizon, action_duration = additional_info
-    observation = generate_observation(remaining_waypoints, horizon, current_spacial_info)
+    observation = generate_observation(remaining_waypoints, horizon, current_spacial_info) # TODO: there could be an off-by-one error here
     observation_expectation = []
     for each in range(horizon):
         velocity_action, spin_action = policy(observation)
