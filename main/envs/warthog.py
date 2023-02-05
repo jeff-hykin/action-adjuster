@@ -162,25 +162,6 @@ class WarthogEnv(gym.Env):
             self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity}, {spin}, {self.is_episode_start}\n")
         self.is_episode_start = 0
 
-    def zero_to_2pi(self, theta):
-        if theta < 0:
-            theta = 2 * math.pi + theta
-        elif theta > 2 * math.pi:
-            theta = theta - 2 * math.pi
-        return theta
-
-    def pi_to_pi(self, theta):
-        if theta < -math.pi:
-            theta = theta + 2 * math.pi
-        elif theta > math.pi:
-            theta = theta - 2 * math.pi
-        return theta
-
-    def get_distance(self, x1, y1, x2, y2):
-        x_diff = x2 - x1
-        y_diff = y2 - y1
-        return math.sqrt(x_diff * x_diff + y_diff * y_diff)
-
     def update_closest_index(self, x, y):
         closest_index = self.closest_index
         self.closest_distance = math.inf
@@ -193,10 +174,6 @@ class WarthogEnv(gym.Env):
             else:
                 break
         self.closest_index = closest_index
-
-    def get_angle_from_origin(self, x, y):
-        theta = math.atan2(y, x)
-        return zero_to_2pi(theta)
 
     def get_observation(self):
         magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
