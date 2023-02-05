@@ -83,6 +83,7 @@ class WarthogEnv(gym.Env):
         self.spin_delay_data        = [0.0] * self.delay_steps
         self.is_episode_start       = 1
         self.trajectory_file        = None
+        self.global_timestep        = 0
         
         if self.waypoint_file_path is not None:
             self._read_waypoint_file_path(self.waypoint_file_path)
@@ -99,6 +100,8 @@ class WarthogEnv(gym.Env):
         self.should_render    = should_render
         
         if self.should_render:
+            self.render_path = "render.ignore/"
+            FS.ensure_is_folder(self.render_path)
             plt.ion
             self.fig = plt.figure(dpi=100, figsize=(10, 10))
             self.ax  = self.fig.add_subplot(111)
@@ -181,40 +184,6 @@ class WarthogEnv(gym.Env):
                 break
         return closest_index
 
-    def get_observation(self):
-        magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
-        magic_number_2 = 2 # TODO: I have no idea what this 2 is for
-        obs = [0] * ((self.horizon * magic_number_4) + magic_number_2)
-        original_velocity = self.spacial_info.velocity
-        original_spin     = self.spacial_info.spin
-        self.update_closest_index(x=self.spacial_info.x, y=self.spacial_info.y)
-        observation_index = 0
-        for horizon_index in range(0, self.horizon):
-            waypoint_index = horizon_index + self.closest_index
-            if waypoint_index < self.number_of_waypoints:
-                waypoint = self.waypoints_list[waypoint_index]
-                x_diff = waypoint.x - self.spacial_info.x
-                y_diff = waypoint.y - self.spacial_info.y
-                radius = get_distance(waypoint.x, waypoint.y, self.spacial_info.x, self.spacial_info.y)
-                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
-                current_angle       = zero_to_2pi(self.spacial_info.angle)
-                
-                yaw_error = pi_to_pi(waypoint.angle - current_angle)
-                velocity = waypoint.velocity
-                obs[observation_index + 0] = radius
-                obs[observation_index + 1] = pi_to_pi(angle_to_next_point - current_angle)
-                obs[observation_index + 2] = yaw_error
-                obs[observation_index + 3] = velocity - original_velocity
-            else:
-                obs[observation_index + 0] = 0.0
-                obs[observation_index + 1] = 0.0
-                obs[observation_index + 2] = 0.0
-                obs[observation_index + 3] = 0.0
-            observation_index = observation_index + magic_number_4
-        obs[observation_index] = original_velocity
-        obs[observation_index + 1] = original_spin
-        return obs
-    
     @staticmethod
     def generate_observation(remaining_waypoints, horizon, current_spacial_info):
         magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
@@ -254,9 +223,7 @@ class WarthogEnv(gym.Env):
 
 
     def step(self, action):
-        if self.should_render:
-            self.render()
-        
+        self.global_timestep += 1
         self.episode_steps = self.episode_steps + 1
         self.action_velocity, self.action_spin = action
         
@@ -370,6 +337,12 @@ class WarthogEnv(gym.Env):
             self.reward = 0
         self.total_episode_reward = self.total_episode_reward + self.reward
         
+        # 
+        # render
+        # 
+        if self.should_render:
+            self.render()
+        
         return observation, self.reward, done, {}
 
     def reset(self):
@@ -412,7 +385,13 @@ class WarthogEnv(gym.Env):
         xl = self.spacial_info.x - self.warthog_diag * math.cos(total_diag_ang)
         yl = self.spacial_info.y - self.warthog_diag * math.sin(total_diag_ang)
         self.rect.remove()
-        self.rect = Rectangle((xl, yl), self.warthog_width * 2, self.warthog_length * 2, 180.0 * self.spacial_info.angle / math.pi, facecolor="blue")
+        self.rect = Rectangle(
+            xy=(xl, yl), 
+            width=self.warthog_width * 2, 
+            height=self.warthog_length * 2, 
+            angle=180.0 * self.spacial_info.angle / math.pi,
+            facecolor="blue",
+        )
         self.text.remove()
         self.text = self.ax.text(
             self.spacial_info.x + 1,
@@ -432,6 +411,8 @@ class WarthogEnv(gym.Env):
         self.cur_pos.set_ydata(self.y_pose)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+        self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
+
 
     def _read_waypoint_file_path(self, filename):
         comments, column_names, rows = Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True)
