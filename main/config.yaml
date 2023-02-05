@@ -60,6 +60,8 @@
                     "spin":
                         standard_deviation: 0
                 
+                allow_cut_short_episode: False
+                
                 # 
                 # delayed dynamics
                 # 

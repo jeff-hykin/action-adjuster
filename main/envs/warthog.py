@@ -171,6 +171,8 @@ class WarthogEnv(gym.Env):
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity_action}, {spin_action}, {self.is_episode_start}\n")
         self.is_episode_start = 0
+        
+        return new_spacial_info
     
     @staticmethod
     def get_closest_index(remaining_waypoints, x, y):
@@ -242,7 +244,7 @@ class WarthogEnv(gym.Env):
         # 
         # simulate action
         # 
-        self.sim_warthog(
+        self.spacial_info = self.sim_warthog(
             old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
             velocity_action=self.action_velocity + velocity_noise,
             spin_action=self.action_spin + spin_noise,
@@ -288,10 +290,6 @@ class WarthogEnv(gym.Env):
             y=self.spacial_info.y,
         )
         
-        done = False
-        if self.closest_index >= self.number_of_waypoints - 1:
-            done = True
-        
         # 
         # Reward Calculation
         # 
@@ -305,11 +303,6 @@ class WarthogEnv(gym.Env):
         self.velocity_error   = closest_waypoint.velocity - self.spacial_info.velocity
         self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
         self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
-        if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
-            done = True
-        if self.episode_steps == self.max_episode_steps:
-            done = True
-            self.episode_steps = 0
         
         magic_number_2 = 2.0
         magic_number_3 = 3.0
@@ -353,6 +346,21 @@ class WarthogEnv(gym.Env):
             horizon=self.horizon,
             action_duration=self.dt,
         )
+        
+        # 
+        # done Calculation
+        #
+        done = False
+        if self.closest_index >= self.number_of_waypoints - 1:
+            done = True 
+        if self.episode_steps == self.max_episode_steps:
+            done = True
+            self.episode_steps = 0
+        # immediate end due to too much loss
+        if config.simulator.allow_cut_short_episode:
+            if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
+                done = True
+        
         return observation, self.reward, done, additional_info
 
     def reset(self):

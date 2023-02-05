@@ -6,7 +6,7 @@ import torch
 # FIXME: need a real policy
 def policy(observation):
     velocity_action = 0.5
-    spin_action     = 0.5
+    spin_action     = 0.01
     return velocity_action, spin_action
 
 action_adjuster = ActionAdjuster(policy=policy, initial_transform=[1,1])
