@@ -1,13 +1,1 @@
 action = (0.5, 0.5)
-step:action = (0.5, 0.5)
-velocity_action, spin_action = ((2.0,), (1.25,))
-velocity_action = (2.0,)
-rendering
-old_x 14.698244493819976
-old_velocity 0.0
-math.cos(old_angle) 0.9893284830627395
-action_duration 0.06
-old_x 14.698244493819976
-old_velocity (2.0,)
-math.cos(old_angle) 0.9893284830627395
-action_duration 0.06

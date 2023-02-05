@@ -20,10 +20,6 @@ def predict_next_spacial_info(current_spatial_info, velocity_action, spin_action
     new_spacial_info.velocity = velocity_action
     new_spacial_info.spin     = spin_action
     
-    print("old_x", old_x)
-    print("old_velocity", old_velocity)
-    print("math.cos(old_angle)", math.cos(old_angle))
-    print("action_duration", action_duration)
     new_spacial_info.x          = old_x + old_velocity * math.cos(old_angle) * action_duration
     new_spacial_info.y          = old_y + old_velocity * math.sin(old_angle) * action_duration
     new_spacial_info.angle      = zero_to_2pi(old_angle + old_spin * action_duration)

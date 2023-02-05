@@ -120,6 +120,7 @@ class WarthogEnv(gym.Env):
         if self.out_trajectory_file is not None:
             FS.ensure_is_folder(FS.parent_path(trajectory_output_path))
             self.trajectory_file = open(trajectory_output_path, "w+")
+            self.trajectory_file.writelines(f"x, y, angle, velocity, spin, velocity_action, spin_action, is_episode_start\n")
     
     @property
     def number_of_waypoints(self):
@@ -149,9 +150,7 @@ class WarthogEnv(gym.Env):
         
         new_spacial_info = WarthogEnv.SpacialInformation(old_spatial_info)
         
-        print(f'''velocity_action, spin_action = {velocity_action, spin_action}''')
         
-        print(f'''velocity_action = {velocity_action}''')
         new_spacial_info.velocity = velocity_action
         new_spacial_info.spin     = spin_action
         
@@ -240,7 +239,6 @@ class WarthogEnv(gym.Env):
             velocity_noise = self.action_velocity - random.normalvariate(mu=self.action_velocity, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
             spin_noise     = self.action_spin     - random.normalvariate(mu=self.action_spin    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
         
-        print(f'''step:action = {action}''')
         # 
         # simulate action
         # 
@@ -390,7 +388,6 @@ class WarthogEnv(gym.Env):
         )
 
     def render(self, mode="human"):
-        print("rendering")
         self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
         self.ax.set_ylim([self.spacial_info.y - self.render_axis_size / 2.0, self.spacial_info.y + self.render_axis_size / 2.0])
         total_diag_ang = self.diagonal_angle + self.spacial_info.angle
