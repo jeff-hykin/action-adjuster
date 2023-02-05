@@ -6,3 +6,5 @@ env = WarthogEnv(
     trajectory_output_path="logs.ignore/trajectory.log"
 )
 print(f'''env.reset() = {env.reset()}''')
+print(f'''env.step([0,0]) = {env.step([0,0])}''')
+print(f'''env.step([0,0]) = {env.step([0,0])}''')

@@ -19,7 +19,9 @@ magic_number_4         = 4.0
 magic_number_2_point_5 = 2.5
 magic_number_2_point_0 = 2.0
 magic_number_1_point_5 = 1.5
+magic_number_1_point_4 = 1.4
 magic_number_0_point_5 = 0.5
+max_velocity_reset_number = 5 # TODO: check this
 
 
 class WarthogEnv(gym.Env):
@@ -42,7 +44,7 @@ class WarthogEnv(gym.Env):
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
     
-    def __init__(self, waypoint_file_path, trajectory_output_path, render=False):
+    def __init__(self, waypoint_file_path, trajectory_output_path, render=True):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
@@ -143,8 +145,8 @@ class WarthogEnv(gym.Env):
         
         new_spacial_info = WarthogEnv.SpacialInformation(old_spatial_info)
         
-        new_spacial_info.velocity = velocity
-        new_spacial_info.spin     = spin
+        new_spacial_info.velocity = velocity_action
+        new_spacial_info.spin     = spin_action
         
         if self.use_delayed_dynamics:
             old_velocity = self.velocity_delay_data[0]
@@ -161,21 +163,22 @@ class WarthogEnv(gym.Env):
         new_spacial_info.y          = old_y + old_velocity * math.sin(old_angle) * self.dt
         new_spacial_info.angle      = zero_to_2pi(old_angle + old_spin * self.dt)
         if self.save_data and self.trajectory_file is not None:
-            self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity}, {spin}, {self.is_episode_start}\n")
+            self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity_action}, {spin_action}, {self.is_episode_start}\n")
         self.is_episode_start = 0
-
-    def update_closest_index(self, x, y):
-        closest_index = self.closest_index
-        self.closest_distance = math.inf
-        for index in range(self.closest_index, self.number_of_waypoints):
-            waypoint = self.waypoints_list[index]
+    
+    @staticmethod
+    def get_closest_index(remaining_waypoints, x, y):
+        closest_index = 0
+        closest_distance = math.inf
+        for index in range(0, len(remaining_waypoints)):
+            waypoint = remaining_waypoints[index]
             distance = get_distance(waypoint.x, waypoint.y, x, y)
-            if distance <= self.closest_distance:
-                self.closest_distance = distance
+            if distance <= closest_distance:
+                closest_distance = distance
                 closest_index = index
             else:
                 break
-        self.closest_index = closest_index
+        return closest_index
 
     def get_observation(self):
         magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
@@ -219,7 +222,7 @@ class WarthogEnv(gym.Env):
         original_velocity = current_spacial_info.velocity
         original_spin     = current_spacial_info.spin
         
-        closest_index = get_closest_index(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
+        closest_index = WarthogEnv.get_closest_index(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
         
         observation_index = 0
         for horizon_index in range(0, horizon):
@@ -282,15 +285,15 @@ class WarthogEnv(gym.Env):
         velocity_noise = 0
         if config.simulator.use_gaussian_spacial_noise:
             import random
-            x_noise        = self.x        - random.normalvariate( mu=self.x       , sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       ,)
-            y_noise        = self.y        - random.normalvariate( mu=self.y       , sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , )
-            angle_noise    = self.angle    - random.normalvariate( mu=self.angle   , sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , )
-            spin_noise     = self.spin     - random.normalvariate( mu=self.spin    , sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , )
-            velocity_noise = self.velocity - random.normalvariate( mu=self.velocity, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, )
+            x_noise        = self.spacial_info.x        - random.normalvariate( mu=self.spacial_info.x       , sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       ,)
+            y_noise        = self.spacial_info.y        - random.normalvariate( mu=self.spacial_info.y       , sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , )
+            angle_noise    = self.spacial_info.angle    - random.normalvariate( mu=self.spacial_info.angle   , sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , )
+            spin_noise     = self.spacial_info.spin     - random.normalvariate( mu=self.spacial_info.spin    , sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , )
+            velocity_noise = self.spacial_info.velocity - random.normalvariate( mu=self.spacial_info.velocity, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, )
         
         # generate observation off potentially incorrect spacial info
         observation = WarthogEnv.generate_observation(
-            remaining_waypoints=self.waypoints[self.closest_index:],
+            remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
             current_spacial_info=WarthogEnv.SpacialInformation([
                 self.spacial_info.x        + x_noise       ,
@@ -305,7 +308,11 @@ class WarthogEnv(gym.Env):
         # get the true closest waypoint (e.g. perfect sensors)
         #
         self.prev_closest_index = self.closest_index 
-        self.update_closest_index(x=self.positional_info.x, y=self.positional_info.y)
+        self.closest_index = WarthogEnv.get_closest_index(
+            remaining_waypoints=self.waypoints_list[self.closest_index:],
+            x=self.spacial_info.x,
+            y=self.spacial_info.y,
+        )
         
         done = False
         if self.closest_index >= self.number_of_waypoints - 1:
@@ -324,7 +331,7 @@ class WarthogEnv(gym.Env):
         self.velocity_error   = closest_waypoint.velocity - self.spacial_info.velocity
         self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
         self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
-        if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > 1.4:
+        if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
             done = True
         if self.episode_steps == self.max_episode_steps:
             done = True
@@ -364,14 +371,14 @@ class WarthogEnv(gym.Env):
     def reset(self):
         self.is_episode_start = 1
         self.total_episode_reward = 0
-        if self.max_velocity >= 5:
+        if self.max_velocity >= max_velocity_reset_number:
             self.max_velocity = 1
         
         # pick a random waypoint
         index = np.random.randint(self.number_of_waypoints, size=1)[0]
+        waypoint = self.waypoints_list[index]
         self.closest_index      = index
         self.prev_closest_index = index
-        waypoint = self.waypoints_list[index]
         
         self.spacial_info.x      = waypoint.x + self.random_start_position_offset
         self.spacial_info.y      = waypoint.y + self.random_start_position_offset
@@ -387,9 +394,14 @@ class WarthogEnv(gym.Env):
                 waypoint.velocity = desired_velocity
         
         self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
-        return self.get_observation()
+        return WarthogEnv.generate_observation(
+            remaining_waypoints=self.waypoints_list,
+            horizon=self.horizon,
+            current_spacial_info=self.spacial_info,
+        )
 
     def render(self, mode="human"):
+        print("rendering")
         self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
         self.ax.set_ylim([self.spacial_info.y - self.render_axis_size / 2.0, self.spacial_info.y + self.render_axis_size / 2.0])
         total_diag_ang = self.diagonal_angle + self.spacial_info.angle
