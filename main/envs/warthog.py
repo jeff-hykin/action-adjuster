@@ -213,10 +213,26 @@ class WarthogEnv(gym.Env):
         self.episode_steps = self.episode_steps + 1
         self.action_velocity, self.action_spin = action
         
+        # 
+        # add noise
+        # 
+        velocity_noise = 0
+        spin_noise     = 0
+        if config.simulator.use_gaussian_action_noise:
+            import random
+            velocity_noise = self.action_velocity - random.normalvariate(
+                mu=self.action_velocity,
+                sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation,
+            )
+            spin_noise = self.action_spin - random.normalvariate(
+                mu=self.action_spin,
+                sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation,
+            )
+        
         self.sim_warthog(
             old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
-            velocity_action=self.action_velocity,
-            spin_action=self.action_spin,
+            velocity_action=self.action_velocity + velocity_noise,
+            spin_action=self.action_spin + spin_noise,
         )
         self.prev_closest_index = self.closest_index
         observation = self.get_observation()

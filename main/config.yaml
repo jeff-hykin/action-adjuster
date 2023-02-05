@@ -26,6 +26,13 @@
                     low: -100
                     high: 1000
                     shape: [ 42 ]
+                use_gaussian_action_noise: True
+                gaussian_action_noise:
+                    spin_action:
+                        standard_deviation: 0
+                    velocity_action:
+                        standard_deviation: 0
+                
                 max_episode_steps: 700
                 use_delayed_dynamics: false
                 delay_steps: 5
