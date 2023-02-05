@@ -9,7 +9,7 @@ from gym import spaces
 import csv
 import time
 from config import config
-from blissful_basics import Csv
+from blissful_basics import Csv, create_named_list_class
 
 # Questions:
     # what is: phi (currently hardcoded to 0)
@@ -39,17 +39,20 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
+    SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
+    
     def __init__(self, waypoint_file_path, trajectory_output_path, render=False):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
         
         self.waypoints_list   = []
-        self.x                = 0
-        self.y                = 0
-        self.angle            = 0
-        self.velocity         = 0
-        self.spin             = 0
+        self.spacial_info = WarthogEnv.SpacialInformation([])
+        self.spacial_info.x                = 0
+        self.spacial_info.y                = 0
+        self.spacial_info.angle            = 0
+        self.spacial_info.velocity         = 0
+        self.spacial_info.spin             = 0
         
         self.max_episode_steps      = config.simulator.max_episode_steps
         self.save_data              = config.simulator.save_data
@@ -126,15 +129,20 @@ class WarthogEnv(gym.Env):
             y.append(each_waypoint.y)
         self.ax.plot(x, y, "+r")
 
-    def sim_warthog(self, velocity, spin):
-        old_velocity = self.velocity
-        old_spin     = self.spin
-        old_x        = self.x
-        old_y        = self.y
-        old_angle    = self.angle
+    def sim_warthog(self, old_spatial_info, velocity_action, spin_action):
+        velocity_action = np.clip(velocity_action,  0, 1) * magic_number_4, # TODO: is it supposed to be clipped to self.max_velocity?
+        spin_action     = np.clip(spin_action,     -1, 1) * magic_number_2_point_5,
         
-        self.velocity = velocity
-        self.spin     = spin
+        old_velocity = old_spatial_info.velocity
+        old_spin     = old_spatial_info.spin
+        old_x        = old_spatial_info.x
+        old_y        = old_spatial_info.y
+        old_angle    = old_spatial_info.angle
+        
+        new_spacial_info = WarthogEnv.SpacialInformation(old_spatial_info)
+        
+        new_spacial_info.velocity = velocity
+        new_spacial_info.spin     = spin
         
         if self.use_delayed_dynamics:
             old_velocity = self.velocity_delay_data[0]
@@ -143,13 +151,13 @@ class WarthogEnv(gym.Env):
             del self.spin_delay_data[0]
             self.velocity_delay_data.append(velocity)
             self.spin_delay_data.append(spin)
-            self.velocity = self.velocity_delay_data[0]
-            self.spin     = self.spin_delay_data[0] # TODO: I dont think this old version worked -> self.spin     = self.velocity_delay_data[1]
+            new_spacial_info.velocity = self.velocity_delay_data[0]
+            new_spacial_info.spin     = self.spin_delay_data[0] # TODO: I dont think this old version worked -> new_spacial_info.spin     = self.velocity_delay_data[1]
         
-        self.prev_angle = self.angle
-        self.x          = old_x + old_velocity * math.cos(old_angle) * self.dt
-        self.y          = old_y + old_velocity * math.sin(old_angle) * self.dt
-        self.angle      = self.zero_to_2pi(old_angle + old_spin * self.dt)
+        self.prev_angle = old_angle
+        new_spacial_info.x          = old_x + old_velocity * math.cos(old_angle) * self.dt
+        new_spacial_info.y          = old_y + old_velocity * math.sin(old_angle) * self.dt
+        new_spacial_info.angle      = zero_to_2pi(old_angle + old_spin * self.dt)
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{old_x}, {old_y}, {old_angle}, {old_velocity}, {old_spin}, {velocity}, {spin}, {self.is_episode_start}\n")
         self.is_episode_start = 0
@@ -178,7 +186,7 @@ class WarthogEnv(gym.Env):
         self.closest_distance = math.inf
         for index in range(self.closest_index, self.number_of_waypoints):
             waypoint = self.waypoints_list[index]
-            distance = self.get_distance(waypoint.x, waypoint.y, x, y)
+            distance = get_distance(waypoint.x, waypoint.y, x, y)
             if distance <= self.closest_distance:
                 self.closest_distance = distance
                 closest_index = index
@@ -188,30 +196,30 @@ class WarthogEnv(gym.Env):
 
     def get_angle_from_origin(self, x, y):
         theta = math.atan2(y, x)
-        return self.zero_to_2pi(theta)
+        return zero_to_2pi(theta)
 
     def get_observation(self):
         magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
         magic_number_2 = 2 # TODO: I have no idea what this 2 is for
         obs = [0] * ((self.horizon * magic_number_4) + magic_number_2)
-        original_velocity = self.velocity
-        original_spin     = self.spin
-        self.update_closest_index(x=self.x, y=self.y)
+        original_velocity = self.spacial_info.velocity
+        original_spin     = self.spacial_info.spin
+        self.update_closest_index(x=self.spacial_info.x, y=self.spacial_info.y)
         observation_index = 0
         for horizon_index in range(0, self.horizon):
             waypoint_index = horizon_index + self.closest_index
             if waypoint_index < self.number_of_waypoints:
                 waypoint = self.waypoints_list[waypoint_index]
-                x_diff = waypoint.x - self.x
-                y_diff = waypoint.y - self.y
-                radius = self.get_distance(waypoint.x, waypoint.y, self.x, self.y)
-                angle_to_next_point = self.get_angle_from_origin(x_diff, y_diff)
-                current_angle       = self.zero_to_2pi(self.angle)
+                x_diff = waypoint.x - self.spacial_info.x
+                y_diff = waypoint.y - self.spacial_info.y
+                radius = get_distance(waypoint.x, waypoint.y, self.spacial_info.x, self.spacial_info.y)
+                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+                current_angle       = zero_to_2pi(self.spacial_info.angle)
                 
-                yaw_error = self.pi_to_pi(waypoint.angle - current_angle)
+                yaw_error = pi_to_pi(waypoint.angle - current_angle)
                 velocity = waypoint.velocity
                 obs[observation_index + 0] = radius
-                obs[observation_index + 1] = self.pi_to_pi(angle_to_next_point - current_angle)
+                obs[observation_index + 1] = pi_to_pi(angle_to_next_point - current_angle)
                 obs[observation_index + 2] = yaw_error
                 obs[observation_index + 3] = velocity - original_velocity
             else:
@@ -229,8 +237,9 @@ class WarthogEnv(gym.Env):
         self.action_velocity, self.action_spin = action
         
         self.sim_warthog(
-            velocity=np.clip(self.action_velocity,  0, 1) * magic_number_4, # TODO: is it supposed to be clipped to self.max_velocity?
-            spin=    np.clip(self.action_spin,     -1, 1) * magic_number_2_point_5,
+            old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
+            velocity_action=self.action_velocity,
+            spin_action=self.action_spin,
         )
         self.prev_closest_index = self.closest_index
         observation = self.get_observation()
@@ -243,14 +252,14 @@ class WarthogEnv(gym.Env):
         # 
         closest_waypoint = self.waypoints_list[self.closest_index]
         
-        x_diff     = closest_waypoint.x - self.x
-        y_diff     = closest_waypoint.y - self.y
-        angle_diff = self.get_angle_from_origin(x_diff, y_diff)
-        yaw_error  = self.pi_to_pi(angle_diff - self.angle)
+        x_diff     = closest_waypoint.x - self.spacial_info.x
+        y_diff     = closest_waypoint.y - self.spacial_info.y
+        angle_diff = get_angle_from_origin(x_diff, y_diff)
+        yaw_error  = pi_to_pi(angle_diff - self.spacial_info.angle)
         
-        self.velocity_error   = closest_waypoint.velocity - self.velocity
+        self.velocity_error   = closest_waypoint.velocity - self.spacial_info.velocity
         self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
-        self.phi_error        = self.pi_to_pi(closest_waypoint.angle - self.angle)
+        self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
         if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > 1.4:
             done = True
         if self.episode_steps == self.max_episode_steps:
@@ -300,13 +309,13 @@ class WarthogEnv(gym.Env):
         self.prev_closest_index = index
         waypoint = self.waypoints_list[index]
         
-        self.x      = waypoint.x + self.random_start_position_offset
-        self.y      = waypoint.y + self.random_start_position_offset
-        self.angle  = waypoint.angle + self.random_start_angle_offset
-        self.x_pose = [self.x] * self.number_of_trajectories
-        self.y_pose = [self.y] * self.number_of_trajectories
-        self.velocity = 0
-        self.spin     = 0
+        self.spacial_info.x      = waypoint.x + self.random_start_position_offset
+        self.spacial_info.y      = waypoint.y + self.random_start_position_offset
+        self.spacial_info.angle  = waypoint.angle + self.random_start_angle_offset
+        self.x_pose = [self.spacial_info.x] * self.number_of_trajectories
+        self.y_pose = [self.spacial_info.y] * self.number_of_trajectories
+        self.spacial_info.velocity = 0
+        self.spacial_info.spin     = 0
         for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
             if desired_velocity > self.max_velocity:
                 waypoint.velocity = self.max_velocity
@@ -317,26 +326,26 @@ class WarthogEnv(gym.Env):
         return self.get_observation()
 
     def render(self, mode="human"):
-        self.ax.set_xlim([self.x - self.render_axis_size / 2.0, self.x + self.render_axis_size / 2.0])
-        self.ax.set_ylim([self.y - self.render_axis_size / 2.0, self.y + self.render_axis_size / 2.0])
-        total_diag_ang = self.diagonal_angle + self.angle
-        xl = self.x - self.warthog_diag * math.cos(total_diag_ang)
-        yl = self.y - self.warthog_diag * math.sin(total_diag_ang)
+        self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
+        self.ax.set_ylim([self.spacial_info.y - self.render_axis_size / 2.0, self.spacial_info.y + self.render_axis_size / 2.0])
+        total_diag_ang = self.diagonal_angle + self.spacial_info.angle
+        xl = self.spacial_info.x - self.warthog_diag * math.cos(total_diag_ang)
+        yl = self.spacial_info.y - self.warthog_diag * math.sin(total_diag_ang)
         self.rect.remove()
-        self.rect = Rectangle((xl, yl), self.warthog_width * 2, self.warthog_length * 2, 180.0 * self.angle / math.pi, facecolor="blue")
+        self.rect = Rectangle((xl, yl), self.warthog_width * 2, self.warthog_length * 2, 180.0 * self.spacial_info.angle / math.pi, facecolor="blue")
         self.text.remove()
         self.text = self.ax.text(
-            self.x + 1,
-            self.y + 2,
-            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
+            self.spacial_info.x + 1,
+            self.spacial_info.y + 2,
+            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
         )
         self.prev_timestamp = time.time()
         self.ax.add_artist(self.rect)
-        self.x_pose.append(self.x)
-        self.y_pose.append(self.y)
+        self.x_pose.append(self.spacial_info.x)
+        self.y_pose.append(self.spacial_info.y)
         del self.x_pose[0]
         del self.y_pose[0]
         self.cur_pos.set_xdata(self.x_pose)
@@ -358,12 +367,34 @@ class WarthogEnv(gym.Env):
             
             x_diff = next_waypoint.x - current_waypoint.x
             y_diff = next_waypoint.y - current_waypoint.y
-            current_waypoint.angle = self.zero_to_2pi(self.get_angle_from_origin(x_diff, y_diff))
+            current_waypoint.angle = zero_to_2pi(get_angle_from_origin(x_diff, y_diff))
         
         assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
         final_waypoint = self.waypoints_list[index + 1]
         final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
 
+def get_distance(x1, y1, x2, y2):
+    x_diff = x2 - x1
+    y_diff = y2 - y1
+    return math.sqrt(x_diff * x_diff + y_diff * y_diff)
+
+def get_angle_from_origin(x, y):
+    theta = math.atan2(y, x)
+    return zero_to_2pi(theta)
+
+def zero_to_2pi(theta):
+    if theta < 0:
+        theta = 2 * math.pi + theta
+    elif theta > 2 * math.pi:
+        theta = theta - 2 * math.pi
+    return theta
+
+def pi_to_pi(theta):
+    if theta < -math.pi:
+        theta = theta + 2 * math.pi
+    elif theta > math.pi:
+        theta = theta - 2 * math.pi
+    return theta
 
 def Waypoint(a_list):
     waypoint_entry = WaypointEntry(len(a_list))
