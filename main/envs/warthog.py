@@ -10,6 +10,7 @@ import csv
 import time
 from config import config
 from blissful_basics import Csv, create_named_list_class
+import file_system_py as FS
 
 # Questions:
     # what is: phi (currently hardcoded to 0)
@@ -111,7 +112,8 @@ class WarthogEnv(gym.Env):
         # trajectory_file
         # 
         if self.out_trajectory_file is not None:
-            self.trajectory_file = open(trajectory_output_path, "w")
+            FS.ensure_is_folder(FS.parent_path(trajectory_output_path))
+            self.trajectory_file = open(trajectory_output_path, "w+")
     
     @property
     def number_of_waypoints(self):
@@ -347,7 +349,8 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.flush_events()
 
     def _read_waypoint_file_path(self, filename):
-        for row in Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True):
+        comments, column_names, rows = Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True)
+        for row in rows:
             self.desired_velocities.append(row.velocity)
             self.waypoints_list.append(
                 Waypoint([row.x, row.y, row.angle, row.velocity])
