@@ -19,10 +19,9 @@ env = WarthogEnv(
 observation = env.reset()
 while True:
     action          = policy(observation)
+    print(f'''action = {action}''')
     adjusted_action = action_adjuster.adjust(action)
     observation, reward, done, additional_info = env.step(adjusted_action)
     action_adjuster.add_data(observation, additional_info)
-
-print(f'''env.reset() = {env.reset()}''')
-print(f'''env.step([0,0]) = {env.step([0,0])}''')
-print(f'''env.step([0,0]) = {env.step([0,0])}''')
+    if done:
+        break

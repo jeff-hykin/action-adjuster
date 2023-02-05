@@ -138,8 +138,8 @@ class WarthogEnv(gym.Env):
         self.ax.plot(x, y, "+r")
 
     def sim_warthog(self, old_spatial_info, velocity_action, spin_action):
-        velocity_action = np.clip(velocity_action,  0, 1) * magic_number_4, # TODO: is it supposed to be clipped to self.max_velocity?
-        spin_action     = np.clip(spin_action,     -1, 1) * magic_number_2_point_5,
+        velocity_action = np.clip(velocity_action,  0, 1) * magic_number_4 # TODO: is it supposed to be clipped to self.max_velocity?
+        spin_action     = np.clip(spin_action,     -1, 1) * magic_number_2_point_5
         
         old_velocity = old_spatial_info.velocity
         old_spin     = old_spatial_info.spin
@@ -149,6 +149,9 @@ class WarthogEnv(gym.Env):
         
         new_spacial_info = WarthogEnv.SpacialInformation(old_spatial_info)
         
+        print(f'''velocity_action, spin_action = {velocity_action, spin_action}''')
+        
+        print(f'''velocity_action = {velocity_action}''')
         new_spacial_info.velocity = velocity_action
         new_spacial_info.spin     = spin_action
         
@@ -237,6 +240,7 @@ class WarthogEnv(gym.Env):
             velocity_noise = self.action_velocity - random.normalvariate(mu=self.action_velocity, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
             spin_noise     = self.action_spin     - random.normalvariate(mu=self.action_spin    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
         
+        print(f'''step:action = {action}''')
         # 
         # simulate action
         # 
