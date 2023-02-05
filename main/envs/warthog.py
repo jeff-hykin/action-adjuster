@@ -15,13 +15,13 @@ import file_system_py as FS
 # Questions:
     # what is: phi (currently hardcoded to 0)
 
+max_velocity_reset_number = 5 # TODO: check this
 magic_number_4         = 4.0
 magic_number_2_point_5 = 2.5
 magic_number_2_point_0 = 2.0
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 magic_number_0_point_5 = 0.5
-max_velocity_reset_number = 5 # TODO: check this
 
 
 class WarthogEnv(gym.Env):
