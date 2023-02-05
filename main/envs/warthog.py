@@ -263,16 +263,17 @@ class WarthogEnv(gym.Env):
             velocity_noise = self.spacial_info.velocity - random.normalvariate( mu=self.spacial_info.velocity, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, )
         
         # generate observation off potentially incorrect spacial info
+        spacial_info_with_noise = WarthogEnv.SpacialInformation([
+            self.spacial_info.x        + x_noise       ,
+            self.spacial_info.y        + y_noise       ,
+            self.spacial_info.angle    + angle_noise   ,
+            self.spacial_info.velocity + spin_noise    ,
+            self.spacial_info.spin     + velocity_noise,
+        ])
         observation = WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
-            current_spacial_info=WarthogEnv.SpacialInformation([
-                self.spacial_info.x        + x_noise       ,
-                self.spacial_info.y        + y_noise       ,
-                self.spacial_info.angle    + angle_noise   ,
-                self.spacial_info.velocity + spin_noise    ,
-                self.spacial_info.spin     + velocity_noise,
-            ]),
+            current_spacial_info=spacial_info_with_noise,
         )
         
         # 
@@ -343,7 +344,14 @@ class WarthogEnv(gym.Env):
         if self.should_render:
             self.render()
         
-        return observation, self.reward, done, {}
+        additional_info = dict(
+            spacial_info=self.spacial_info,
+            spacial_info_with_noise=spacial_info_with_noise,
+            remaining_waypoints=self.waypoints_list[self.closest_index:],
+            horizon=self.horizon,
+            action_duration=self.dt,
+        )
+        return observation, self.reward, done, additional_info
 
     def reset(self):
         self.is_episode_start = 1
