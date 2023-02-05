@@ -17,8 +17,6 @@
                 width: 0.5  # TODO: length in meters?
             simulator:
                 save_data: True
-                random_start_position_offset: 0.1 # TODO: units?
-                random_start_angle_offset: 0.01 # TODO: units?
                 action_space:
                     low:  [ 0.0, -1.5 ] # TODO: units?
                     high: [ 1.0,  1.5 ]
@@ -26,19 +24,48 @@
                     low: -100
                     high: 1000
                     shape: [ 42 ]
+                horizon: 10 # number of waypoints in the observation
+                max_episode_steps: 700
+                number_of_trajectories: 100
+                dt: 0.06 # TODO: why 0.06? what units?
+                
+                # 
+                # random start
+                # 
+                random_start_position_offset: 0.1 # TODO: units?
+                random_start_angle_offset: 0.01 # TODO: units?
+                
+                # 
+                # action noise
+                # 
                 use_gaussian_action_noise: True
                 gaussian_action_noise:
                     spin_action:
                         standard_deviation: 0
                     velocity_action:
                         standard_deviation: 0
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: True
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0
+                    "y":
+                        standard_deviation: 0
+                    "angle":
+                        standard_deviation: 0
+                    "velocity":
+                        standard_deviation: 0
+                    "spin":
+                        standard_deviation: 0
                 
-                max_episode_steps: 700
-                use_delayed_dynamics: false
+                # 
+                # delayed dynamics
+                # 
+                use_delayed_dynamics: False
                 delay_steps: 5
-                horizon: 10 # number of waypoints in the observation
-                number_of_trajectories: 100
-                dt: 0.06 # TODO: why 0.06? what units?
+                
                 
         PROFILE1:
             mode: testing

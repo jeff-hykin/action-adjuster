@@ -210,6 +210,44 @@ class WarthogEnv(gym.Env):
         obs[observation_index] = original_velocity
         obs[observation_index + 1] = original_spin
         return obs
+    
+    @staticmethod
+    def generate_observation(remaining_waypoints, horizon, current_spacial_info):
+        magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
+        magic_number_2 = 2 # TODO: I have no idea what this 2 is for
+        obs = [0] * ((horizon * magic_number_4) + magic_number_2)
+        original_velocity = current_spacial_info.velocity
+        original_spin     = current_spacial_info.spin
+        
+        closest_index = get_closest_index(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
+        
+        observation_index = 0
+        for horizon_index in range(0, horizon):
+            waypoint_index = horizon_index + closest_index
+            if waypoint_index < len(remaining_waypoints):
+                waypoint = remaining_waypoints[waypoint_index]
+                x_diff = waypoint.x - current_spacial_info.x
+                y_diff = waypoint.y - current_spacial_info.y
+                radius = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+                current_angle       = zero_to_2pi(current_spacial_info.angle)
+                
+                yaw_error = pi_to_pi(waypoint.angle - current_angle)
+                velocity = waypoint.velocity
+                obs[observation_index + 0] = radius
+                obs[observation_index + 1] = pi_to_pi(angle_to_next_point - current_angle)
+                obs[observation_index + 2] = yaw_error
+                obs[observation_index + 3] = velocity - original_velocity
+            else:
+                obs[observation_index + 0] = 0.0
+                obs[observation_index + 1] = 0.0
+                obs[observation_index + 2] = 0.0
+                obs[observation_index + 3] = 0.0
+            observation_index = observation_index + magic_number_4
+        obs[observation_index] = original_velocity
+        obs[observation_index + 1] = original_spin
+        return obs
+
 
     def step(self, action):
         self.episode_steps = self.episode_steps + 1
@@ -222,22 +260,53 @@ class WarthogEnv(gym.Env):
         spin_noise     = 0
         if config.simulator.use_gaussian_action_noise:
             import random
-            velocity_noise = self.action_velocity - random.normalvariate(
-                mu=self.action_velocity,
-                sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation,
-            )
-            spin_noise = self.action_spin - random.normalvariate(
-                mu=self.action_spin,
-                sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation,
-            )
+            velocity_noise = self.action_velocity - random.normalvariate(mu=self.action_velocity, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+            spin_noise     = self.action_spin     - random.normalvariate(mu=self.action_spin    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
         
+        # 
+        # simulate action
+        # 
         self.sim_warthog(
             old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
             velocity_action=self.action_velocity + velocity_noise,
             spin_action=self.action_spin + spin_noise,
         )
-        self.prev_closest_index = self.closest_index
-        observation = self.get_observation()
+        
+        # 
+        # add positional noise
+        # 
+        x_noise        = 0
+        y_noise        = 0
+        angle_noise    = 0
+        spin_noise     = 0
+        velocity_noise = 0
+        if config.simulator.use_gaussian_spacial_noise:
+            import random
+            x_noise        = self.x        - random.normalvariate( mu=self.x       , sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       ,)
+            y_noise        = self.y        - random.normalvariate( mu=self.y       , sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , )
+            angle_noise    = self.angle    - random.normalvariate( mu=self.angle   , sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , )
+            spin_noise     = self.spin     - random.normalvariate( mu=self.spin    , sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , )
+            velocity_noise = self.velocity - random.normalvariate( mu=self.velocity, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, )
+        
+        # generate observation off potentially incorrect spacial info
+        observation = WarthogEnv.generate_observation(
+            remaining_waypoints=self.waypoints[self.closest_index:],
+            horizon=self.horizon,
+            current_spacial_info=WarthogEnv.SpacialInformation([
+                self.spacial_info.x        + x_noise       ,
+                self.spacial_info.y        + y_noise       ,
+                self.spacial_info.angle    + angle_noise   ,
+                self.spacial_info.velocity + spin_noise    ,
+                self.spacial_info.spin     + velocity_noise,
+            ]),
+        )
+        
+        # 
+        # get the true closest waypoint (e.g. perfect sensors)
+        #
+        self.prev_closest_index = self.closest_index 
+        self.update_closest_index(x=self.positional_info.x, y=self.positional_info.y)
+        
         done = False
         if self.closest_index >= self.number_of_waypoints - 1:
             done = True
