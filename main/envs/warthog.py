@@ -44,7 +44,7 @@ class WarthogEnv(gym.Env):
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
     
-    def __init__(self, waypoint_file_path, trajectory_output_path, render=True):
+    def __init__(self, waypoint_file_path, trajectory_output_path, should_render=True):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
@@ -96,8 +96,9 @@ class WarthogEnv(gym.Env):
         self.velocity_error   = 0
         self.phi_error        = 0
         self.prev_timestamp   = time.time()
+        self.should_render    = should_render
         
-        if render:
+        if self.should_render:
             plt.ion
             self.fig = plt.figure(dpi=100, figsize=(10, 10))
             self.ax  = self.fig.add_subplot(111)
@@ -253,6 +254,9 @@ class WarthogEnv(gym.Env):
 
 
     def step(self, action):
+        if self.should_render:
+            self.render()
+        
         self.episode_steps = self.episode_steps + 1
         self.action_velocity, self.action_spin = action
         
