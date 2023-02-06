@@ -4,7 +4,7 @@ import matplotlib as mpl
 import numpy
 import numpy as np
 import math
-from gym import spaces
+import gym
 import csv
 import time
 from blissful_basics import Csv, create_named_list_class
@@ -22,17 +22,15 @@ magic_number_0_point_5 = 0.5
 
 
 class WarthogEnv(gym.Env):
-    warthog_length               = config.vehicle.length # just for rendering
-    warthog_width                = config.vehicle.width  # 1.0 / 2.0  # TODO: length in meters?
     random_start_position_offset = config.simulator.random_start_position_offset
     random_start_angle_offset    = config.simulator.random_start_angle_offset
     
-    action_space = spaces.Box(
+    action_space = gym.spaces.Box(
         low=np.array(config.simulator.action_space.low),
         high=np.array(config.simulator.action_space.high),
         shape=np.array(config.simulator.action_space.low).shape,
     )
-    observation_space = spaces.Box(
+    observation_space = gym.spaces.Box(
         low=config.simulator.observation_space.low,
         high=config.simulator.observation_space.high,
         shape=config.simulator.observation_space.shape,
@@ -333,10 +331,10 @@ class WarthogEnv(gym.Env):
             # 
             if config.reward_parameters.velocity_caps_enabled:
                 velocity_error = math.fabs(self.velocity_error)
-                for min_waypoint_speed, max_error_allowed in reward_parameters.velocity_caps.items():
+                for min_waypoint_speed, max_error_allowed in config.reward_parameters.velocity_caps.items():
                     # convert %'s to vehicle-specific values
                     min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
-                    max_error_allowed =  float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
+                    max_error_allowed  = float(max_error_allowed.replace( "%", ""))/100 * config.vehicle.controller_max_velocity
                     # if rule-is-active
                     if closest_waypoint.velocity >= min_waypoint_speed:
                         # if rule is broken, no reward

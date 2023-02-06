@@ -14,8 +14,9 @@
         (default):
             vehicle: null # filled in by 
             action_adjuster:
+                update_rate: 0.05 # kinda similar to alpha/step-size
                 future_projection_length: 10 # timesteps
-                update_frequency: 100 # timesteps
+                update_frequency: 3 # timesteps
             
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters

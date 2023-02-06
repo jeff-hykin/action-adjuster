@@ -1,5 +1,5 @@
 import torch
-from blissful_basics import to_pure, countdown
+from blissful_basics import to_pure, countdown, print
 import numpy
 
 from config import config, path_to
@@ -13,20 +13,20 @@ generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
 
 # FIXME: replace this with a normalization method
-spacial_coefficients = WarthogEnv.SpacialInformation(
-    x=1,
-    y=1,
-    angle=1,
-    velocity=0.3, # arbitraryly picked value 
-    spin=0.3, # arbitraryly picked value 
-)
+spacial_coefficients = WarthogEnv.SpacialInformation([
+    1, # x
+    1, # y
+    1, # angle
+    0.3, # velocity # arbitraryly picked value 
+    0.3, # spin # arbitraryly picked value 
+])
 class ActionAdjuster:
-    def __init__(self, policy, initial_transform=None, update_rate=0.05):
+    def __init__(self, policy, initial_transform=None):
         self.policy = policy
         self.actual_spatial_values = []
         self.input_data            = []
         self.transform             = initial_transform
-        self.should_update = countdown(config.update_frequency)
+        self.should_update = countdown(config.action_adjuster.update_frequency)
         self.optimizer = None # will exist after first data is added
     
     def adjust(self, action, transform=None):
@@ -35,7 +35,7 @@ class ActionAdjuster:
         if type(transform) == type(None):
             transform = self.transform
         
-        return to_pure(torch.tensor(action) * transform)
+        return to_pure(numpy.array(action) * transform)
     
     def add_data(self, observation, additional_info):
         self.input_data.append(dict(
@@ -56,11 +56,6 @@ class ActionAdjuster:
             # create transform if needed
             if type(self.transform) == type(None):
                 self.transform = numpy.ones((len(action),len(action)))
-            # create optimizer
-            self.optimizer = CMA(
-                mean=self.transform,
-                sigma=1, # Note: somewhat aribtrary without prior data
-            )
         
         if self.should_update():
             self.fit_points()
@@ -75,7 +70,7 @@ class ActionAdjuster:
         def objective_function(transform):
             predicted_spatial_values = []
             for each_input_data in self.input_data:
-                spacial_expectation, observation_expectation = project(
+                spacial_expectation, observation_expectation = self.project(
                     transform=transform,
                     **each_input_data,
                 )
@@ -96,7 +91,8 @@ class ActionAdjuster:
                 loss += iteration_total
             return loss
         
-        self.transform = self.transform + (self.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform))
+        print("action adjuster is updating transform matrix")
+        self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform))
     
     # returns twos list, one of projected spacial_info's one of projected observations
     def project(self, policy, observation, additional_info, transform=None):
@@ -131,11 +127,31 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
     if len(initial_guess) == 1:
         new_objective = lambda arg1: objective_function(arg1[0])
     
-    xopt, es = cma.fmin2(
-        lambda *args: -objective_function(*args),
-        input_size*[1],
-        stdev
-    )
+    import sys
+    
+    original_stdout = sys.stdout
+    with open("/dev/null", "w+") as null:
+        sys.stdout = null
+        try:
+            xopt, es = cma.fmin2(
+                lambda *args: -objective_function(*args),
+                initial_guess,
+                stdev,
+                options=dict(
+                    verb_log=0                      ,
+                    verbose=0                       ,
+                    verb_plot=0                     ,
+                    verb_disp=0                     ,
+                    verb_filenameprefix="/dev/null" ,
+                    verb_append=0                   ,
+                    verb_time=False                 ,
+                ),
+            )
+        except Exception as error:
+            raise error
+        finally:
+            sys.stdout = original_stdout
+        
     if len(initial_guess) == 1:
         return xopt[0]
         

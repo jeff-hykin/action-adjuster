@@ -1,5 +1,5 @@
 from envs.warthog import WarthogEnv
-from prediction import project, prediction_loss, ActionAdjuster
+from prediction import ActionAdjuster
 from config import config, path_to
 import torch
 
