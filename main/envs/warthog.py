@@ -7,12 +7,11 @@ import math
 from gym import spaces
 import csv
 import time
-from config import config
 from blissful_basics import Csv, create_named_list_class
 import file_system_py as FS
 
-# Questions:
-    # what is: phi (currently hardcoded to 0)
+from config import config
+from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
 max_velocity_reset_number = 5 # TODO: check this
 magic_number_2_point_5 = 2.5
@@ -465,28 +464,6 @@ class WarthogEnv(gym.Env):
         final_waypoint = self.waypoints_list[index + 1]
         final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
 
-def get_distance(x1, y1, x2, y2):
-    x_diff = x2 - x1
-    y_diff = y2 - y1
-    return math.sqrt(x_diff * x_diff + y_diff * y_diff)
-
-def get_angle_from_origin(x, y):
-    theta = math.atan2(y, x)
-    return zero_to_2pi(theta)
-
-def zero_to_2pi(theta):
-    if theta < 0:
-        theta = 2 * math.pi + theta
-    elif theta > 2 * math.pi:
-        theta = theta - 2 * math.pi
-    return theta
-
-def pi_to_pi(theta):
-    if theta < -math.pi:
-        theta = theta + 2 * math.pi
-    elif theta > math.pi:
-        theta = theta - 2 * math.pi
-    return theta
 
 def Waypoint(a_list):
     waypoint_entry = WaypointEntry(len(a_list))
