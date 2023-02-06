@@ -329,13 +329,21 @@ class WarthogEnv(gym.Env):
             
             self.reward = running_reward
             
-            magic_number_0_point_5 = 0.5
-            if closest_waypoint.velocity >= magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_1_point_5:
-                self.reward = 0
-            elif closest_waypoint.velocity < magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_0_point_5:
-                self.reward = 0
-            self.total_episode_reward = self.total_episode_reward + self.reward
-        
+            # 
+            # velocity caps
+            # 
+            if config.reward_parameters.velocity_caps_enabled:
+                velocity_error = math.fabs(self.velocity_error)
+                for min_waypoint_speed, max_error_allowed in reward_parameters.velocity_caps.items():
+                    # convert %'s to vehicle-specific values
+                    min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
+                    max_error_allowed =  float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
+                    # if rule-is-active
+                    if closest_waypoint.velocity >= min_waypoint_speed:
+                        # if rule is broken, no reward
+                        if velocity_error > max_error_allowed:
+                            self.reward = 0
+                            break
         # 
         # render
         # 

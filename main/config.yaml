@@ -25,6 +25,16 @@
                 spin_jerk_cost_coefficient:     0.5
                 direct_velocity_cost:           0 # no penalty for going fast
                 direct_spin_cost:               1 # no scaling of spin cost relative to combination
+                
+                velocity_caps_enabled: true
+                velocity_caps:
+                    # EXAMPLE:
+                    #   40%: 10% 
+                    #  # ^this means, if the closest waypoint has a velocity >= 40% of max-speed,
+                    #  # then the velocity error must be < 10% of max speed (otherwise 0 reward)
+                    
+                    0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
+                    62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%
             
             simulator:
                 save_data: True
