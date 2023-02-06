@@ -13,8 +13,12 @@
     (profiles):
         (default):
             warthog:
-                length: 0.25 # TODO: length in meters? (1meter in length)
-                width: 0.5  # TODO: length in meters? (real width is 50cm wide)
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
             action_adjuster:
                 future_projection_length: 10 # timesteps
                 update_frequency: 100 # timesteps

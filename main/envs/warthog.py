@@ -16,7 +16,6 @@ import file_system_py as FS
     # what is: phi (currently hardcoded to 0)
 
 max_velocity_reset_number = 5 # TODO: check this
-magic_number_4         = 4.0
 magic_number_2_point_5 = 2.5
 magic_number_2_point_0 = 2.0
 magic_number_1_point_5 = 1.5
@@ -85,8 +84,7 @@ class WarthogEnv(gym.Env):
         if self.waypoint_file_path is not None:
             self._read_waypoint_file_path(self.waypoint_file_path)
         
-        self.warthog_diag   = math.sqrt(self.warthog_width**2 + self.warthog_length**2)
-        self.diagonal_angle = math.atan2(self.warthog_length, self.warthog_width)
+        
         self.prev_angle = 0
         self.x_pose = [0.0] * self.number_of_trajectories
         self.y_pose = [0.0] * self.number_of_trajectories
@@ -97,6 +95,9 @@ class WarthogEnv(gym.Env):
         self.should_render    = should_render
         
         if self.should_render:
+            self.warthog_diag   = math.sqrt(config.warthog.render_width**2 + config.warthog.render_length**2)
+            self.diagonal_angle = math.atan2(config.warthog.render_length, config.warthog.render_width)
+            
             self.render_path = "render.ignore/"
             FS.ensure_is_folder(self.render_path)
             plt.ion
@@ -104,7 +105,7 @@ class WarthogEnv(gym.Env):
             self.ax  = self.fig.add_subplot(111)
             self.ax.set_xlim([-4, 4])
             self.ax.set_ylim([-4, 4])
-            self.rect = Rectangle((0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False)
+            self.rect = Rectangle((0.0, 0.0), config.warthog.render_width * 2, config.warthog.render_length * 2, fill=False)
             self.ax.add_artist(self.rect)
             (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
             self.text = self.ax.text(1, 2, f"vel_error={self.velocity_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
@@ -137,8 +138,8 @@ class WarthogEnv(gym.Env):
 
     @staticmethod
     def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
-        velocity_action = np.clip(velocity_action,  0, 1) * magic_number_4 # TODO: is it supposed to be clipped to self.max_velocity?
-        spin_action     = np.clip(spin_action,     -1, 1) * magic_number_2_point_5
+        velocity_action = np.clip(velocity_action,  0, 1) * config.warthog.controller_max_velocity
+        spin_action     = np.clip(spin_action,     -1, 1) * config.warthog.controller_max_spin
         
         old_velocity = old_spatial_info.velocity
         old_spin     = old_spatial_info.spin
@@ -411,8 +412,8 @@ class WarthogEnv(gym.Env):
         self.rect.remove()
         self.rect = Rectangle(
             xy=(xl, yl), 
-            width=self.warthog_width * 2, 
-            height=self.warthog_length * 2, 
+            width=config.warthog.render_width * 2, 
+            height=config.warthog.render_length * 2, 
             angle=180.0 * self.spacial_info.angle / math.pi,
             facecolor="blue",
         )
