@@ -13,17 +13,18 @@
     (profiles):
         (default):
             warthog:
-                length: 0.25 # TODO: length in meters?
-                width: 0.5  # TODO: length in meters?
+                length: 0.25 # TODO: length in meters? (1meter in length)
+                width: 0.5  # TODO: length in meters? (real width is 50cm wide)
             action_adjuster:
                 future_projection_length: 10 # timesteps
                 update_frequency: 100 # timesteps
             
             simulator:
                 save_data: True
+                max_velocity: 4
                 action_space:
-                    low:  [ 0.0, -1.5 ] # TODO: units?
-                    high: [ 1.0,  1.5 ]
+                    low:  [ 0.0, -1.5 ] # (1.5 radians per second is max option on the controller, but the )
+                    high: [ 1.0,  1.5 ] # 0-1 for velocity
                 observation_space:
                     low: -100
                     high: 1000
@@ -31,7 +32,7 @@
                 horizon: 10 # number of waypoints in the observation
                 max_episode_steps: 700
                 number_of_trajectories: 100
-                action_duration: 0.06 # TODO: why 0.06? what units?
+                action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
                 allow_cut_short_episode: False
                 action_delay: 0 # 5 => 5 timesteps
                 

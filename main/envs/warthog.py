@@ -25,7 +25,7 @@ magic_number_0_point_5 = 0.5
 
 
 class WarthogEnv(gym.Env):
-    warthog_length               = config.warthog.length # 0.5 / 2.0 # TODO: length in meters? why the division?
+    warthog_length               = config.warthog.length # just for rendering
     warthog_width                = config.warthog.width  # 1.0 / 2.0  # TODO: length in meters?
     random_start_position_offset = config.simulator.random_start_position_offset
     random_start_angle_offset    = config.simulator.random_start_angle_offset
@@ -59,7 +59,7 @@ class WarthogEnv(gym.Env):
         
         self.max_episode_steps      = config.simulator.max_episode_steps
         self.save_data              = config.simulator.save_data
-        self.action_duration        = config.simulator.action_duration  # TODO: why is dt 0.06?
+        self.action_duration        = config.simulator.action_duration  
         self.horizon                = config.simulator.horizon # number of waypoints in the observation
         self.number_of_trajectories = config.simulator.number_of_trajectories
         self.render_axis_size       = 20
@@ -171,40 +171,39 @@ class WarthogEnv(gym.Env):
 
     @staticmethod
     def generate_observation(remaining_waypoints, horizon, current_spacial_info):
-        magic_number_4 = 4 # I think this is len([x,y,spin,velocity])
-        magic_number_2 = 2 # TODO: I have no idea what this 2 is for
-        obs = [0] * ((horizon * magic_number_4) + magic_number_2)
         original_velocity = current_spacial_info.velocity
         original_spin     = current_spacial_info.spin
         
+        observation = []
         closest_index = WarthogEnv.get_closest_index(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
-        
-        observation_index = 0
         for horizon_index in range(0, horizon):
             waypoint_index = horizon_index + closest_index
             if waypoint_index < len(remaining_waypoints):
                 waypoint = remaining_waypoints[waypoint_index]
+                
                 x_diff = waypoint.x - current_spacial_info.x
                 y_diff = waypoint.y - current_spacial_info.y
-                radius = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
                 angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
                 current_angle       = zero_to_2pi(current_spacial_info.angle)
                 
-                yaw_error = pi_to_pi(waypoint.angle - current_angle)
-                velocity = waypoint.velocity
-                obs[observation_index + 0] = radius
-                obs[observation_index + 1] = pi_to_pi(angle_to_next_point - current_angle)
-                obs[observation_index + 2] = yaw_error
-                obs[observation_index + 3] = velocity - original_velocity
+                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
+                gap_of_velocity                    = waypoint.velocity - original_velocity
+                
+                observation.append(gap_of_distance)
+                observation.append(gap_of_angle_directly_towards_next)
+                observation.append(gap_of_desired_angle_at_next)
+                observation.append(gap_of_velocity)
             else:
-                obs[observation_index + 0] = 0.0
-                obs[observation_index + 1] = 0.0
-                obs[observation_index + 2] = 0.0
-                obs[observation_index + 3] = 0.0
-            observation_index = observation_index + magic_number_4
-        obs[observation_index] = original_velocity
-        obs[observation_index + 1] = original_spin
-        return obs
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
+        
+        observation.append(original_velocity)
+        observation.append(original_spin)
+        return observation
 
 
     def step(self, action):
@@ -326,7 +325,7 @@ class WarthogEnv(gym.Env):
             # penalties
             running_reward -= math.fabs(self.action_velocity - self.prev_action_velocity)                  # velocity penalty
             running_reward -= magic_number_0_point_5 * math.fabs(self.action_spin - self.prev_action_spin) # spin penalty
-            running_reward -= math.fabs(self.action_spin)                                                  # TODO: ??? penalty
+            running_reward -= math.fabs(self.action_spin)                                                  # energy expenditure penalty (and no jerky stuff that hurts hardware)
             
             self.reward = running_reward
 
@@ -452,8 +451,9 @@ class WarthogEnv(gym.Env):
             current_waypoint = self.waypoints_list[index]
             next_waypoint    = self.waypoints_list[index+1]
             
-            x_diff = next_waypoint.x - current_waypoint.x
-            y_diff = next_waypoint.y - current_waypoint.y
+            x_diff = next_waypoint.x - current_waypoint.x # meters
+            y_diff = next_waypoint.y - current_waypoint.y # meters
+            # angle radians
             current_waypoint.angle = zero_to_2pi(get_angle_from_origin(x_diff, y_diff))
         
         assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
@@ -490,6 +490,8 @@ def Waypoint(a_list):
     return waypoint_entry
 
 class WaypointEntry(numpy.ndarray):
+    keys = [ "x", "y", "angle", "velocity" ]
+    
     @property
     def x(self): return self[0]
     @x.setter
