@@ -1,5 +1,58 @@
+from config import config, path_to
+
 magic_number_4  = 4           # FIXME: import these from somewhere once you know what they are
 magic_number_2_point_5  = 2.5 # FIXME: import these from somewhere once you know what they are
+
+import torch
+from blissful_basics import to_pure
+class ActionAdjuster:
+    def __init__(self, policy, initial_transform):
+        self.policy = policy
+        self.transform = torch.tensor(initial_transform)
+        self.observations = []
+        self.projections = []
+    
+    def add_data(self, observation, additional_info):
+        self.observations.append(observation)
+        # FIXME: add a trigger here to run the sovler
+        
+        # TODO: figure out the best way to create data for a linear/logrithmic/quadratic sovler
+        self.projections.append(
+            project(
+                policy=self.policy,
+                observation=observation,
+                additional_info=[
+                    additional_info["spacial_info_with_noise"],
+                    additional_info["remaining_waypoints"],
+                    additional_info["horizon"],
+                    additional_info["action_duration"],
+                ],
+            )
+        )
+    
+    def adjust(self, action):
+        return to_pure(torch.tensor(action) * self.transform)
+
+
+# 
+# model(s)
+#
+
+# returns a list of [horizon] observations (e.g. 10x10 waypoints)
+def project(policy, observation, additional_info):
+    current_spatial_info, remaining_waypoints, horizon, action_duration = additional_info
+    observation_expectation = []
+    for each in range(config.prediction.future_projection_length):
+        velocity_action, spin_action = policy(observation)
+        current_spatial_info, observation = predict_next_observation_and_spacial_info(
+            current_spatial_info,
+            velocity_action,
+            spin_action,
+            [remaining_waypoints, horizon, action_duration],
+        )
+        observation_expectation.append(observation)
+    
+    return observation_expectation
 
 def predict_next_spacial_info(current_spatial_info, velocity_action, spin_action, action_duration):
     import numpy as np
@@ -32,22 +85,6 @@ def predict_next_observation_and_spacial_info(current_spatial_info, velocity_act
     next_spacial_info = predict_next_spacial_info(current_spatial_info, velocity_action, spin_action, action_duration)
     return next_spacial_info, generate_observation(remaining_waypoints, horizon, next_spacial_info)
 
-# returns a list of [horizon] observations (e.g. 10x10 waypoints)
-def project(policy, observation, additional_info):
-    current_spatial_info, remaining_waypoints, horizon, action_duration = additional_info
-    observation_expectation = []
-    for each in range(horizon):
-        velocity_action, spin_action = policy(observation)
-        current_spatial_info, observation = predict_next_observation_and_spacial_info(
-            current_spatial_info,
-            velocity_action,
-            spin_action,
-            [remaining_waypoints, horizon, action_duration],
-        )
-        observation_expectation.append(observation)
-    
-    return observation_expectation
-
 def prediction_loss(actual_observations, projected_observations):
     loss = 0
     for actual, projected in zip(actual_observations, projected_observations):
@@ -55,36 +92,6 @@ def prediction_loss(actual_observations, projected_observations):
         loss += mean_squared_error(actual, projected)
     
     return loss
-
-import torch
-from blissful_basics import to_pure
-class ActionAdjuster:
-    def __init__(self, policy, initial_transform):
-        self.policy = policy
-        self.transform = torch.tensor(initial_transform)
-        self.observations = []
-        self.projections = []
-    
-    def add_data(self, observation, additional_info):
-        self.observations.append(observation)
-        # FIXME: add a trigger here to run the sovler
-        
-        # TODO: figure out the best way to create data for a linear/logrithmic/quadratic sovler
-        self.projections.append(
-            project(
-                policy=self.policy,
-                observation=observation,
-                additional_info=[
-                    additional_info["spacial_info_with_noise"],
-                    additional_info["remaining_waypoints"],
-                    additional_info["horizon"],
-                    additional_info["action_duration"],
-                ],
-            )
-        )
-    
-    def adjust(self, action):
-        return to_pure(torch.tensor(action) * self.transform)
 
 
 # 

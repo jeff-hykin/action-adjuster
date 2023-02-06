@@ -15,6 +15,9 @@
             warthog:
                 length: 0.25 # TODO: length in meters?
                 width: 0.5  # TODO: length in meters?
+            prediction:
+                future_projection_length: 10 # timesteps
+            
             simulator:
                 save_data: True
                 action_space:
@@ -27,7 +30,9 @@
                 horizon: 10 # number of waypoints in the observation
                 max_episode_steps: 700
                 number_of_trajectories: 100
-                dt: 0.06 # TODO: why 0.06? what units?
+                action_duration: 0.06 # TODO: why 0.06? what units?
+                allow_cut_short_episode: False
+                action_delay: 0 # 5 => 5 timesteps
                 
                 # 
                 # random start
@@ -60,13 +65,7 @@
                     "spin":
                         standard_deviation: 0
                 
-                allow_cut_short_episode: False
                 
-                # 
-                # delayed dynamics
-                # 
-                use_delayed_dynamics: False
-                delay_steps: 5
                 
                 
         PROFILE1:
