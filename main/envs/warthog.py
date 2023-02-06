@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import matplotlib as mpl
-import gym
 import numpy
 import numpy as np
 import math
@@ -24,8 +23,8 @@ magic_number_0_point_5 = 0.5
 
 
 class WarthogEnv(gym.Env):
-    warthog_length               = config.warthog.length # just for rendering
-    warthog_width                = config.warthog.width  # 1.0 / 2.0  # TODO: length in meters?
+    warthog_length               = config.vehicle.length # just for rendering
+    warthog_width                = config.vehicle.width  # 1.0 / 2.0  # TODO: length in meters?
     random_start_position_offset = config.simulator.random_start_position_offset
     random_start_angle_offset    = config.simulator.random_start_angle_offset
     
@@ -74,8 +73,6 @@ class WarthogEnv(gym.Env):
         self.action_velocity        = 0
         self.prev_action_spin       = 0
         self.prev_action_velocity   = 0
-        self.omega_reward           = 0
-        self.velocity_reward        = 0
         self.is_episode_start       = 1
         self.trajectory_file        = None
         self.global_timestep        = 0
@@ -83,7 +80,6 @@ class WarthogEnv(gym.Env):
         
         if self.waypoint_file_path is not None:
             self._read_waypoint_file_path(self.waypoint_file_path)
-        
         
         self.prev_angle = 0
         self.x_pose = [0.0] * self.number_of_trajectories
@@ -95,8 +91,8 @@ class WarthogEnv(gym.Env):
         self.should_render    = should_render
         
         if self.should_render:
-            self.warthog_diag   = math.sqrt(config.warthog.render_width**2 + config.warthog.render_length**2)
-            self.diagonal_angle = math.atan2(config.warthog.render_length, config.warthog.render_width)
+            self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
+            self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
             
             self.render_path = "render.ignore/"
             FS.ensure_is_folder(self.render_path)
@@ -105,7 +101,7 @@ class WarthogEnv(gym.Env):
             self.ax  = self.fig.add_subplot(111)
             self.ax.set_xlim([-4, 4])
             self.ax.set_ylim([-4, 4])
-            self.rect = Rectangle((0.0, 0.0), config.warthog.render_width * 2, config.warthog.render_length * 2, fill=False)
+            self.rect = Rectangle((0.0, 0.0), config.vehicle.render_width * 2, config.vehicle.render_length * 2, fill=False)
             self.ax.add_artist(self.rect)
             (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
             self.text = self.ax.text(1, 2, f"vel_error={self.velocity_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
@@ -138,8 +134,8 @@ class WarthogEnv(gym.Env):
 
     @staticmethod
     def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
-        velocity_action = np.clip(velocity_action,  0, 1) * config.warthog.controller_max_velocity
-        spin_action     = np.clip(spin_action,     -1, 1) * config.warthog.controller_max_spin
+        velocity_action = np.clip(velocity_action,  0, 1) * config.vehicle.controller_max_velocity
+        spin_action     = np.clip(spin_action,     -1, 1) * config.vehicle.controller_max_spin
         
         old_velocity = old_spatial_info.velocity
         old_spin     = old_spatial_info.spin
@@ -208,6 +204,7 @@ class WarthogEnv(gym.Env):
 
 
     def step(self, action):
+        self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
         self.action_velocity, self.action_spin = action
         
         # 
@@ -311,30 +308,28 @@ class WarthogEnv(gym.Env):
             self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
             self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
             
-            magic_number_2 = 2.0
-            magic_number_3 = 3.0
-            magic_number_0_point_5 = 0.5
-            magic_number_4_point_5 = 4.5
-            magic_number_negative_2 = -2
+            max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
+            max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
+            max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
             
-            crosstrack_reward = magic_number_2           - math.fabs(self.crosstrack_error)
-            velocity_reward   = magic_number_4_point_5   - math.fabs(self.velocity_error)
-            angle_reward      = math.pi / magic_number_3 - math.fabs(self.phi_error)
+            # base rewards
+            crosstrack_reward = max_expected_crosstrack_error - math.fabs(self.crosstrack_error)
+            velocity_reward   = max_expected_velocity_error   - math.fabs(self.velocity_error)
+            angle_reward      = max_expected_angle_error      - math.fabs(self.phi_error)
             
+            # combine
             running_reward = crosstrack_reward * velocity_reward * angle_reward
             
-            # penalties
-            running_reward -= math.fabs(self.action_velocity - self.prev_action_velocity)                  # velocity penalty
-            running_reward -= magic_number_0_point_5 * math.fabs(self.action_spin - self.prev_action_spin) # spin penalty
-            running_reward -= math.fabs(self.action_spin)                                                  # energy expenditure penalty (and no jerky stuff that hurts hardware)
+            # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
+            running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(self.action_velocity - self.prev_action_velocity)
+            running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(self.action_spin - self.prev_action_spin)
+            # direct energy consumption
+            running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(self.action_velocity)
+            running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(self.action_spin)
             
             self.reward = running_reward
-
-            self.omega_reward         = -magic_number_negative_2 * math.fabs(self.action_spin)
-            self.velocity_reward      = -math.fabs(self.action_velocity - self.prev_action_velocity)
-            self.prev_action_spin     = self.action_spin
-            self.prev_action_velocity = self.action_velocity
             
+            magic_number_0_point_5 = 0.5
             if closest_waypoint.velocity >= magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_1_point_5:
                 self.reward = 0
             elif closest_waypoint.velocity < magic_number_2_point_5 and math.fabs(self.velocity_error) > magic_number_0_point_5:
@@ -412,16 +407,17 @@ class WarthogEnv(gym.Env):
         self.rect.remove()
         self.rect = Rectangle(
             xy=(xl, yl), 
-            width=config.warthog.render_width * 2, 
-            height=config.warthog.render_length * 2, 
+            width=config.vehicle.render_width * 2, 
+            height=config.vehicle.render_length * 2, 
             angle=180.0 * self.spacial_info.angle / math.pi,
             facecolor="blue",
         )
         self.text.remove()
+        omega_reward = -2 * math.fabs(self.action_spin)
         self.text = self.ax.text(
             self.spacial_info.x + 1,
             self.spacial_info.y + 2,
-            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
+            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,

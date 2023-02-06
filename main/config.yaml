@@ -12,16 +12,19 @@
     
     (profiles):
         (default):
-            warthog:
-                real_length: 1 # meter (approximately)
-                real_width: 0.5 # meters (approximately)
-                render_length: 0.25 
-                render_width: 0.5
-                controller_max_velocity: 4 # meters per second
-                controller_max_spin: 2.5 # radians
+            vehicle: null # filled in by 
             action_adjuster:
                 future_projection_length: 10 # timesteps
                 update_frequency: 100 # timesteps
+            
+            reward_parameters:
+                max_expected_crosstrack_error:  2.0   # meters
+                max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
+                max_expected_angle_error:       1.047 # radians (1.047 = 60 degrees)
+                velocity_jerk_cost_coefficient: 1
+                spin_jerk_cost_coefficient:     0.5
+                direct_velocity_cost:           0 # no penalty for going fast
+                direct_spin_cost:               1 # no scaling of spin cost relative to combination
             
             simulator:
                 save_data: True
@@ -71,8 +74,12 @@
                     "spin":
                         standard_deviation: 0
                 
-                
-                
-                
-        PROFILE1:
-            mode: testing
+        WARTHOG:
+            vehicle:
+                name: Warthog
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
