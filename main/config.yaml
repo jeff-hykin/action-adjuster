@@ -15,8 +15,9 @@
             warthog:
                 length: 0.25 # TODO: length in meters?
                 width: 0.5  # TODO: length in meters?
-            prediction:
+            action_adjuster:
                 future_projection_length: 10 # timesteps
+                update_frequency: 100 # timesteps
             
             simulator:
                 save_data: True

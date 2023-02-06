@@ -135,7 +135,8 @@ class WarthogEnv(gym.Env):
             y.append(each_waypoint.y)
         self.ax.plot(x, y, "+r")
 
-    def sim_warthog(self, old_spatial_info, velocity_action, spin_action, action_duration):
+    @staticmethod
+    def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
         velocity_action = np.clip(velocity_action,  0, 1) * magic_number_4 # TODO: is it supposed to be clipped to self.max_velocity?
         spin_action     = np.clip(spin_action,     -1, 1) * magic_number_2_point_5
         
@@ -244,7 +245,7 @@ class WarthogEnv(gym.Env):
             # 
             # apply action
             # 
-            self.spacial_info = self.sim_warthog(
+            self.spacial_info = WarthogEnv.sim_warthog(
                 old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
                 velocity_action=self.action_velocity + velocity_noise,
                 spin_action=self.action_spin + spin_noise,
