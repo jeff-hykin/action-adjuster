@@ -6,15 +6,13 @@
         default_waypoints: "./waypoint_paths/real1.csv"
         default_output_folder: "./output.ignore/"
     
-    # git-ignore this file path! (file will be generated automatically)
     (local_data): ./local_data.ignore.yaml
-            # this^ is where you choose which profile(s)
-            # and is where to store auth tokens and other secrets
     
     (profiles):
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             action_adjuster:
+                disabled: True
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 10 # timesteps
                 update_frequency: 20 # timesteps
@@ -63,10 +61,10 @@
                 random_start_angle_offset: 0.01 # TODO: units?
                 
                 # 
-                # action offset
+                # action offset 
                 # 
                 velocity_offset: 0 # will be added to the velocity_action value every step
-                spin_offset: 0.1 # will be added to the spin_action value every step
+                spin_offset: 0.10 # will be added to the spin_action value every step
                 
                 # 
                 # action noise

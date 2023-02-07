@@ -33,6 +33,8 @@ class ActionAdjuster:
         self.optimizer = None # will exist after first data is added
     
     def adjust(self, action, transform=None):
+        if config.action_adjuster.disabled:
+            return action # no change
         if type(self.transform) == type(None):
             self.transform = numpy.eye((len(action)))
         if type(transform) == type(None):
@@ -42,6 +44,9 @@ class ActionAdjuster:
         return to_pure(numpy.cross( numpy.array(action) , numpy.array(transform)))
     
     def add_data(self, observation, additional_info):
+        if config.action_adjuster.disabled:
+            return # no change
+            
         self.input_data.append(dict(
             policy=self.policy,
             observation=observation,
