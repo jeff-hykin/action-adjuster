@@ -40,13 +40,13 @@ class ActionAdjuster:
         if type(transform) == type(None):
             transform = self.transform
         
-        return numpy.array(action) + numpy.array(transform)
+        return [ action_value + transform_value for action_value, transform_value in zip(action, transform)]
     
     def _init_transform_if_needed(self, action_length):
         # if type(self.transform) == type(None):
         #     self.transform = numpy.eye((len(action)))
         if type(self.transform) == type(None):
-            self.transform = numpy.ones((len(action)))
+            self.transform = numpy.ones((action_length,))
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -141,6 +141,7 @@ class ActionAdjuster:
 def guess_to_maximize(objective_function, initial_guess, stdev=1):
     import cma
     is_scalar = not bb.is_iterable(initial_guess)
+    new_objective = objective_function
     if is_scalar: # wrap it
         new_objective = lambda arg1: objective_function(arg1[0])
         initial_guess = [initial_guess, 0]
@@ -185,3 +186,5 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
             return numpy.array([output[0]])
         elif len(shape) > 1:
             return output.reshape(shape)
+    
+    return output
