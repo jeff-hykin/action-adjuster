@@ -9,7 +9,7 @@ def policy(observation):
     spin_action     = 0.00
     return velocity_action, spin_action
 
-action_adjuster = ActionAdjuster(policy=policy, initial_transform=[1,1])
+action_adjuster = ActionAdjuster(policy=policy, initial_transform=[[1,0], [0,1]])
 
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,
