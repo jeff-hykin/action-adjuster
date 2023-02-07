@@ -219,6 +219,12 @@ class WarthogEnv(gym.Env):
         if True:
             velocity_action = self.action_velocity
             spin_action     = self.action_spin
+            
+            # 
+            # add offsets
+            # 
+            velocity_action += config.simulator.velocity_offset
+            spin_action     += config.simulator.spin_offset
         
             # 
             # add noise
@@ -227,22 +233,22 @@ class WarthogEnv(gym.Env):
             spin_noise     = 0
             if config.simulator.use_gaussian_action_noise:
                 import random
-                velocity_noise = self.action_velocity - random.normalvariate(mu=self.action_velocity, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
-                spin_noise     = self.action_spin     - random.normalvariate(mu=self.action_spin    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
+                velocity_noise = velocity_action - random.normalvariate(mu=velocity_action, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+                spin_noise     = spin_action     - random.normalvariate(mu=spin_action    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
             
             # 
             # action delay
             # 
             self.action_buffer.append((velocity_action, spin_action))
-            velocity_action, spin_action = self.action_buffer.pop(0) # if no delay, this will pop what was just pushed
+            velocity_action, spin_action = self.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
                 
             # 
             # apply action
             # 
             self.spacial_info = WarthogEnv.sim_warthog(
                 old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
-                velocity_action=self.action_velocity + velocity_noise,
-                spin_action=self.action_spin + spin_noise,
+                velocity_action=action_velocity + velocity_noise,
+                spin_action=action_spin + spin_noise,
                 action_duration=self.action_duration,
             )
         
@@ -282,7 +288,7 @@ class WarthogEnv(gym.Env):
         
         
         # 
-        # Reward Calculation
+        # Reward Calculation (uses noiseless data as input)
         # 
         if True:
             # 

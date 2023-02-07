@@ -61,6 +61,12 @@
                 random_start_angle_offset: 0.01 # TODO: units?
                 
                 # 
+                # action offset
+                # 
+                velocity_offset: 0 # will be added to the velocity_action value every step
+                spin_offset: 0.1 # will be added to the spin_action value every step
+                
+                # 
                 # action noise
                 # 
                 use_gaussian_action_noise: True

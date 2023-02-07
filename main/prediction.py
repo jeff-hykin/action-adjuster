@@ -82,11 +82,11 @@ class ActionAdjuster:
                 x1, y1, angle1, velocity1, spin1 = each_actual
                 x2, y2, angle2, velocity2, spin2 = each_predicted
                 iteration_total = 0
-                iteration_total += spacial_coefficients.x        * abs((x1        - x2       )**2)
-                iteration_total += spacial_coefficients.y        * abs((y1        - y2       )**2)
-                iteration_total += spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)**2) # angle is different cause it wraps (0 == 2π)
-                iteration_total += spacial_coefficients.velocity * abs((velocity1 - velocity2)**2)
-                iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    )**2)
+                iteration_total += spacial_coefficients.x        * abs((x1        - x2       ))
+                iteration_total += spacial_coefficients.y        * abs((y1        - y2       ))
+                iteration_total += spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)) # angle is different cause it wraps (0 == 2π)
+                iteration_total += spacial_coefficients.velocity * abs((velocity1 - velocity2))
+                iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    ))
                 
                 loss += iteration_total
             return loss
