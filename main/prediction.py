@@ -1,6 +1,9 @@
 import torch
 from blissful_basics import to_pure, countdown, print
+import blissful_basics as bb
 import numpy
+from icecream import ic
+ic.configureOutput(includeContext=True)
 
 from config import config, path_to
 from envs.warthog import WarthogEnv
@@ -31,11 +34,12 @@ class ActionAdjuster:
     
     def adjust(self, action, transform=None):
         if type(self.transform) == type(None):
-            self.transform = numpy.ones((len(action),len(action)))
+            self.transform = numpy.eye((len(action)))
         if type(transform) == type(None):
             transform = self.transform
         
-        return to_pure(numpy.array(action) * transform)
+        transform = numpy.array(transform)
+        return to_pure(numpy.cross( numpy.array(action) , numpy.array(transform)))
     
     def add_data(self, observation, additional_info):
         self.input_data.append(dict(
@@ -55,7 +59,7 @@ class ActionAdjuster:
             action = self.policy(observation)
             # create transform if needed
             if type(self.transform) == type(None):
-                self.transform = numpy.ones((len(action),len(action)))
+                self.transform = numpy.eye((len(action)))
         
         if self.should_update():
             self.fit_points()
@@ -92,6 +96,7 @@ class ActionAdjuster:
             return loss
         
         print("action adjuster is updating transform matrix")
+        self.transform = numpy.array(self.transform)
         self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform))
     
     # returns twos list, one of projected spacial_info's one of projected observations
@@ -124,8 +129,17 @@ class ActionAdjuster:
 
 def guess_to_maximize(objective_function, initial_guess, stdev=1):
     import cma
-    if len(initial_guess) == 1:
+    is_scalar = not bb.is_iterable(initial_guess)
+    if is_scalar: # wrap it
         new_objective = lambda arg1: objective_function(arg1[0])
+        initial_guess = [initial_guess, 0]
+    else: # flatten it
+        initial_guess = numpy.array(initial_guess)
+        shape = initial_guess.shape
+        if shape == (1,):
+            new_objective = lambda arg1: objective_function(numpy.array([arg1[0]]))
+        elif len(shape) > 1:
+            new_objective = lambda arg1: objective_function(arg1.reshape(shape))
     
     import sys
     
@@ -134,8 +148,8 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         sys.stdout = null
         try:
             xopt, es = cma.fmin2(
-                lambda *args: -objective_function(*args),
-                initial_guess,
+                lambda *args: -new_objective(*args),
+                numpy.array(initial_guess.flat),
                 stdev,
                 options=dict(
                     verb_log=0                      ,
@@ -151,8 +165,12 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
             raise error
         finally:
             sys.stdout = original_stdout
-        
-    if len(initial_guess) == 1:
-        return xopt[0]
-        
-    return xopt
+    
+    output = xopt
+    if is_scalar: # wrap it
+        return output[0]
+    else: # un-flatten it
+        if shape == (1,):
+            return numpy.array([output[0]])
+        elif len(shape) > 1:
+            return output.reshape(shape)
