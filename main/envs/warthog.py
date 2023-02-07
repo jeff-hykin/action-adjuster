@@ -89,6 +89,7 @@ class WarthogEnv(gym.Env):
             self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
             
             self.render_path = "render.ignore/"
+            FS.remove(self.render_path)
             FS.ensure_is_folder(self.render_path)
             plt.ion
             self.fig = plt.figure(dpi=100, figsize=(10, 10))
@@ -106,6 +107,7 @@ class WarthogEnv(gym.Env):
         # trajectory_file
         # 
         if self.out_trajectory_file is not None:
+            print(f'''trajectory being logged to: {trajectory_output_path}''')
             FS.ensure_is_folder(FS.parent_path(trajectory_output_path))
             self.trajectory_file = open(trajectory_output_path, "w+")
             self.trajectory_file.writelines(f"x, y, angle, velocity, spin, velocity_action, spin_action, is_episode_start\n")
@@ -244,8 +246,8 @@ class WarthogEnv(gym.Env):
             # 
             self.spacial_info = WarthogEnv.sim_warthog(
                 old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
-                velocity_action=action_velocity + velocity_noise,
-                spin_action=action_spin + spin_noise,
+                velocity_action=velocity_action + velocity_noise,
+                spin_action=spin_action + spin_noise,
                 action_duration=self.action_duration,
             )
         
