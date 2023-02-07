@@ -13,7 +13,7 @@ action_adjuster = ActionAdjuster(policy=policy, initial_transform=[[1,0], [0,1]]
 
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,
-    trajectory_output_path="logs.ignore/trajectory.log"
+    trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log"
 )
 
 observation = env.reset()

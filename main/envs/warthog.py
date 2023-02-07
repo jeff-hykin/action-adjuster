@@ -10,7 +10,7 @@ import time
 from blissful_basics import Csv, create_named_list_class
 import file_system_py as FS
 
-from config import config
+from config import config, path_to
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
 max_velocity_reset_number = 5 # TODO: check this
@@ -88,7 +88,7 @@ class WarthogEnv(gym.Env):
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
             self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
             
-            self.render_path = "render.ignore/"
+            self.render_path = f"{path_to.default_output_folder}/render/"
             FS.remove(self.render_path)
             FS.ensure_is_folder(self.render_path)
             plt.ion

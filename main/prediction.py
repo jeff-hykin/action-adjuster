@@ -69,6 +69,8 @@ class ActionAdjuster:
         if len(self.input_data) == 0:
             return
         
+        lookback_size = (2*-config.action_adjuster.update_frequency)
+        recent_data = self.input_data[lookback_size:]
         self.optimizer
         relevent_observations = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
         def objective_function(transform):
