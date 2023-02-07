@@ -12,7 +12,7 @@
     
     (profiles):
         (default):
-            vehicle: null # filled in by 
+            vehicle: null # filled in by "WARTHOG" profile below (way below)
             action_adjuster:
                 update_rate: 0.05 # kinda similar to alpha/step-size
                 future_projection_length: 10 # timesteps
@@ -39,6 +39,7 @@
             
             simulator:
                 save_data: True
+                should_render: True
                 max_velocity: 4
                 action_space:
                     low:  [ 0.0, -1.5 ] # (1.5 radians per second is max option on the controller, but the )

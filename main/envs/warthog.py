@@ -14,11 +14,8 @@ from config import config
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
 max_velocity_reset_number = 5 # TODO: check this
-magic_number_2_point_5 = 2.5
-magic_number_2_point_0 = 2.0
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
-magic_number_0_point_5 = 0.5
 
 
 class WarthogEnv(gym.Env):
@@ -39,7 +36,7 @@ class WarthogEnv(gym.Env):
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
     
-    def __init__(self, waypoint_file_path, trajectory_output_path, should_render=True):
+    def __init__(self, waypoint_file_path, trajectory_output_path):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
@@ -85,7 +82,7 @@ class WarthogEnv(gym.Env):
         self.velocity_error   = 0
         self.phi_error        = 0
         self.prev_timestamp   = time.time()
-        self.should_render    = should_render
+        self.should_render    = config.simulator.should_render
         
         if self.should_render:
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
