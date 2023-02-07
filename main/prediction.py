@@ -35,13 +35,18 @@ class ActionAdjuster:
     def adjust(self, action, transform=None):
         if config.action_adjuster.disabled:
             return action # no change
-        if type(self.transform) == type(None):
-            self.transform = numpy.eye((len(action)))
+        
+        self._init_transform_if_needed(len(action))
         if type(transform) == type(None):
             transform = self.transform
         
-        transform = numpy.array(transform)
-        return to_pure(numpy.cross( numpy.array(action) , numpy.array(transform)))
+        return numpy.array(action) + numpy.array(transform)
+    
+    def _init_transform_if_needed(self, action_length):
+        # if type(self.transform) == type(None):
+        #     self.transform = numpy.eye((len(action)))
+        if type(self.transform) == type(None):
+            self.transform = numpy.ones((len(action)))
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -63,8 +68,7 @@ class ActionAdjuster:
         if self.optimizer == None:
             action = self.policy(observation)
             # create transform if needed
-            if type(self.transform) == type(None):
-                self.transform = numpy.eye((len(action)))
+            self._init_transform_if_needed(len(action))
         
         if self.should_update():
             self.fit_points()
