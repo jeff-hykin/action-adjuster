@@ -11,7 +11,8 @@ after doing `commands/start`
 python ./main/main.py @WARTHOG
 ```
 
-Output is rendered as images to `main/render.ignore/`
+All the output (including the render images) is dumped into `main/output.ignore/`
+
 To disable rendering:
 ```sh
 python ./main/main.py @WARTHOG simulator:should_render:False
