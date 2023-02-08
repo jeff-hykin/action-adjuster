@@ -13,7 +13,7 @@
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             action_adjuster:
                 disabled: False
-                update_rate: 0.05 # kinda similar to alpha/step-size
+                update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 4 # timesteps
                 update_frequency: 20 # timesteps
             

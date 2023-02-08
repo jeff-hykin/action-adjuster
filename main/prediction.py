@@ -32,7 +32,7 @@ class ActionAdjuster:
         self.should_update = countdown(config.action_adjuster.update_frequency)
         self.optimizer = None # will exist after first data is added
     
-    def adjust(self, action, transform=None):
+    def adjust(self, action, transform=None, real_transformation=True):
         if config.action_adjuster.disabled:
             return action # no change
         
@@ -40,13 +40,16 @@ class ActionAdjuster:
         if type(transform) == type(None):
             transform = self.transform
         
-        return [ action_value + transform_value for action_value, transform_value in zip(action, transform)]
+        if real_transformation:
+            return [ action_value + transform_value for action_value, transform_value in zip(action, transform)]
+        else:
+            return [ action_value - transform_value for action_value, transform_value in zip(action, transform)]
     
     def _init_transform_if_needed(self, action_length):
         # if type(self.transform) == type(None):
         #     self.transform = numpy.eye((len(action)))
         if type(self.transform) == type(None):
-            self.transform = numpy.ones((action_length,))
+            self.transform = numpy.zeros((action_length,))
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -73,6 +76,10 @@ class ActionAdjuster:
         if self.should_update():
             self.fit_points()
     
+    @property
+    def readable_transform(self):
+        return "[ " + ", ".join([ f"{each:.3f}" for each in to_pure(self.transform)]) + " ]"
+    
     def fit_points(self):
         # no data
         if len(self.input_data) == 0:
@@ -87,6 +94,7 @@ class ActionAdjuster:
             for each_input_data in self.input_data:
                 spacial_expectation, observation_expectation = self.project(
                     transform=transform,
+                    real_transformation=False,
                     **each_input_data,
                 )
                 predicted_spatial_values.append(spacial_expectation[-1]) 
@@ -104,20 +112,22 @@ class ActionAdjuster:
                 iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    ))
                 
                 loss += iteration_total
-            return loss
+            return -loss
         
-        print("action adjuster is updating transform matrix")
         self.transform = numpy.array(self.transform)
-        self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform))
+        print("")
+        print(f"action adjuster is updating transform vector (before): {self.readable_transform}, score:{objective_function(self.transform):.3f}")
+        self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform, stdev=0.01))
+        print(f"action adjuster is updating transform vector (after ): {self.readable_transform}, score:{objective_function(self.transform):.3f}")
     
     # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, observation, additional_info, transform=None):
+    def project(self, policy, observation, additional_info, transform=None, real_transformation=True):
         current_spatial_info, remaining_waypoints, horizon, action_duration = additional_info
         observation_expectation = []
         spacial_expectation = []
         for each in range(config.action_adjuster.future_projection_length):
             action = policy(observation)
-            velocity_action, spin_action = self.adjust(action, transform)
+            velocity_action, spin_action = self.adjust(action, transform, real_transformation=real_transformation)
             
             next_spacial_info = generate_next_spacial_info(
                 old_spatial_info=current_spatial_info,
