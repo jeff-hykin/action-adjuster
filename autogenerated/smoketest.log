@@ -1,12 +1,3 @@
 trajectory being logged to: output.ignore/trajectory.log
 
-action adjuster is updating transform vector (before): [ 0.000, 0.000 ], score:-8.027327181724123
-action adjuster is updating transform vector (after ): [ 0.000, -0.100 ], score:-6.8273271817881955
-
-action adjuster is updating transform vector (before): [ 0.000, -0.100 ], score:-16.807190297718353
-action adjuster is updating transform vector (after ): [ -0.000, -0.100 ], score:-16.80719029793493
-
-action adjuster is updating transform vector (before): [ -0.000, -0.100 ], score:-26.711736961417795
-action adjuster is updating transform vector (after ): [ -0.000, -0.100 ], score:-26.711736961671352
-
-action adjuster is updating transform vector (before): [ -0.000, -0.100 ], score:-36.616283625225954
+action adjuster is updating transform vector (before): [ 0.000, 0.000 ], score:-9.033
