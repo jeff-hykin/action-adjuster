@@ -40,8 +40,11 @@ class ActionAdjuster:
         if type(transform) == type(None):
             transform = self.transform
         
+        # the real transformation needs to compensate for differences
         if real_transformation:
             return [ action_value + transform_value for action_value, transform_value in zip(action, transform)]
+        # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
+        # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
             return [ action_value - transform_value for action_value, transform_value in zip(action, transform)]
     
