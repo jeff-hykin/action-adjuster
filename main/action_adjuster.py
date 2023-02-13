@@ -42,17 +42,34 @@ class ActionAdjuster:
         
         # the real transformation needs to compensate for differences
         if real_transformation:
-            return [ action_value + transform_value for action_value, transform_value in zip(action, transform)]
+            *result, constant = numpy.inner(
+                numpy.array([*action, 1]),
+                numpy.array(self.transform) 
+            )
+            return numpy.array(result)
+            # return [ action + transform_value for action, transform_value in zip(action, transform)]
+        
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
-            return [ action_value - transform_value for action_value, transform_value in zip(action, transform)]
+            # FIXME: I'm screwing up the math somehow, that or the sample size needs to be much larger
+            
+            inverse_transform = numpy.linalg.inv( numpy.array(self.transform) )
+            *result, constant = numpy.inner(
+                inverse_transform, 
+                numpy.array([*action, 1]),
+            )
+            # *result, constant = numpy.inner(
+            #     numpy.array(self.transform),
+            #     numpy.array([*action, 1]),
+            # )
+            return numpy.array(result)
     
     def _init_transform_if_needed(self, action_length):
         # if type(self.transform) == type(None):
         #     self.transform = numpy.eye((len(action)))
         if type(self.transform) == type(None):
-            self.transform = numpy.zeros((action_length,))
+            self.transform = numpy.eye(action_length+1)
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -81,7 +98,7 @@ class ActionAdjuster:
     
     @property
     def readable_transform(self):
-        return "[ " + ", ".join([ f"{each:.3f}" for each in to_pure(self.transform)]) + " ]"
+        return "[ " + ", ".join([ f"{each}" for each in to_pure(self.transform)]) + " ]"
     
     def fit_points(self):
         # no data
