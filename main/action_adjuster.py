@@ -9,6 +9,12 @@ from config import config, path_to
 from envs.warthog import WarthogEnv
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
+perfect_answer = numpy.array([
+    [ 1,     0,                               0, ],
+    [ 0,     1,    config.simulator.spin_offset, ],
+    [ 0,     0,                               1, ],
+])
+
 # 
 # models
 # 
@@ -28,9 +34,26 @@ class ActionAdjuster:
         self.policy = policy
         self.actual_spatial_values = []
         self.input_data            = []
+        self._transform            = None
+        self.inverse_transform     = None
         self.transform             = initial_transform
         self.should_update = countdown(config.action_adjuster.update_frequency)
         self.optimizer = None # will exist after first data is added
+    
+    @property
+    def transform(self):
+        return self._transform
+    
+    @transform.setter
+    def transform(self, value):
+        if isinstance(value, type(None)):
+            self._transform = None
+        elif isinstance(value, numpy.ndarray):
+            self._transform = value
+        else:
+            self._transform = numpy.array(value)
+        if type(self._transform) != type(None):
+            self.inverse_transform = numpy.linalg.inv( numpy.array(self._transform) )
     
     def adjust(self, action, transform=None, real_transformation=True):
         if config.action_adjuster.disabled:
@@ -40,29 +63,24 @@ class ActionAdjuster:
         if type(transform) == type(None):
             transform = self.transform
         
-        # the real transformation needs to compensate for differences
+        # FIXME: debugging only, force the perfect answer
+        self.transform = perfect_answer
+        
+        # the real transformation needs to compensate (inverse of curve-fitter transform)
         if real_transformation:
             *result, constant = numpy.inner(
                 numpy.array([*action, 1]),
-                numpy.array(self.transform) 
+                self.inverse_transform, 
             )
             return numpy.array(result)
-            # return [ action + transform_value for action, transform_value in zip(action, transform)]
         
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
-            # FIXME: I'm screwing up the math somehow, that or the sample size needs to be much larger
-            
-            inverse_transform = numpy.linalg.inv( numpy.array(self.transform) )
             *result, constant = numpy.inner(
-                inverse_transform, 
                 numpy.array([*action, 1]),
+                self.transform,
             )
-            # *result, constant = numpy.inner(
-            #     numpy.array(self.transform),
-            #     numpy.array([*action, 1]),
-            # )
             return numpy.array(result)
     
     def _init_transform_if_needed(self, action_length):

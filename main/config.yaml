@@ -52,7 +52,7 @@
                 number_of_trajectories: 100
                 action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
                 allow_cut_short_episode: False
-                action_delay: 0 # 5 => 5 timesteps
+                action_delay: 0 # 5 => 5 timesteps (5 * action_duration)
                 
                 # 
                 # random start
