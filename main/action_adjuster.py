@@ -10,9 +10,9 @@ from envs.warthog import WarthogEnv
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
 perfect_answer = numpy.array([
-    [ 1,     0,                               0, ],
-    [ 0,     1,    config.simulator.spin_offset, ],
-    [ 0,     0,                               1, ],
+    [ 1,     0,    config.simulator.velocity_offset, ],
+    [ 0,     1,        config.simulator.spin_offset, ],
+    [ 0,     0,                                   1, ],
 ])
 
 # 
@@ -62,9 +62,6 @@ class ActionAdjuster:
         self._init_transform_if_needed(len(action))
         if type(transform) == type(None):
             transform = self.transform
-        
-        # FIXME: debugging only, force the perfect answer
-        self.transform = perfect_answer
         
         # the real transformation needs to compensate (inverse of curve-fitter transform)
         if real_transformation:
