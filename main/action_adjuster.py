@@ -149,10 +149,16 @@ class ActionAdjuster:
                 loss += iteration_total
             return -loss
         
-        self.transform = numpy.array(self.transform)
+        transform_before = numpy.array(self.transform)
+        score_before     = objective_function(self.transform)
         print("")
-        print(f"action adjuster is updating transform vector (before): {self.readable_transform}, score:{objective_function(self.transform):.3f}")
+        print(f"action adjuster is updating transform vector (before): {self.readable_transform}, score:{score_before:.3f}")
         self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform, stdev=0.01))
+        score_after = objective_function(self.transform)
+        if score_after < score_before:
+            # not only DONT use the new transform, but actually decay/cool-down the previous one
+            # FIXME: this shouldnt shrink everything, it should instead get closer to the original (idenity) matrix
+            self.transform = transform_before * config.action_adjuster.decay_rate
         print(f"action adjuster is updating transform vector (after ): {self.readable_transform}, score:{objective_function(self.transform):.3f}")
     
     # returns twos list, one of projected spacial_info's one of projected observations
