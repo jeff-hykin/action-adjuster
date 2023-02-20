@@ -3,6 +3,9 @@ from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import numpy
 import numpy as np
+import torch
+import trivial_torch_tools as ttt
+from trivial_torch_tools import to_tensor
 import math
 import gym
 import csv
@@ -130,8 +133,8 @@ class WarthogEnv(gym.Env):
 
     @staticmethod
     def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
-        velocity_action = np.clip(velocity_action,  0, 1) * config.vehicle.controller_max_velocity
-        spin_action     = np.clip(spin_action,     -1, 1) * config.vehicle.controller_max_spin
+        velocity_action = torch.clip(to_tensor(velocity_action),  0, 1) * config.vehicle.controller_max_velocity
+        spin_action     = torch.clip(to_tensor(spin_action),     -1, 1) * config.vehicle.controller_max_spin
         
         old_velocity = old_spatial_info.velocity
         old_spin     = old_spatial_info.spin
@@ -142,8 +145,8 @@ class WarthogEnv(gym.Env):
         new_spacial_info          = WarthogEnv.SpacialInformation(old_spatial_info)
         new_spacial_info.velocity = velocity_action
         new_spacial_info.spin     = spin_action
-        new_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * action_duration
-        new_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * action_duration
+        new_spacial_info.x        = old_x + old_velocity * torch.cos(old_angle) * action_duration
+        new_spacial_info.y        = old_y + old_velocity * torch.sin(old_angle) * action_duration
         new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)
         
         return new_spacial_info
@@ -188,14 +191,14 @@ class WarthogEnv(gym.Env):
                 observation.append(gap_of_desired_angle_at_next)
                 observation.append(gap_of_velocity)
             else:
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
+                observation.append(to_tensor(0.0))
+                observation.append(to_tensor(0.0))
+                observation.append(to_tensor(0.0))
+                observation.append(to_tensor(0.0))
         
         observation.append(original_velocity)
         observation.append(original_spin)
-        return observation
+        return to_tensor(observation)
 
 
     def step(self, action):
@@ -473,7 +476,7 @@ def Waypoint(a_list):
         waypoint_entry[index] = each
     return waypoint_entry
 
-class WaypointEntry(numpy.ndarray):
+class WaypointEntry(torch.Tensor):
     keys = [ "x", "y", "angle", "velocity" ]
     
     @property
@@ -495,3 +498,9 @@ class WaypointEntry(numpy.ndarray):
     def velocity(self): return self[3]
     @velocity.setter
     def velocity(self, value): self[3] = value
+
+    def __format__(self, *args):
+        if self.shape == (1,):
+            return float(self).__format__(*args)
+        else:
+            return str(self)

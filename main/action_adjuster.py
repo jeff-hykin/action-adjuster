@@ -1,4 +1,6 @@
 import torch
+import trivial_torch_tools as ttt
+from trivial_torch_tools import to_tensor
 from blissful_basics import to_pure, countdown, print
 import blissful_basics as bb
 import numpy
@@ -9,7 +11,7 @@ from config import config, path_to
 from envs.warthog import WarthogEnv
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
-perfect_answer = numpy.array([
+perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
     [ 0,     1,        config.simulator.spin_offset, ],
     [ 0,     0,                                   1, ],
@@ -47,12 +49,12 @@ class ActionAdjuster:
     def transform(self, value):
         if isinstance(value, type(None)):
             self._transform = None
-        elif isinstance(value, numpy.ndarray):
+        elif isinstance(value, torch.Tensor):
             self._transform = value
         else:
-            self._transform = numpy.array(value)
+            self._transform = to_tensor(value)
         if type(self._transform) != type(None):
-            self.inverse_transform = numpy.linalg.inv( numpy.array(self._transform) )
+            self.inverse_transform = torch.linalg.inv(self._transform)
     
     def adjust(self, action, transform=None, real_transformation=True):
         if config.action_adjuster.disabled:
@@ -64,26 +66,24 @@ class ActionAdjuster:
         
         # the real transformation needs to compensate (inverse of curve-fitter transform)
         if real_transformation:
-            *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
+            *result, constant = torch.inner(
+                to_tensor([*action, 1]),
                 self.inverse_transform, 
             )
-            return numpy.array(result)
+            return to_tensor(result)
         
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
-            *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
+            *result, constant = torch.inner(
+                to_tensor([*action, 1]),
                 self.transform,
             )
-            return numpy.array(result)
+            return to_tensor(result)
     
     def _init_transform_if_needed(self, action_length):
-        # if type(self.transform) == type(None):
-        #     self.transform = numpy.eye((len(action)))
         if type(self.transform) == type(None):
-            self.transform = numpy.eye(action_length+1)
+            self.transform = torch.eye(action_length+1)
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -133,21 +133,28 @@ class ActionAdjuster:
                 predicted_spatial_values.append(spacial_expectation[-1]) 
             
             # loss function
-            loss = 0
+            loss = to_tensor(0.0).requires_grad_()
             for each_actual, each_predicted in zip(relevent_observations, predicted_spatial_values):
                 x1, y1, angle1, velocity1, spin1 = each_actual
                 x2, y2, angle2, velocity2, spin2 = each_predicted
-                iteration_total = 0
-                iteration_total += spacial_coefficients.x        * abs((x1        - x2       ))
-                iteration_total += spacial_coefficients.y        * abs((y1        - y2       ))
+                iteration_total = to_tensor(0.0).requires_grad_()
+                iteration_total += spacial_coefficients.x        * torch.abs((x1        - x2       ))
+                iteration_total += spacial_coefficients.y        * torch.abs((y1        - y2       ))
                 iteration_total += spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)) # angle is different cause it wraps (0 == 2π)
-                iteration_total += spacial_coefficients.velocity * abs((velocity1 - velocity2))
-                iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    ))
+                iteration_total += spacial_coefficients.velocity * torch.abs((velocity1 - velocity2))
+                iteration_total += spacial_coefficients.spin     * torch.abs((spin1     - spin2    ))
                 
                 loss += iteration_total
             return -loss
         
-        transform_before = numpy.array(self.transform)
+        tracked_transform = to_tensor(self.transform).requires_grad_()
+        score_before     = objective_function(tracked_transform)
+        print(f'''score_before = {score_before}''')
+        print(f'''score_before.backward() = {score_before.backward()}''')
+        print(f'''tracked_transform.grad = {tracked_transform.grad}''')
+        exit()
+        
+        transform_before = to_tensor(self.transform)
         score_before     = objective_function(self.transform)
         print("")
         print(f"action adjuster is updating transform vector (before): {self.readable_transform}, score:{score_before:.3f}")
@@ -185,7 +192,7 @@ class ActionAdjuster:
             observation          = next_observation
             current_spacial_info = next_spacial_info
         
-        return spacial_expectation, observation_expectation
+        return to_tensor(spacial_expectation), to_tensor(observation_expectation)
 
 def guess_to_maximize(objective_function, initial_guess, stdev=1):
     import cma
@@ -195,10 +202,10 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         new_objective = lambda arg1: objective_function(arg1[0])
         initial_guess = [initial_guess, 0]
     else: # flatten it
-        initial_guess = numpy.array(initial_guess)
+        initial_guess = to_tensor(initial_guess)
         shape = initial_guess.shape
         if shape == (1,):
-            new_objective = lambda arg1: objective_function(numpy.array([arg1[0]]))
+            new_objective = lambda arg1: objective_function(to_tensor([arg1[0]]))
         elif len(shape) > 1:
             new_objective = lambda arg1: objective_function(arg1.reshape(shape))
     
@@ -210,7 +217,7 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         try:
             xopt, es = cma.fmin2(
                 lambda *args: -new_objective(*args),
-                numpy.array(initial_guess.flat),
+                to_tensor(initial_guess.flat),
                 stdev,
                 options=dict(
                     verb_log=0                      ,
@@ -232,7 +239,7 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         return output[0]
     else: # un-flatten it
         if shape == (1,):
-            return numpy.array([output[0]])
+            return to_tensor([output[0]])
         elif len(shape) > 1:
             return output.reshape(shape)
     
