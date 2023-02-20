@@ -38,7 +38,6 @@ class ActionAdjuster:
         self.inverse_transform     = None
         self.transform             = initial_transform
         self.should_update = countdown(config.action_adjuster.update_frequency)
-        self.optimizer = None # will exist after first data is added
     
     @property
     def transform(self):
@@ -103,10 +102,10 @@ class ActionAdjuster:
         self.actual_spatial_values.append(additional_info["spacial_info_with_noise"])
         # NOTE: this^ is only grabbing the last, it would be valid to grab all of them
         # future work here might try grabbing all of them, or reducing the length, especially if the model/policy is thought to be bad/noisy
-        if self.optimizer == None:
-            action = self.policy(observation)
-            # create transform if needed
-            self._init_transform_if_needed(len(action))
+        
+        action = self.policy(observation)
+        # create transform if needed
+        self._init_transform_if_needed(len(action))
         
         if self.should_update():
             self.fit_points()
@@ -122,7 +121,6 @@ class ActionAdjuster:
         
         lookback_size = (2*-config.action_adjuster.update_frequency)
         recent_data = self.input_data[lookback_size:]
-        self.optimizer
         relevent_observations = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
         def objective_function(transform):
             predicted_spatial_values = []
