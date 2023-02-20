@@ -10,7 +10,7 @@ import math
 import gym
 import csv
 import time
-from blissful_basics import Csv, create_named_list_class
+from blissful_basics import Csv, create_named_list_class, to_pure
 import file_system_py as FS
 
 from config import config, path_to
@@ -133,8 +133,8 @@ class WarthogEnv(gym.Env):
 
     @staticmethod
     def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
-        velocity_action = torch.clip(to_tensor(velocity_action),  0, 1) * config.vehicle.controller_max_velocity
-        spin_action     = torch.clip(to_tensor(spin_action),     -1, 1) * config.vehicle.controller_max_spin
+        velocity_action = torch.clip(to_tensor(velocity_action).requires_grad_(),  0, 1) * config.vehicle.controller_max_velocity
+        spin_action     = torch.clip(to_tensor(spin_action).requires_grad_(),     -1, 1) * config.vehicle.controller_max_spin
         
         old_velocity = old_spatial_info.velocity
         old_spin     = old_spatial_info.spin
@@ -191,14 +191,14 @@ class WarthogEnv(gym.Env):
                 observation.append(gap_of_desired_angle_at_next)
                 observation.append(gap_of_velocity)
             else:
-                observation.append(to_tensor(0.0))
-                observation.append(to_tensor(0.0))
-                observation.append(to_tensor(0.0))
-                observation.append(to_tensor(0.0))
+                observation.append(to_tensor(0.0).requires_grad_())
+                observation.append(to_tensor(0.0).requires_grad_())
+                observation.append(to_tensor(0.0).requires_grad_())
+                observation.append(to_tensor(0.0).requires_grad_())
         
         observation.append(original_velocity)
         observation.append(original_spin)
-        return to_tensor(observation)
+        return to_tensor(observation).requires_grad_()
 
 
     def step(self, action):
@@ -224,8 +224,8 @@ class WarthogEnv(gym.Env):
             # 
             # add offsets
             # 
-            velocity_action += config.simulator.velocity_offset
-            spin_action     += config.simulator.spin_offset
+            velocity_action = velocity_action + config.simulator.velocity_offset
+            spin_action     = spin_action     + config.simulator.spin_offset
         
             # 
             # add noise
@@ -411,33 +411,34 @@ class WarthogEnv(gym.Env):
         )
 
     def render(self, mode="human"):
-        self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
-        self.ax.set_ylim([self.spacial_info.y - self.render_axis_size / 2.0, self.spacial_info.y + self.render_axis_size / 2.0])
-        total_diag_ang = self.diagonal_angle + self.spacial_info.angle
-        xl = self.spacial_info.x - self.warthog_diag * math.cos(total_diag_ang)
-        yl = self.spacial_info.y - self.warthog_diag * math.sin(total_diag_ang)
+        spacial_info = PureWaypointEntry(to_pure(self.spacial_info))
+        self.ax.set_xlim([spacial_info.x - self.render_axis_size / 2.0, spacial_info.x + self.render_axis_size / 2.0])
+        self.ax.set_ylim([spacial_info.y - self.render_axis_size / 2.0, spacial_info.y + self.render_axis_size / 2.0])
+        total_diag_ang = self.diagonal_angle + spacial_info.angle
+        xl = spacial_info.x - self.warthog_diag * math.cos(total_diag_ang)
+        yl = spacial_info.y - self.warthog_diag * math.sin(total_diag_ang)
         self.rect.remove()
         self.rect = Rectangle(
             xy=(xl, yl), 
             width=config.vehicle.render_width * 2, 
             height=config.vehicle.render_length * 2, 
-            angle=180.0 * self.spacial_info.angle / math.pi,
+            angle=180.0 * spacial_info.angle / math.pi,
             facecolor="blue",
         )
         self.text.remove()
         omega_reward = -2 * math.fabs(self.action_spin)
         self.text = self.ax.text(
-            self.spacial_info.x + 1,
-            self.spacial_info.y + 2,
-            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
+            spacial_info.x + 1,
+            spacial_info.y + 2,
+            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
         )
         self.prev_timestamp = time.time()
         self.ax.add_artist(self.rect)
-        self.x_pose.append(self.spacial_info.x)
-        self.y_pose.append(self.spacial_info.y)
+        self.x_pose.append(spacial_info.x)
+        self.y_pose.append(spacial_info.y)
         del self.x_pose[0]
         del self.y_pose[0]
         self.cur_pos.set_xdata(self.x_pose)
@@ -504,3 +505,5 @@ class WaypointEntry(torch.Tensor):
             return float(self).__format__(*args)
         else:
             return str(self)
+
+PureWaypointEntry = create_named_list_class(WaypointEntry.keys)

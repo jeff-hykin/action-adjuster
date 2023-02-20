@@ -36,4 +36,4 @@ def abs_angle_difference(radians1, radians2):
     return torch.tensor([
         torch.abs(radians1_positive-radians2_positive),
         torch.abs(radians1_offset-radians2_offset),
-    ]).min()
+    ]).requires_grad_().min()

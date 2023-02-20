@@ -15,7 +15,7 @@ perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
     [ 0,     1,        config.simulator.spin_offset, ],
     [ 0,     0,                                   1, ],
-])
+]).requires_grad_()
 
 # 
 # models
@@ -52,7 +52,7 @@ class ActionAdjuster:
         elif isinstance(value, torch.Tensor):
             self._transform = value
         else:
-            self._transform = to_tensor(value)
+            self._transform = to_tensor(value).requires_grad_()
         if type(self._transform) != type(None):
             self.inverse_transform = torch.linalg.inv(self._transform)
     
@@ -67,19 +67,19 @@ class ActionAdjuster:
         # the real transformation needs to compensate (inverse of curve-fitter transform)
         if real_transformation:
             *result, constant = torch.inner(
-                to_tensor([*action, 1]),
+                to_tensor([*action, 1]).requires_grad_(),
                 self.inverse_transform, 
             )
-            return to_tensor(result)
+            return result
         
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
             *result, constant = torch.inner(
-                to_tensor([*action, 1]),
+                to_tensor([*action, 1]).requires_grad_(),
                 self.transform,
             )
-            return to_tensor(result)
+            return result
     
     def _init_transform_if_needed(self, action_length):
         if type(self.transform) == type(None):
@@ -138,13 +138,13 @@ class ActionAdjuster:
                 x1, y1, angle1, velocity1, spin1 = each_actual
                 x2, y2, angle2, velocity2, spin2 = each_predicted
                 iteration_total = to_tensor(0.0).requires_grad_()
-                iteration_total += spacial_coefficients.x        * torch.abs((x1        - x2       ))
-                iteration_total += spacial_coefficients.y        * torch.abs((y1        - y2       ))
-                iteration_total += spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)) # angle is different cause it wraps (0 == 2π)
-                iteration_total += spacial_coefficients.velocity * torch.abs((velocity1 - velocity2))
-                iteration_total += spacial_coefficients.spin     * torch.abs((spin1     - spin2    ))
+                iteration_total = iteration_total + spacial_coefficients.x        * torch.abs((x1        - x2       ))
+                iteration_total = iteration_total + spacial_coefficients.y        * torch.abs((y1        - y2       ))
+                iteration_total = iteration_total + spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)) # angle is different cause it wraps (0 == 2π)
+                iteration_total = iteration_total + spacial_coefficients.velocity * torch.abs((velocity1 - velocity2))
+                iteration_total = iteration_total + spacial_coefficients.spin     * torch.abs((spin1     - spin2    ))
                 
-                loss += iteration_total
+                loss = loss + iteration_total
             return -loss
         
         tracked_transform = to_tensor(self.transform).requires_grad_()
@@ -192,7 +192,7 @@ class ActionAdjuster:
             observation          = next_observation
             current_spacial_info = next_spacial_info
         
-        return to_tensor(spacial_expectation), to_tensor(observation_expectation)
+        return to_tensor(spacial_expectation).requires_grad_(), to_tensor(observation_expectation).requires_grad_()
 
 def guess_to_maximize(objective_function, initial_guess, stdev=1):
     import cma
@@ -202,10 +202,10 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         new_objective = lambda arg1: objective_function(arg1[0])
         initial_guess = [initial_guess, 0]
     else: # flatten it
-        initial_guess = to_tensor(initial_guess)
+        initial_guess = to_tensor(initial_guess).requires_grad_()
         shape = initial_guess.shape
         if shape == (1,):
-            new_objective = lambda arg1: objective_function(to_tensor([arg1[0]]))
+            new_objective = lambda arg1: objective_function(to_tensor([arg1[0]]).requires_grad_())
         elif len(shape) > 1:
             new_objective = lambda arg1: objective_function(arg1.reshape(shape))
     
@@ -217,7 +217,7 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         try:
             xopt, es = cma.fmin2(
                 lambda *args: -new_objective(*args),
-                to_tensor(initial_guess.flat),
+                to_tensor(initial_guess.flat).requires_grad_(),
                 stdev,
                 options=dict(
                     verb_log=0                      ,
@@ -239,7 +239,7 @@ def guess_to_maximize(objective_function, initial_guess, stdev=1):
         return output[0]
     else: # un-flatten it
         if shape == (1,):
-            return to_tensor([output[0]])
+            return to_tensor([output[0]]).requires_grad_()
         elif len(shape) > 1:
             return output.reshape(shape)
     
