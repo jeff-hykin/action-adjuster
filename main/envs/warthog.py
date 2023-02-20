@@ -152,8 +152,7 @@ class WarthogEnv(gym.Env):
     def get_closest_index(remaining_waypoints, x, y):
         closest_index = 0
         closest_distance = math.inf
-        for index in range(0, len(remaining_waypoints)):
-            waypoint = remaining_waypoints[index]
+        for index, waypoint in enumerate(remaining_waypoints):
             distance = get_distance(waypoint.x, waypoint.y, x, y)
             if distance <= closest_distance:
                 closest_distance = distance
