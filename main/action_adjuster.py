@@ -37,7 +37,7 @@ class Transform:
         else:
             self._transform = to_tensor(value).numpy()
         
-    def __deepcopy__(self):
+    def __deepcopy__(self, arg1):
         return Transform(to_tensor(self._transform).numpy())
     
     def __repr__(self):
@@ -70,8 +70,16 @@ class Transform:
             to_tensor([0,0,1]).numpy()
         ])
         
+        # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
+        # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
+        if reverse_transformation:
+            *result, constant = numpy.inner(
+                to_tensor([*action, 1]).numpy(),
+                transform,
+            )
+            return to_tensor(result).numpy()
         # the real transformation needs to compensate (inverse of curve-fitter transform)
-        if not reverse_transformation:
+        else:
             inverse_transform = numpy.linalg.inv( to_tensor(transform).numpy() )
             *result, constant = numpy.inner(
                 to_tensor([*action, 1]).numpy(),
@@ -79,14 +87,6 @@ class Transform:
             )
             return to_tensor(result).numpy()
         
-        # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
-        # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
-        else:
-            *result, constant = numpy.inner(
-                to_tensor([*action, 1]).numpy(),
-                transform,
-            )
-            return to_tensor(result).numpy()
     
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
@@ -102,7 +102,8 @@ spacial_coefficients = WarthogEnv.SpacialInformation([
 ])
 class ActionAdjuster:
     def __init__(self, policy, initial_transform=None):
-        self.policy = policy
+        self.original_policy = policy
+        self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
         self.actual_spatial_values = []
         self.input_data            = []
         self.transform             = Transform()
@@ -114,9 +115,10 @@ class ActionAdjuster:
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
             return # no change
-            
+        
         self.input_data.append(dict(
             policy=self.policy,
+            historic_transform=deepcopy(self.transform),
             observation=observation,
             additional_info=[
                 additional_info["spacial_info_with_noise"],
@@ -139,9 +141,9 @@ class ActionAdjuster:
         if len(self.input_data) == 0:
             return
         
-        lookback_size = (2*-config.action_adjuster.update_frequency)
-        recent_data = self.input_data[lookback_size:]
-        relevent_observations = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
+        lookback_size = (2*config.action_adjuster.update_frequency)
+        recent_data = self.input_data[-lookback_size:]
+        relevent_observations = self.actual_spatial_values[-config.action_adjuster.future_projection_length:]
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
             predicted_spatial_values = []
@@ -234,12 +236,20 @@ class ActionAdjuster:
                 self.stdev = self.stdev/10
     
     # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, observation, additional_info, transform=None, real_transformation=True):
+    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None):
         current_spatial_info, remaining_waypoints, horizon, action_duration = additional_info
         observation_expectation = []
         spacial_expectation = []
         for each in range(config.action_adjuster.future_projection_length):
             action = policy(observation)
+            
+            # undo the effects of the at-the-time transformation
+            if historic_transform:
+                action = historic_transform.modify_action(
+                    action=action,
+                    reverse_transformation=real_transformation, # fight-against the new transformation
+                )
+            
             velocity_action, spin_action = transform.modify_action(
                 action=action,
                 reverse_transformation=(not real_transformation)
