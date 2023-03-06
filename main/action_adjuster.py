@@ -4,17 +4,18 @@ import blissful_basics as bb
 import numpy
 from icecream import ic
 from copy import deepcopy
+from trivial_torch_tools import to_tensor
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
 from envs.warthog import WarthogEnv
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
-perfect_answer = numpy.array([
+perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
     [ 0,     1,        config.simulator.spin_offset, ],
     [ 0,     0,                                   1, ],
-])
+]).numpy()
 
 # 
 # models
@@ -28,16 +29,14 @@ class Transform:
     def __init__(self, value=None):
         self.inital_arg = value
         if isinstance(value, type(None)):
-            self._transform = numpy.array(self.inital)
+            self._transform = to_tensor(self.inital).numpy()
         elif isinstance(value, numpy.ndarray):
             self._transform = value
         else:
-            self._transform = numpy.array(value)
+            self._transform = to_tensor(value).numpy()
         
-        print(f'''self._transform = {self._transform}''')
-    
     def __deepcopy__(self):
-        return Transform(numpy.array(self._transform))
+        return Transform(to_tensor(self._transform).numpy())
     
     def __repr__(self):
         return "[ " + ", ".join([ f"{each}" for each in to_pure(self._transform)]) + " ]"
@@ -60,43 +59,35 @@ class Transform:
                 each_existing + increment_amount
             )
         
-        new_array = numpy.array(new_values)
+        new_array = to_tensor(new_values).numpy()
         new_array.reshape(self.inital.shape)
         self._transform = new_array
     
     def modify_action(self, action, reverse_transformation=False):
         # the full transform needs to be 3x3 with a constant bottom-row of 0,0,1
-        transform = None
-        try:
-            transform = numpy.vstack([
-                self._transform[0],
-                self._transform[1],
-                numpy.array([0,0,1])
-            ])
-        except Exception as error:
-            import code; code.interact(local=locals())
-            print(f'''self.inital_arg = {self.inital_arg}''')
-            print(f'''self._transform = {self._transform}''')
-            print(f'''self._transform[0] = {self._transform[0]}''')
-            print(f'''self._transform[1] = {self._transform[1]}''')
+        transform = numpy.vstack([
+            self._transform[0],
+            self._transform[1],
+            to_tensor([0,0,1]).numpy()
+        ])
         
         # the real transformation needs to compensate (inverse of curve-fitter transform)
         if not reverse_transformation:
-            inverse_transform = numpy.linalg.inv( numpy.array(transform) )
+            inverse_transform = numpy.linalg.inv( to_tensor(transform).numpy() )
             *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
+                to_tensor([*action, 1]).numpy(),
                 inverse_transform,
             )
-            return numpy.array(result)
+            return to_tensor(result).numpy()
         
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
         else:
             *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
+                to_tensor([*action, 1]).numpy(),
                 transform,
             )
-            return numpy.array(result)
+            return to_tensor(result).numpy()
     
     
 
@@ -187,13 +178,14 @@ class ActionAdjuster:
         self.transform = Transform(
             self.transform.as_numpy + (config.action_adjuster.update_rate * best_new_transform.as_numpy)
         )
-        score_after = objective_function(self.transform)
+        score_after = objective_function(self.transform.as_numpy)
+        print(f'''score_after = {score_after}''')
         if score_after < score_before:
             self.transform = transform_before
             # self.transform.regress()
             
         print(f'''score_after < score_before = {score_after < score_before}''')
-        print(f"action adjuster is updating transform vector (after ): {self.transform}, score:{objective_function(self.transform):.3f}")
+        print(f"action adjuster is updating transform vector (after ): {self.transform}, score:{objective_function(self.transform.as_numpy):.3f}")
     
     # returns twos list, one of projected spacial_info's one of projected observations
     def project(self, policy, observation, additional_info, transform=None, real_transformation=True):

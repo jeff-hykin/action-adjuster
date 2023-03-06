@@ -4,4 +4,49 @@ trajectory being logged to: output.ignore/trajectory.log
 self._transform = [[1. 0. 0.]
  [0. 1. 0.]]
 
-action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-8.016
+action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-8.118
+self._transform = [[ 0.81349919 -0.11545699  0.09325042]
+ [ 0.1918776   0.78499832  0.0040612 ]]
+self._transform = [[ 1.81349919 -0.11545699  0.09325042]
+ [ 0.1918776   1.78499832  0.0040612 ]]
+self._transform = [[ 1.81349919 -0.11545699  0.09325042]
+ [ 0.1918776   1.78499832  0.0040612 ]]
+score_after = -16.517839485668368
+score_after < score_before = True
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+action adjuster is updating transform vector (after ): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-8.118
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+
+action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-19.678
+self._transform = [[ 0.68048248 -0.12231861  0.15975878]
+ [-0.01699966  1.19624617  0.10849983]]
+self._transform = [[ 1.68048248 -0.12231861  0.15975878]
+ [-0.01699966  2.19624617  0.10849983]]
+self._transform = [[ 1.68048248 -0.12231861  0.15975878]
+ [-0.01699966  2.19624617  0.10849983]]
+score_after = -38.57842933485189
+score_after < score_before = True
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+action adjuster is updating transform vector (after ): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-19.678
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+
+action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-32.117
+self._transform = [[0.88232244 0.08018791 0.05883877]
+ [0.01959766 0.88684617 0.09020117]]
+self._transform = [[1.88232244 0.08018791 0.05883877]
+ [0.01959766 1.88684617 0.09020117]]
+self._transform = [[1.88232244 0.08018791 0.05883877]
+ [0.01959766 1.88684617 0.09020117]]
+score_after = -61.517163863229555
+score_after < score_before = True
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+action adjuster is updating transform vector (after ): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-32.117
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
+
+action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-44.537
