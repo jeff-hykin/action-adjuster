@@ -1,3 +1,7 @@
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
 trajectory being logged to: output.ignore/trajectory.log
+self._transform = [[1. 0. 0.]
+ [0. 1. 0.]]
 
-action adjuster is updating transform vector (before): [ 0.000, 0.000 ], score:-9.033
+action adjuster is updating transform vector (before): [ [1.0, 0.0, 0.0], [0.0, 1.0, 0.0] ], score:-8.016

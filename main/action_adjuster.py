@@ -1,8 +1,9 @@
 import torch
-from blissful_basics import to_pure, countdown, print
+from blissful_basics import to_pure, countdown, print, singleton
 import blissful_basics as bb
 import numpy
 from icecream import ic
+from copy import deepcopy
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
@@ -21,6 +22,84 @@ perfect_answer = numpy.array([
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
 
+class Transform:
+    inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
+    
+    def __init__(self, value=None):
+        self.inital_arg = value
+        if isinstance(value, type(None)):
+            self._transform = numpy.array(self.inital)
+        elif isinstance(value, numpy.ndarray):
+            self._transform = value
+        else:
+            self._transform = numpy.array(value)
+        
+        print(f'''self._transform = {self._transform}''')
+    
+    def __deepcopy__(self):
+        return Transform(numpy.array(self._transform))
+    
+    def __repr__(self):
+        return "[ " + ", ".join([ f"{each}" for each in to_pure(self._transform)]) + " ]"
+    
+    @property
+    def as_numpy(self):
+        return self._transform
+    
+    def regress(self):
+        """
+            Summary:
+                Move towards the initial value as a way of showing
+        """
+        # should move towards initial value
+        new_values = []
+        for each_existing, each_initial in zip(self.as_numpy.flat, self.inital.flat):
+            difference = each_initial - each_existing
+            increment_amount = difference * config.action_adjuster.decay_rate
+            new_values.append(
+                each_existing + increment_amount
+            )
+        
+        new_array = numpy.array(new_values)
+        new_array.reshape(self.inital.shape)
+        self._transform = new_array
+    
+    def modify_action(self, action, reverse_transformation=False):
+        # the full transform needs to be 3x3 with a constant bottom-row of 0,0,1
+        transform = None
+        try:
+            transform = numpy.vstack([
+                self._transform[0],
+                self._transform[1],
+                numpy.array([0,0,1])
+            ])
+        except Exception as error:
+            import code; code.interact(local=locals())
+            print(f'''self.inital_arg = {self.inital_arg}''')
+            print(f'''self._transform = {self._transform}''')
+            print(f'''self._transform[0] = {self._transform[0]}''')
+            print(f'''self._transform[1] = {self._transform[1]}''')
+        
+        # the real transformation needs to compensate (inverse of curve-fitter transform)
+        if not reverse_transformation:
+            inverse_transform = numpy.linalg.inv( numpy.array(transform) )
+            *result, constant = numpy.inner(
+                numpy.array([*action, 1]),
+                inverse_transform,
+            )
+            return numpy.array(result)
+        
+        # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
+        # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
+        else:
+            *result, constant = numpy.inner(
+                numpy.array([*action, 1]),
+                transform,
+            )
+            return numpy.array(result)
+    
+    
+
 # FIXME: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
     1, # x
@@ -34,56 +113,8 @@ class ActionAdjuster:
         self.policy = policy
         self.actual_spatial_values = []
         self.input_data            = []
-        self._transform            = None
-        self.inverse_transform     = None
-        self.transform             = initial_transform
+        self.transform             = Transform()
         self.should_update = countdown(config.action_adjuster.update_frequency)
-    
-    @property
-    def transform(self):
-        return self._transform
-    
-    @transform.setter
-    def transform(self, value):
-        if isinstance(value, type(None)):
-            self._transform = None
-        elif isinstance(value, numpy.ndarray):
-            self._transform = value
-        else:
-            self._transform = numpy.array(value)
-        if type(self._transform) != type(None):
-            self.inverse_transform = numpy.linalg.inv( numpy.array(self._transform) )
-    
-    def adjust(self, action, transform=None, real_transformation=True):
-        if config.action_adjuster.disabled:
-            return action # no change
-        
-        self._init_transform_if_needed(len(action))
-        if type(transform) == type(None):
-            transform = self.transform
-        
-        # the real transformation needs to compensate (inverse of curve-fitter transform)
-        if real_transformation:
-            *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
-                self.inverse_transform, 
-            )
-            return numpy.array(result)
-        
-        # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
-        # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
-        else:
-            *result, constant = numpy.inner(
-                numpy.array([*action, 1]),
-                self.transform,
-            )
-            return numpy.array(result)
-    
-    def _init_transform_if_needed(self, action_length):
-        # if type(self.transform) == type(None):
-        #     self.transform = numpy.eye((len(action)))
-        if type(self.transform) == type(None):
-            self.transform = numpy.eye(action_length+1)
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -104,15 +135,9 @@ class ActionAdjuster:
         # future work here might try grabbing all of them, or reducing the length, especially if the model/policy is thought to be bad/noisy
         
         action = self.policy(observation)
-        # create transform if needed
-        self._init_transform_if_needed(len(action))
         
         if self.should_update():
             self.fit_points()
-    
-    @property
-    def readable_transform(self):
-        return "[ " + ", ".join([ f"{each}" for each in to_pure(self.transform)]) + " ]"
     
     def fit_points(self):
         # no data
@@ -122,7 +147,8 @@ class ActionAdjuster:
         lookback_size = (2*-config.action_adjuster.update_frequency)
         recent_data = self.input_data[lookback_size:]
         relevent_observations = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
-        def objective_function(transform):
+        def objective_function(numpy_array):
+            transform = Transform(numpy_array)
             predicted_spatial_values = []
             for each_input_data in self.input_data:
                 spacial_expectation, observation_expectation = self.project(
@@ -147,17 +173,27 @@ class ActionAdjuster:
                 loss += iteration_total
             return -loss
         
-        transform_before = numpy.array(self.transform)
-        score_before     = objective_function(self.transform)
+        transform_before = self.transform
+        score_before     = objective_function(self.transform.as_numpy)
         print("")
-        print(f"action adjuster is updating transform vector (before): {self.readable_transform}, score:{score_before:.3f}")
-        self.transform = self.transform + (config.action_adjuster.update_rate * guess_to_maximize(objective_function, initial_guess=self.transform, stdev=0.01))
+        print(f"action adjuster is updating transform vector (before): {self.transform}, score:{score_before:.3f}")
+        best_new_transform = Transform(
+            guess_to_maximize(
+                objective_function,
+                initial_guess=self.transform.as_numpy,
+                stdev=0.1
+            )
+        )
+        self.transform = Transform(
+            self.transform.as_numpy + (config.action_adjuster.update_rate * best_new_transform.as_numpy)
+        )
         score_after = objective_function(self.transform)
         if score_after < score_before:
-            # not only DONT use the new transform, but actually decay/cool-down the previous one
-            # FIXME: this shouldnt shrink everything, it should instead get closer to the original (idenity) matrix
-            self.transform = transform_before * config.action_adjuster.decay_rate
-        print(f"action adjuster is updating transform vector (after ): {self.readable_transform}, score:{objective_function(self.transform):.3f}")
+            self.transform = transform_before
+            # self.transform.regress()
+            
+        print(f'''score_after < score_before = {score_after < score_before}''')
+        print(f"action adjuster is updating transform vector (after ): {self.transform}, score:{objective_function(self.transform):.3f}")
     
     # returns twos list, one of projected spacial_info's one of projected observations
     def project(self, policy, observation, additional_info, transform=None, real_transformation=True):
@@ -166,7 +202,10 @@ class ActionAdjuster:
         spacial_expectation = []
         for each in range(config.action_adjuster.future_projection_length):
             action = policy(observation)
-            velocity_action, spin_action = self.adjust(action, transform, real_transformation=real_transformation)
+            velocity_action, spin_action = transform.modify_action(
+                action=action,
+                reverse_transformation=(not real_transformation)
+            )
             
             next_spacial_info = generate_next_spacial_info(
                 old_spatial_info=current_spatial_info,
@@ -187,7 +226,7 @@ class ActionAdjuster:
         
         return spacial_expectation, observation_expectation
 
-def guess_to_maximize(objective_function, initial_guess, stdev=1):
+def guess_to_maximize(objective_function, initial_guess, stdev):
     import cma
     is_scalar = not bb.is_iterable(initial_guess)
     new_objective = objective_function

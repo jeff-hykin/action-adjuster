@@ -41,6 +41,7 @@
                 save_data: True
                 should_render: True
                 max_velocity: 4
+                action_length: 2
                 action_space:
                     low:  [ 0.0, -1.5 ] # (1.5 radians per second is max option on the controller, but the )
                     high: [ 1.0,  1.5 ] # 0-1 for velocity
