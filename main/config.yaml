@@ -14,7 +14,7 @@
             action_adjuster:
                 disabled: False
                 update_rate: 1 # kinda similar to alpha/step-size
-                future_projection_length: 4 # timesteps
+                future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
                 decay_rate: 0.95 # setting this value to 1 means no decay
             
