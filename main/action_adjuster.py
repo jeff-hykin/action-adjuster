@@ -10,6 +10,7 @@ ic.configureOutput(includeContext=True)
 from config import config, path_to
 from envs.warthog import WarthogEnv
 from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
+from tools.numpy import shift_towards
 
 perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
@@ -26,6 +27,7 @@ generate_next_observation  = WarthogEnv.generate_observation
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
     
+    # think of this as a "from numpy array" method
     def __init__(self, value=None):
         self.inital_arg = value
         if isinstance(value, type(None)):
@@ -39,7 +41,11 @@ class Transform:
         return Transform(to_tensor(self._transform).numpy())
     
     def __repr__(self):
-        return "[ " + ", ".join([ f"{each}" for each in to_pure(self._transform)]) + " ]"
+        rows = [
+            "[ " + ", ".join([ f"{each_cell:.3f}" for each_cell in each_row ]) + " ]"
+                for each_row in to_pure(self._transform)
+        ]
+        return "[ " + ", ".join([ each_row for each_row in rows]) + " ]"
     
     @property
     def as_numpy(self):
@@ -50,18 +56,11 @@ class Transform:
             Summary:
                 Move towards the initial value as a way of showing
         """
-        # should move towards initial value
-        new_values = []
-        for each_existing, each_initial in zip(self.as_numpy.flat, self.inital.flat):
-            difference = each_initial - each_existing
-            increment_amount = difference * config.action_adjuster.decay_rate
-            new_values.append(
-                each_existing + increment_amount
-            )
-        
-        new_array = to_tensor(new_values).numpy()
-        new_array.reshape(self.inital.shape)
-        self._transform = new_array
+        self._transform = shift_towards(
+            new_value=self.inital,
+            old_value=self.as_numpy,
+            proportion=config.action_adjuster.decay_rate
+        )
     
     def modify_action(self, action, reverse_transformation=False):
         # the full transform needs to be 3x3 with a constant bottom-row of 0,0,1
@@ -89,6 +88,8 @@ class Transform:
             )
             return to_tensor(result).numpy()
     
+    def __hash__(self):
+        return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
     
 
 # FIXME: replace this with a normalization method
@@ -105,7 +106,10 @@ class ActionAdjuster:
         self.actual_spatial_values = []
         self.input_data            = []
         self.transform             = Transform()
+        self.canidate_transform    = Transform()
         self.should_update = countdown(config.action_adjuster.update_frequency)
+        self.stdev = 1
+        self.selected_solutions = set([ self.transform ])
     
     def add_data(self, observation, additional_info):
         if config.action_adjuster.disabled:
@@ -162,30 +166,72 @@ class ActionAdjuster:
                 iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    ))
                 
                 loss += iteration_total
+            # print(f'''    {-loss}: {transform}''')
             return -loss
         
-        transform_before = self.transform
-        score_before     = objective_function(self.transform.as_numpy)
-        print("")
-        print(f"action adjuster is updating transform vector (before): {self.transform}, score:{score_before:.3f}")
-        best_new_transform = Transform(
-            guess_to_maximize(
-                objective_function,
-                initial_guess=self.transform.as_numpy,
-                stdev=0.1
+        # 
+        # overfitting protection (validate the canidate)
+        # 
+        if True:
+            solutions = list(self.selected_solutions) + [ self.canidate_transform ]
+            scores = tuple(
+                objective_function(each_transform.as_numpy)
+                    for each_transform in solutions
             )
-        )
-        self.transform = Transform(
-            self.transform.as_numpy + (config.action_adjuster.update_rate * best_new_transform.as_numpy)
-        )
-        score_after = objective_function(self.transform.as_numpy)
-        print(f'''score_after = {score_after}''')
-        if score_after < score_before:
-            self.transform = transform_before
-            # self.transform.regress()
+            for each_transform, each_score in zip(solutions, scores):
+                print(f'''    {each_score}: {each_transform}''')
             
-        print(f'''score_after < score_before = {score_after < score_before}''')
-        print(f"action adjuster is updating transform vector (after ): {self.transform}, score:{objective_function(self.transform.as_numpy):.3f}")
+            best_with_new_data = bb.arg_maxs(
+                args=solutions,
+                values=scores,
+            )
+            new_data_invalidated_recent_best = self.canidate_transform not in best_with_new_data
+            # basically overfitting detection
+            # reduce stdev, and don't use the canidate
+            if new_data_invalidated_recent_best:
+                self.stdev = self.stdev/2
+                # choose the long-term best as the starting point
+                self.transform = best_with_new_data[0]
+            else:
+                print(f'''canidate passed inspection: {self.canidate_transform}''')
+                print(f'''prev transform            : {self.transform}''')
+                print(f'''canidate score: {objective_function(self.canidate_transform.as_numpy)}''')
+                print(f'''prev score    : {objective_function(self.transform.as_numpy)}''')
+                self.selected_solutions.add(self.canidate_transform)
+                # use the canidate transform as the base for finding new answers
+                self.transform = self.canidate_transform
+        
+        # 
+        # generate new canidate
+        # 
+        if True:
+            score_before     = objective_function(self.transform.as_numpy)
+            
+            # find next best
+            best_new_transform = Transform(
+                guess_to_maximize(
+                    objective_function,
+                    initial_guess=self.transform.as_numpy,
+                    stdev=self.stdev
+                )
+            )
+            
+            # canidate is the incremental shift towards next_best
+            self.canidate_transform = Transform(
+                shift_towards(
+                    new_value=best_new_transform.as_numpy,
+                    old_value=self.transform.as_numpy,
+                    proportion=config.action_adjuster.update_rate,
+                )
+            )
+            
+            score_after = objective_function(self.canidate_transform.as_numpy)
+            print(f'''new canidate transform = {self.canidate_transform}''')
+            print(f'''score_before   = {score_before}''')
+            print(f'''canidate score = {score_after}''')
+            # if no improvement at all, then shrink the stdev
+            if score_after < score_before:
+                self.stdev = self.stdev/10
     
     # returns twos list, one of projected spacial_info's one of projected observations
     def project(self, policy, observation, additional_info, transform=None, real_transformation=True):
@@ -235,28 +281,21 @@ def guess_to_maximize(objective_function, initial_guess, stdev):
     
     import sys
     
-    original_stdout = sys.stdout
-    with open("/dev/null", "w+") as null:
-        sys.stdout = null
-        try:
-            xopt, es = cma.fmin2(
-                lambda *args: -new_objective(*args),
-                numpy.array(initial_guess.flat),
-                stdev,
-                options=dict(
-                    verb_log=0                      ,
-                    verbose=0                       ,
-                    verb_plot=0                     ,
-                    verb_disp=0                     ,
-                    verb_filenameprefix="/dev/null" ,
-                    verb_append=0                   ,
-                    verb_time=False                 ,
-                ),
-            )
-        except Exception as error:
-            raise error
-        finally:
-            sys.stdout = original_stdout
+    
+    xopt, es = cma.fmin2(
+        lambda *args: -new_objective(*args),
+        numpy.array(initial_guess.flat),
+        stdev,
+        options=dict(
+            verb_log=0                      ,
+            verbose=0                       ,
+            verb_plot=0                     ,
+            verb_disp=0                     ,
+            verb_filenameprefix="/dev/null" ,
+            verb_append=0                   ,
+            verb_time=False                 ,
+        ),
+    )
     
     output = xopt
     if is_scalar: # wrap it
