@@ -1,3 +1,4 @@
+- confirm that self.input_data corrisponds with predicted spatial data
 - make sure that the action that is saved (the record used in the objective function) accounts for the adjustment
 - try sqrt instead of squaring loss
 - try 1-step prediction instead of 10-step prediction

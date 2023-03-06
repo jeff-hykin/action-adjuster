@@ -109,7 +109,7 @@ class ActionAdjuster:
         self.transform             = Transform()
         self.canidate_transform    = Transform()
         self.should_update = countdown(config.action_adjuster.update_frequency)
-        self.stdev = 1
+        self.stdev = 0.01
         self.selected_solutions = set([ self.transform ])
     
     def add_data(self, observation, additional_info):
@@ -141,9 +141,8 @@ class ActionAdjuster:
         if len(self.input_data) == 0:
             return
         
-        lookback_size = (2*config.action_adjuster.update_frequency)
-        recent_data = self.input_data[-lookback_size:]
-        relevent_observations = self.actual_spatial_values[-config.action_adjuster.future_projection_length:]
+        # skip the first X, because we are not predicting the first X
+        real_spatial_values = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
             predicted_spatial_values = []
@@ -157,7 +156,9 @@ class ActionAdjuster:
             
             # loss function
             loss = 0
-            for each_actual, each_predicted in zip(relevent_observations, predicted_spatial_values):
+            # Note: len(predicted_spatial_values) should == len(real_spatial_values) + future_projection_length
+            # however, it will be automatically truncated because of the zip behavior
+            for each_actual, each_predicted in zip(real_spatial_values, predicted_spatial_values):
                 x1, y1, angle1, velocity1, spin1 = each_actual
                 x2, y2, angle2, velocity2, spin2 = each_predicted
                 iteration_total = 0
