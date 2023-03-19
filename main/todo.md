@@ -1,6 +1,9 @@
 - DONE: create numeric score of correction
 - FAIL: implement the real policy instead of going straight, tensorflow v1 is too hard to install
-- add lookbehind limiter
+- create a file system passthrough to asyncly update things
+    - have action adjuster add-info log observations to a folder
+    - have seperate task read from folder, run the solver, then solved, write to `best_canidate.json`
+- add lookbehind limiter, or maybe log
 - record noise performance
 - add sliding test
 - try sqrt instead of squaring loss
