@@ -1,5 +1,8 @@
 - DONE: create numeric score of correction
-- implement the real policy instead of going straight
+- FAIL: implement the real policy instead of going straight, tensorflow v1 is too hard to install
+- add lookbehind limiter
+- record noise performance
+- add sliding test
 - try sqrt instead of squaring loss
 
 - finish removing magic numbers
