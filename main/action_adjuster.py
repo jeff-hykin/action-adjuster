@@ -55,17 +55,6 @@ class Transform:
     def as_numpy(self):
         return self._transform
     
-    def regress(self):
-        """
-            Summary:
-                Move towards the initial value as a way of showing
-        """
-        self._transform = shift_towards(
-            new_value=self.inital,
-            old_value=self.as_numpy,
-            proportion=config.action_adjuster.decay_rate
-        )
-    
     def modify_action(self, action, reverse_transformation=False):
         # the full transform needs to be 3x3 with a constant bottom-row of 0,0,1
         transform = numpy.vstack([
@@ -128,9 +117,6 @@ class ActionAdjuster:
         self.timestep += 1
         self.recorder.add(timestep=self.timestep)
         
-        if config.action_adjuster.disabled:
-            return # no change
-        
         self.input_data.append(dict(
             policy=self.policy,
             historic_transform=deepcopy(self.transform),
@@ -190,7 +176,7 @@ class ActionAdjuster:
         # 
         # overfitting protection (validate the canidate)
         # 
-        if True:
+        if not config.action_adjuster.disabled:
             solutions = list(self.selected_solutions) + [ self.canidate_transform ]
             scores = tuple(
                 objective_function(each_transform.as_numpy)

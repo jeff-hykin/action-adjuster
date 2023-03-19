@@ -1,4 +1,4 @@
-- create numeric score of correction
+- DONE: create numeric score of correction
 - implement the real policy instead of going straight
 - try sqrt instead of squaring loss
 
