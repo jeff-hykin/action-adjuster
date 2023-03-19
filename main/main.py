@@ -23,10 +23,14 @@ env = WarthogEnv(
 )
 
 observation = env.reset()
+accumulated_reward = 0
 while True:
     action          = policy(observation)
     adjusted_action = action_adjuster.transform.modify_action(action)
     observation, reward, done, additional_info = env.step(adjusted_action)
+    accumulated_reward += reward
+    recorder.add(accumulated_reward=accumulated_reward)
+    recorder.add(reward=reward)
     action_adjuster.add_data(observation, additional_info)
     if done:
         break
