@@ -1,10 +1,12 @@
-import torch
-from blissful_basics import to_pure, countdown, print, singleton
-import blissful_basics as bb
-import numpy
-from icecream import ic
+import json
 from copy import deepcopy
-from trivial_torch_tools import to_tensor
+
+import torch                                                     # pip install torch
+import numpy                                                     # pip install numpy
+import blissful_basics as bb                                     # pip install blissful_basics
+from blissful_basics import to_pure, countdown, print, singleton # pip install blissful_basics
+from icecream import ic                                          # pip install icecream
+from trivial_torch_tools import to_tensor                        # pip install trivial_torch_tools
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
@@ -23,6 +25,8 @@ perfect_answer = to_tensor([
 # 
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
+
+recorder_path = f"{path_to.default_output_folder}/recorder.yaml"
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
@@ -101,7 +105,7 @@ spacial_coefficients = WarthogEnv.SpacialInformation([
     0.3, # spin # arbitraryly picked value 
 ])
 class ActionAdjuster:
-    def __init__(self, policy, initial_transform=None):
+    def __init__(self, policy, initial_transform=None, recorder=None):
         self.original_policy = policy
         self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
         self.actual_spatial_values = []
@@ -111,8 +115,19 @@ class ActionAdjuster:
         self.should_update = countdown(config.action_adjuster.update_frequency)
         self.stdev = 0.01
         self.selected_solutions = set([ self.transform ])
+        self.recorder = recorder
+        self.timestep = 0
+        
+        if self.recorder == None:
+            from rigorous_recorder import RecordKeeper
+            self.recorder = RecordKeeper()
+        
+        self.recorder.live_write_to(recorder_path, as_yaml=True)
     
     def add_data(self, observation, additional_info):
+        self.timestep += 1
+        self.recorder.add(timestep=self.timestep)
+        
         if config.action_adjuster.disabled:
             return # no change
         
@@ -209,6 +224,8 @@ class ActionAdjuster:
         # 
         if True:
             score_before     = objective_function(self.transform.as_numpy)
+            self.recorder.add(line_fit_score=score_before)
+            self.recorder.commit()
             
             # find next best
             best_new_transform = Transform(

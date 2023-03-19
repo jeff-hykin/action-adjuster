@@ -2,6 +2,12 @@ from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjuster
 from config import config, path_to
 import torch
+from rigorous_recorder import RecordKeeper
+
+from statistics import mean as average
+from random import random, sample, choices
+
+recorder = RecordKeeper(config=config)
 
 # FIXME: need a real policy
 def policy(observation):
@@ -9,7 +15,7 @@ def policy(observation):
     spin_action     = 0.00
     return velocity_action, spin_action
 
-action_adjuster = ActionAdjuster(policy=policy)
+action_adjuster = ActionAdjuster(policy=policy, recorder=recorder)
 
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,

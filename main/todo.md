@@ -1,4 +1,5 @@
-- try 1-step prediction instead of 10-step prediction
+- create numeric score of correction
+- implement the real policy instead of going straight
 - try sqrt instead of squaring loss
 
 - finish removing magic numbers
