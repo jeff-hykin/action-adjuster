@@ -162,6 +162,17 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "plotly"
+version = "5.13.1"
+description = "An open-source, interactive data visualization library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+tenacity = ">=6.2.0"
+
+[[package]]
 name = "Pygments"
 version = "2.14.0"
 description = "Pygments is a syntax highlighting package written in Python."
@@ -192,7 +203,7 @@ use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rigorous-recorder"
-version = "1.2.1"
+version = "1.3.0"
 description = "Save everything in a filterable way"
 category = "main"
 optional = false
@@ -250,6 +261,17 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 json-fix = ">=0.1.3"
+
+[[package]]
+name = "tenacity"
+version = "8.2.2"
+description = "Retry code until it succeeds"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
 
 [[package]]
 name = "torch"
@@ -335,7 +357,7 @@ test = ["pytest (>=6.0.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "3a2e83f7734a84d52c2e30a44245d050becf4d091a64e800f3125e65058eaa05"
+content-hash = "4cf587eaaf45e578cf64bbbd03686741fbacae0ca256ea0b6d228534a1e459b9"
 
 [metadata.files]
 asttokens = [
@@ -580,6 +602,10 @@ Pillow = [
     {file = "Pillow-9.4.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:8f127e7b028900421cad64f51f75c051b628db17fb00e099eb148761eed598c9"},
     {file = "Pillow-9.4.0.tar.gz", hash = "sha256:a1c2d7780448eb93fbcc3789bf3916aa5720d942e37945f4056680317f1cd23e"},
 ]
+plotly = [
+    {file = "plotly-5.13.1-py2.py3-none-any.whl", hash = "sha256:f776a5c664908450c6c1727f61e8e2e22798d9c6c69d37a9057735365084a2fa"},
+    {file = "plotly-5.13.1.tar.gz", hash = "sha256:90ee9a1fee0dda30e2830e129855081ea17bd1b06a553a62b62de15caff1a219"},
+]
 Pygments = [
     {file = "Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},
     {file = "Pygments-2.14.0.tar.gz", hash = "sha256:b3ed06a9e8ac9a9aae5a6f5dbe78a8a58655d17b43b93c078f094ddc476ae297"},
@@ -589,8 +615,8 @@ requests = [
     {file = "requests-2.28.2.tar.gz", hash = "sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf"},
 ]
 rigorous-recorder = [
-    {file = "rigorous_recorder-1.2.1-py3-none-any.whl", hash = "sha256:a75740f48c7b4eadc07bba768516689c4c6ef5d76f502c145374c442b8fa46e4"},
-    {file = "rigorous_recorder-1.2.1.tar.gz", hash = "sha256:942f2319877dfda53a09512552363c8576bb67695b0bed2c3a217093ab5c28bd"},
+    {file = "rigorous_recorder-1.3.0-py3-none-any.whl", hash = "sha256:2258e0dc67ed87a4b1b9e4d56394ba950cceb14c135c7a0e7e946fe957b9660c"},
+    {file = "rigorous_recorder-1.3.0.tar.gz", hash = "sha256:e080fba04bc41b3d3dd88e5a110316655f5c4eebc2ccb31d76098a3bad6094a9"},
 ]
 setuptools = [
     {file = "setuptools-67.6.0-py3-none-any.whl", hash = "sha256:b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2"},
@@ -611,6 +637,10 @@ super-hash = [
 super-map = [
     {file = "super_map-1.3.2-py3-none-any.whl", hash = "sha256:8362e423ecf704c51de9b8a166bc2b39c39a65950472d2bb1ab78b7ecf5bc8d3"},
     {file = "super_map-1.3.2.tar.gz", hash = "sha256:9668a9823e7c184e9c3cdc42878a26a67f823b0f7099b3dd8c327eed25f89285"},
+]
+tenacity = [
+    {file = "tenacity-8.2.2-py3-none-any.whl", hash = "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0"},
+    {file = "tenacity-8.2.2.tar.gz", hash = "sha256:43af037822bd0029025877f3b2d97cc4d7bb0c2991000a3d59d71517c5c969e0"},
 ]
 torch = [
     {file = "torch-1.13.1-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:fd12043868a34a8da7d490bf6db66991108b00ffbeecb034228bfcbbd4197143"},
