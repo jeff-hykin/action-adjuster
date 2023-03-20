@@ -1,0 +1,138 @@
+# NOTE: names in parentheses are special, all other names are not!
+(project):
+    
+    # a central place for filepaths
+    (path_to):
+        default_waypoints: "./waypoint_paths/real1.csv"
+        default_output_folder: "./output.ignore/"
+        records: "./records/"
+    
+    (local_data): ./local_data.ignore.yaml
+    
+    (profiles):
+        (default):
+            vehicle: null # filled in by "WARTHOG" profile below (way below)
+            action_adjuster:
+                disabled: True
+                default_to_perfect: True
+                update_rate: 1 # kinda similar to alpha/step-size
+                future_projection_length: 1 # timesteps
+                update_frequency: 20 # timesteps
+            
+            reward_parameters:
+                max_expected_crosstrack_error:  2.0   # meters
+                max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
+                max_expected_angle_error:       1.047 # radians (1.047 = 60 degrees)
+                velocity_jerk_cost_coefficient: 1
+                spin_jerk_cost_coefficient:     0.5
+                direct_velocity_cost:           0 # no penalty for going fast
+                direct_spin_cost:               1 # no scaling of spin cost relative to combination
+                
+                velocity_caps_enabled: true
+                velocity_caps:
+                    # EXAMPLE:
+                    #   40%: 10% 
+                    #  # ^this means, if the closest waypoint has a velocity >= 40% of max-speed,
+                    #  # then the velocity error must be < 10% of max speed (otherwise 0 reward)
+                    
+                    0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
+                    62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%
+            
+            simulator:
+                save_data: True
+                should_render: True
+                max_velocity: 4
+                action_length: 2
+                action_space:
+                    low:  [ 0.0, -1.5 ] # (1.5 radians per second is max option on the controller, but the )
+                    high: [ 1.0,  1.5 ] # 0-1 for velocity
+                observation_space:
+                    low: -100
+                    high: 1000
+                    shape: [ 42 ]
+                horizon: 10 # number of waypoints in the observation
+                max_episode_steps: 700
+                number_of_trajectories: 100
+                action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
+                allow_cut_short_episode: False
+                action_delay: 0 # 5 => 5 timesteps (5 * action_duration)
+                
+                # 
+                # random start
+                # 
+                random_start_position_offset: 0.1 # TODO: units?
+                random_start_angle_offset: 0.01 # TODO: units?
+                
+                # 
+                # action offset 
+                # 
+                velocity_offset: 0 # will be added to the velocity_action value every step
+                spin_offset: 0.20 # will be added to the spin_action value every step
+                
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: True
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.01 # meters per second
+                    spin_action:
+                        standard_deviation: 0.05 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: True
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.5 # meters
+                    "y":
+                        standard_deviation: 0.5 # meters
+                    "angle":
+                        standard_deviation: 0 # radians
+                    "velocity":
+                        standard_deviation: 0 # meters per second
+                    "spin":
+                        standard_deviation: 0 # radians per action_duration (default 15 hertz)
+                
+        WARTHOG:
+            vehicle:
+                name: Warthog
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
+        
+        HEAVY_NOISE:
+            simulator:
+                # 
+                # action offset 
+                # 
+                velocity_offset: 0 # will be added to the velocity_action value every step
+                spin_offset: 0.20 # will be added to the spin_action value every step
+                
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: True
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.01 # meters per second
+                    spin_action:
+                        standard_deviation: 0.05 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: True
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.5 # meters
+                    "y":
+                        standard_deviation: 0.5 # meters
+                    "angle":
+                        standard_deviation: 0 # radians
+                    "velocity":
+                        standard_deviation: 0 # meters per second
+                    "spin":
+                        standard_deviation: 0 # radians per action_duration (default 15 hertz)
