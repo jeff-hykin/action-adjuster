@@ -13,7 +13,8 @@
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             action_adjuster:
-                disabled: False
+                disabled: True
+                default_to_perfect: True
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps

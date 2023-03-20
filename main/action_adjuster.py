@@ -83,7 +83,9 @@ class Transform:
     
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
-    
+
+if config.action_adjuster.default_to_perfect:
+    Transform.inital = perfect_answer[0:2,:]
 
 # FIXME: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
