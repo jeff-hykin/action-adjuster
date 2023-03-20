@@ -11,7 +11,7 @@ from blissful_basics import Csv, create_named_list_class
 import file_system_py as FS
 
 from config import config, path_to
-from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
+from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
 max_velocity_reset_number = 5 # TODO: check this
 magic_number_1_point_5 = 1.5

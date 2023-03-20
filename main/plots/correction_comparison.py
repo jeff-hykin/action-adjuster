@@ -42,7 +42,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, ):
 
 lines = []
 for path in FS.list_paths_in(path_to.records):
-    data = ez_yaml.to_object(string=FS.read(path))
+    data = ez_yaml.to_object(string=FS.read(path+"/recorder.yaml"))
     records = data["records"]
     lines.append(
         dict(

@@ -11,8 +11,8 @@ ic.configureOutput(includeContext=True)
 
 from config import config, path_to
 from envs.warthog import WarthogEnv
-from tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
-from tools.numpy import shift_towards
+from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
+from generic_tools.numpy import shift_towards
 
 perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
