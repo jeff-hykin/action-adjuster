@@ -5,6 +5,7 @@
     (path_to):
         default_waypoints: "./waypoint_paths/real1.csv"
         default_output_folder: "./output.ignore/"
+        records: "./records/"
     
     (local_data): ./local_data.ignore.yaml
     
@@ -12,7 +13,7 @@
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             action_adjuster:
-                disabled: True
+                disabled: False
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
@@ -70,7 +71,7 @@
                 # 
                 # action noise
                 # 
-                use_gaussian_action_noise: True
+                use_gaussian_action_noise: False
                 gaussian_action_noise:
                     velocity_action:
                         standard_deviation: 0
