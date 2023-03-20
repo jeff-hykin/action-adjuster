@@ -205,14 +205,15 @@ class ActionAdjuster:
                 # use the canidate transform as the base for finding new answers
                 self.transform = self.canidate_transform
         
-        # 
-        # generate new canidate
-        # 
         if True:
             score_before     = objective_function(self.transform.as_numpy)
             self.recorder.add(line_fit_score=score_before)
             self.recorder.commit()
-            
+        
+        # 
+        # generate new canidate
+        # 
+        if not config.action_adjuster.disabled:
             # find next best
             best_new_transform = Transform(
                 guess_to_maximize(
