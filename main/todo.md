@@ -1,5 +1,7 @@
 - DONE: create numeric score of correction
-- FAIL: implement the real policy instead of going straight, tensorflow v1 is too hard to install
+- FAIL: implement the real policy instead of going straight, tensorflow v1 is too hard to
+    - trains custom PPO: /ppo_warthog.ipynb https://github.com/akhil22/rl_algos/blob/main/policy_gradients/actor_critic/ppo_warthog.ipynb
+    - trains model: /ppo_warthog.ipynb /Users/jeffhykin/repos/action-adjuster/.ignore.repo/warthog_rl/warthog_bicycle.py
 - create a file system passthrough to asyncly update things
     - have action adjuster add-info log observations to a folder
     - have seperate task read from folder, run the solver, then solved, write to `best_canidate.json`
