@@ -21,7 +21,7 @@
                 update_frequency: 20 # timesteps
             
             policy:
-                name: dummy # 'bicycle' or 'dummy'
+                name: bicycle # 'bicycle' or 'dummy'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters

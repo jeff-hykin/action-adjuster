@@ -8,8 +8,9 @@ info = find_and_load(
     defaults_for_local_data=[ "WARTHOG" ],
 )
 
-path_to = info.path_to
-config  = info.config
+absolute_path_to = info.absolute_path_to
+path_to          = info.path_to
+config           = info.config
 
 # stamp some things
 FS.copy(item="config.yaml", to=path_to.default_output_folder, new_name=None)
