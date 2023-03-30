@@ -12,9 +12,9 @@ blissful-basics = "^0.2.23"
 trivial-torch-tools = "^0.5.1"
 plotly = "^5.13.1"
 matplotlib = "^3.7.1"
-gym = "^0.26.2"
 quik-config = "^1.7.0"
 cma = "^3.3.0"
+gym = "0.21"
 
 [tool.poetry.dev-dependencies]
 
