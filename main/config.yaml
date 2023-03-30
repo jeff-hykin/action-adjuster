@@ -4,6 +4,7 @@
     # a central place for filepaths
     (path_to):
         default_waypoints: "./waypoint_paths/real1.csv"
+        saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
         records: "./records/"
     
@@ -19,6 +20,9 @@
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
             
+            policy:
+                name: dummy # 'bicycle' or 'dummy'
+                
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
                 max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
@@ -72,7 +76,7 @@
                 # 
                 # action noise
                 # 
-                use_gaussian_action_noise: True
+                use_gaussian_action_noise: False
                 gaussian_action_noise:
                     velocity_action:
                         standard_deviation: 0.01 # meters per second
@@ -81,7 +85,7 @@
                 # 
                 # spacial info noise (e.g. sensor error)
                 # 
-                use_gaussian_spacial_noise: True
+                use_gaussian_spacial_noise: False
                 gaussian_spacial_noise:
                     "x":
                         standard_deviation: 0.5 # meters

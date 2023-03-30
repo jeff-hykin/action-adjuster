@@ -3,20 +3,31 @@ from action_adjuster import ActionAdjuster
 from config import config, path_to
 import torch
 from rigorous_recorder import RecordKeeper
+from stable_baselines3 import PPO
+from blissful_basics import FS
 
 from statistics import mean as average
 from random import random, sample, choices
 
 recorder = RecordKeeper(config=config)
 
-# FIXME: need a real policy
-def policy(observation):
-    velocity_action = 0.5
-    spin_action     = 0.00
-    return velocity_action, spin_action
 
+# 
+# policy
+# 
+if config.policy.name == 'dummy':
+    from policies.dummy import policy
+if config.policy.name == 'bicycle':
+    from policies.bicycle import policy
+
+# 
+# action adjuster
+# 
 action_adjuster = ActionAdjuster(policy=policy, recorder=recorder)
 
+# 
+# env
+# 
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,
     trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log"
