@@ -1,2 +1,0 @@
-- look up Trim control (for aircraft)
-- 
