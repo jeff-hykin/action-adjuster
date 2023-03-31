@@ -3,10 +3,12 @@
     
     # a central place for filepaths
     (path_to):
+        records: "./records/"
+        waypoints_folder: "./waypoint_paths/"
         default_waypoints: "./waypoint_paths/real1.csv"
         saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
-        records: "./records/"
+        temp_policy_folder: "./saved_policies/temp.ignore/"
     
     (local_data): ./local_data.ignore.yaml
     
@@ -21,7 +23,7 @@
                 update_frequency: 20 # timesteps
             
             policy:
-                name: bicycle # 'bicycle' or 'dummy'
+                name: retrained # 'bicycle' or 'dummy' or 'retrained'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
@@ -97,7 +99,28 @@
                         standard_deviation: 0 # meters per second
                     "spin":
                         standard_deviation: 0 # radians per action_duration (default 15 hertz)
+            
+            training:
+                parameters:
+                    seed: 0
+                    buff_size: 4000
+                    train_time_steps: 10000000
+                    gamma: 0.99
+                    clip_ratio: 0.2
+                    lr_pi: 3.0e-5
+                    lr_vf: 1.0e-3
+                    pi_train_itrs: 80
+                    v_train_itrs: 80
+                    lam: 0.97
+                    max_ep_len: 500
                 
+                evaluation:
+                    timesteps: 400
+                policy:
+                    layer_sizes: [ 128 ]
+                value_network:
+                    layer_sizes: [64, 64]
+        
         WARTHOG:
             vehicle:
                 name: Warthog

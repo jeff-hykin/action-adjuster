@@ -5,6 +5,7 @@ import torch
 from rigorous_recorder import RecordKeeper
 from stable_baselines3 import PPO
 from blissful_basics import FS
+from specific_tools.train_ppo import * # required because of pickle lookup
 
 from statistics import mean as average
 from random import random, sample, choices
@@ -19,6 +20,8 @@ if config.policy.name == 'dummy':
     from policies.dummy import policy
 if config.policy.name == 'bicycle':
     from policies.bicycle import policy
+if config.policy.name == 'retrained':
+    from policies.retrained import policy
 
 # 
 # action adjuster
