@@ -7,8 +7,7 @@ import math
 import gym
 import csv
 import time
-from blissful_basics import Csv, create_named_list_class
-import file_system_py as FS
+from blissful_basics import Csv, create_named_list_class, FS, print
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
@@ -111,6 +110,8 @@ class WarthogEnv(gym.Env):
             FS.ensure_is_folder(FS.parent_path(trajectory_output_path))
             self.trajectory_file = open(trajectory_output_path, "w+")
             self.trajectory_file.writelines(f"x, y, angle, velocity, spin, velocity_action, spin_action, is_episode_start\n")
+        
+        self.reset()
     
     @property
     def number_of_waypoints(self):
@@ -293,11 +294,12 @@ class WarthogEnv(gym.Env):
             # get the true closest waypoint (e.g. perfect sensors)
             #
             self.prev_closest_index = self.closest_index 
-            self.closest_index, self.closest_distance = WarthogEnv.get_closest(
+            closest_relative_index, self.closest_distance = WarthogEnv.get_closest(
                 remaining_waypoints=self.waypoints_list[self.closest_index:],
                 x=self.spacial_info.x,
                 y=self.spacial_info.y,
             )
+            self.closest_index += closest_relative_index
             closest_waypoint = self.waypoints_list[self.closest_index]
             
             x_diff     = closest_waypoint.x - self.spacial_info.x
@@ -308,6 +310,7 @@ class WarthogEnv(gym.Env):
             self.velocity_error   = closest_waypoint.velocity - self.spacial_info.velocity
             self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
             self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
+            
             
             max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
             max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
@@ -401,8 +404,16 @@ class WarthogEnv(gym.Env):
                 waypoint.velocity = desired_velocity
         
         self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
+        
+        closest_relative_index, self.closest_distance = WarthogEnv.get_closest(
+            remaining_waypoints=self.waypoints_list[self.closest_index:],
+            x=self.spacial_info.x,
+            y=self.spacial_info.y,
+        )
+        self.closest_index += closest_relative_index
+        
         return WarthogEnv.generate_observation(
-            remaining_waypoints=self.waypoints_list,
+            remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
             current_spacial_info=self.spacial_info,
         )

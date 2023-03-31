@@ -15,6 +15,7 @@ from envs.warthog import WarthogEnv
 import scipy.signal
 import time
 from config import config, path_to
+from blissful_basics import FS, print
 
 # torch.manual_seed(100)
 eps = np.finfo(np.float32).eps.item()
@@ -141,8 +142,6 @@ class PPOBuffer:
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
-       # print(rews)
-       # print(vals)
         # the next two lines implement GAE-Lambda advantage calculation
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
         self.adv_buf[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
@@ -188,20 +187,15 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
             with torch.no_grad():
                 m = pi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                 action = m.sample()
-                # print(action)
                 action = action.reshape((-1,) + action_dim)
-                # print(action)
                 logp = m.log_prob(action).sum(dim=1)
-                # print(logp)
                 action = action.cpu().numpy()
                 clipped_action = np.clip(action, env.action_space.low, env.action_space.high)
-                # print(clipped_action)
-                # obs_new, rew, done, _ = env.step(a.item())
                 obs_new, rew, done, _ = env.step(clipped_action[0])
                 ep_rewards[num_episode] += rew
                 ep_steps[num_episode] += 1
                 v = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
-            print(f'''rew = {rew}''')
+            
             data_buff.store(obs, action, rew, v.cpu().numpy(), logp.cpu().numpy())
             obs = obs_new
             if done or t == buff_size - 1:
@@ -218,7 +212,6 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
                 else:
                     v_ = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                     v_ = v_.detach().cpu().numpy()
-                print(f'''v_ = {v_}''')
                 data_buff.finish_path(v_)
             if curr_time_step % 100000 == 0:
                 torch.save(pi, f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt")
@@ -227,7 +220,6 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
         
         #  pbar.update(1)
         data = data_buff.get()
-        print(f'''data = {data}''')
         ret      = data["ret"].to(device)
         act      = data["act"].to(device)
         adv      = data["adv"].to(device)
@@ -258,18 +250,19 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
 # python.dataScience.textOutputLimit = 0
 
 if __name__ == '__main__':
-    env = WarthogEnv(path_to.waypoints_folder + "/sim_remote_waypoint.csv", None)
-    pi = ppo(env, **config.training.parameters)
-    # pi = torch.load("./temp_warthog.pt")
-    # plt.ion()
-    # plt.pause(2)
-    obs = env.reset()
-    for i in range(0, config.training.evaluation.timesteps):
-        m = pi(torch.as_tensor(obs, dtype=torch.float32).to(device))
-        action = m.sample()
-        obs, rew, done, info = env.step(action.cpu().numpy())
-        # env.render()
-        if done:
-            obs = env.reset()
+    with print.indent:
+        env = WarthogEnv(path_to.waypoints_folder + "/sim_remote_waypoint.csv", None)
+        pi = ppo(env, **config.training.parameters)
+        # pi = torch.load("./temp_warthog.pt")
+        # plt.ion()
+        # plt.pause(2)
+        obs = env.reset()
+        for i in range(0, config.training.evaluation.timesteps):
+            m = pi(torch.as_tensor(obs, dtype=torch.float32).to(device))
+            action = m.sample()
+            obs, rew, done, info = env.step(action.cpu().numpy())
+            # env.render()
+            if done:
+                obs = env.reset()
 
-    # torch.save(pi,"temp_warthog.pt")
+        # torch.save(pi,"temp_warthog.pt")

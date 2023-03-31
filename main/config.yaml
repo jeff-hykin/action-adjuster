@@ -46,7 +46,7 @@
             
             simulator:
                 save_data: True
-                should_render: True
+                should_render: False
                 max_velocity: 4
                 action_length: 2
                 action_space:

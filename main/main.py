@@ -4,7 +4,7 @@ from config import config, path_to
 import torch
 from rigorous_recorder import RecordKeeper
 from stable_baselines3 import PPO
-from blissful_basics import FS
+from blissful_basics import FS, print
 from specific_tools.train_ppo import * # required because of pickle lookup
 
 from statistics import mean as average
