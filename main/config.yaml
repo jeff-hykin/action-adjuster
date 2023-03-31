@@ -13,6 +13,12 @@
     (local_data): ./local_data.ignore.yaml
     
     related papers:
+        meta-reinforcement learning robust to distributional shift via model identification and experience relabeling:
+            paper: https://arxiv.org/pdf/2006.07178.pdf
+        
+        Learning Visual Locomotion with Cross-Modal Supervision:
+            paper: https://arxiv.org/abs/2211.03785
+        
         learning to adapt in dynamic envs with meta learning:
             paper: https://arxiv.org/pdf/1803.11347.pdf
             code: https://github.com/dhl8282/learning_to_adapt_gpu
@@ -22,6 +28,14 @@
         
         reinforcement learning in non-stationary environments:
             paper: https://arxiv.org/abs/1905.03970
+        
+        deep dynamics models for learning dexterous manipulation:
+            paper: https://arxiv.org/pdf/1909.11652.pdf
+        
+        continuous adaptation via meta-learning in nonstationary and competitive environments:
+            paper: 
+        
+            
     
     (profiles):
         (default):
