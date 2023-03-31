@@ -149,7 +149,7 @@ class WarthogEnv(gym.Env):
         return new_spacial_info
     
     @staticmethod
-    def get_closest_index(remaining_waypoints, x, y):
+    def get_closest(remaining_waypoints, x, y):
         closest_index = 0
         closest_distance = math.inf
         for index, waypoint in enumerate(remaining_waypoints):
@@ -159,7 +159,7 @@ class WarthogEnv(gym.Env):
                 closest_index = index
             else:
                 break
-        return closest_index
+        return closest_index, closest_distance
 
     @staticmethod
     def generate_observation(remaining_waypoints, horizon, current_spacial_info):
@@ -167,7 +167,7 @@ class WarthogEnv(gym.Env):
         original_spin     = current_spacial_info.spin
         
         observation = []
-        closest_index = WarthogEnv.get_closest_index(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
+        closest_index, closest_distance = WarthogEnv.get_closest(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
         for horizon_index in range(0, horizon):
             waypoint_index = horizon_index + closest_index
             if waypoint_index < len(remaining_waypoints):
@@ -293,7 +293,7 @@ class WarthogEnv(gym.Env):
             # get the true closest waypoint (e.g. perfect sensors)
             #
             self.prev_closest_index = self.closest_index 
-            self.closest_index = WarthogEnv.get_closest_index(
+            self.closest_index, self.closest_distance = WarthogEnv.get_closest(
                 remaining_waypoints=self.waypoints_list[self.closest_index:],
                 x=self.spacial_info.x,
                 y=self.spacial_info.y,

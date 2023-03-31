@@ -163,8 +163,7 @@ class PPOBuffer:
         # the next two lines implement the advantage normalization trick
 
         self.adv_buf = (self.adv_buf - self.adv_buf.mean()) / (self.adv_buf.std()+eps)
-        data = dict(obs=self.obs_buf, act=self.act_buf, ret=self.ret_buf,
-                    adv=self.adv_buf, logp=self.logp_buf)
+        data = dict(obs=self.obs_buf, act=self.act_buf, ret=self.ret_buf, adv=self.adv_buf, logp=self.logp_buf)
         return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in data.items()}
 
 def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf, pi_train_itrs, v_train_itrs, lam, max_ep_len):
@@ -202,6 +201,7 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
                 ep_rewards[num_episode] += rew
                 ep_steps[num_episode] += 1
                 v = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
+            print(f'''rew = {rew}''')
             data_buff.store(obs, action, rew, v.cpu().numpy(), logp.cpu().numpy())
             obs = obs_new
             if done or t == buff_size - 1:
@@ -218,6 +218,7 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
                 else:
                     v_ = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                     v_ = v_.detach().cpu().numpy()
+                print(f'''v_ = {v_}''')
                 data_buff.finish_path(v_)
             if curr_time_step % 100000 == 0:
                 torch.save(pi, f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt")
@@ -226,6 +227,7 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
         
         #  pbar.update(1)
         data = data_buff.get()
+        print(f'''data = {data}''')
         ret      = data["ret"].to(device)
         act      = data["act"].to(device)
         adv      = data["adv"].to(device)
