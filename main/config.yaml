@@ -16,7 +16,7 @@
         meta-reinforcement learning robust to distributional shift via model identification and experience relabeling:
             paper: https://arxiv.org/pdf/2006.07178.pdf
         
-        Learning Visual Locomotion with Cross-Modal Supervision:
+        learning visual locomotion with cross-modal supervision:
             paper: https://arxiv.org/abs/2211.03785
         
         learning to adapt in dynamic envs with meta learning:
