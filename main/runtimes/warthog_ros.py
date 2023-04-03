@@ -12,6 +12,7 @@ import message_filters
 from blissful_basics import print, LazyDict
 
 from generic_tools.universe.timestep import Timestep
+from config import config, path_to
 
 class RosRuntime:
     def __init__(self, agent, env):
@@ -38,7 +39,11 @@ class RosRuntime:
         self.first_observation_loaded = False
         
         rospy.init_node(config.ros_runtime.main_node_name)
-        # FIXME: setup action publisher
+        self.controller_publisher = rospy.Publisher(
+            rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic),
+            Twist,
+            queue_size=1,
+        )
         self.odom_subscriber = message_filters.Subscriber(
             rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic),
             Odometry,
@@ -56,8 +61,12 @@ class RosRuntime:
         self.time_synchonizer.registerCallback(self.when_data_arrives)
     
     def publish_action(self, action):
-        # FIXME
-        pass
+        velocity, spin = action
+        if not rospy.is_shutdown():
+            message = Twist()
+            message.linear.x = velocity
+            message.angular.z = spin
+            self.controller_publisher.publish(message)
     
     def when_data_arrives(self, odom_msg, gps_msg):
         velocity = odom_msg.twist.twist.linear.x 
@@ -90,6 +99,7 @@ class RosRuntime:
             reaction = agent.timestep.reaction
             if type(reaction) == type(None):
                 reaction = env.action_space.sample()
+            self.publish_action(reaction)
             observation, reward, is_last_step, agent.timestep.hidden_info = env.step(reaction, spacial_info_override=new_spacial_info)
             agent.next_timestep.observation = deepcopy(observation)
             agent.timestep.reward           = deepcopy(reward)
