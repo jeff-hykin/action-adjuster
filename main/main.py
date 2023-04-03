@@ -7,7 +7,7 @@ from stable_baselines3 import PPO
 from blissful_basics import FS, print, LazyDict
 
 from envs.warthog import WarthogEnv
-from action_adjuster import ActionAdjustedAgent
+from action_adjuster import ActionAdjustedAgent, ActionAdjuster
 from config import config, path_to
 from specific_tools.train_ppo import * # required because of pickle lookup
 from generic_tools.universe.agent import Skeleton
@@ -38,6 +38,7 @@ if config.policy.name == 'retrained':
 # 
 # agent
 # 
+ActionAdjuster.waypoints_list = env.waypoints_list # Hacky but needed so that waypoint data doesn't get sent across threads at every timesteps
 agent = ActionAdjustedAgent(
     observation_space=env.observation_space,
     reaction_space=env.action_space,

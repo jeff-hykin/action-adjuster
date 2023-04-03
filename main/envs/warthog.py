@@ -359,6 +359,7 @@ class WarthogEnv(gym.Env):
         additional_info = dict(
             spacial_info=self.spacial_info,
             spacial_info_with_noise=spacial_info_with_noise,
+            current_waypoint_index=self.closest_index,
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
             action_duration=self.action_duration,

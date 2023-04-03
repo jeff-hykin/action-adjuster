@@ -10,6 +10,7 @@
         default_output_folder: "./output.ignore/"
         temp_policy_folder: "./saved_policies/temp.ignore/"
         action_adjuster_data_buffer: "./temp.ignore/action_adjuster_data_buffer.json"
+        action_adjuster_transform_file: "./temp.ignore/action_adjuster_transform.json"
     
     (local_data): ./local_data.ignore.yaml
     
