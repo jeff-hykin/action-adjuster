@@ -6,6 +6,7 @@ dependencies:
 - file-system-py==0.0.10
 - json-fix==0.5.2
 - more-itertools==9.0.0
+- pyquaternion
 - gym
 - icecream
 - matplotlib
