@@ -40,6 +40,7 @@
     (profiles):
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
+            should_use_ros: false
             action_adjuster:
                 disabled: False
                 default_to_perfect: True
@@ -68,6 +69,9 @@
                     
                     0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%
+            
+            ros_runtime:
+                velocity_controller: 'warthog_velocity_controller/cmd_vel'
             
             simulator:
                 save_data: True

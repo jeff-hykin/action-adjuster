@@ -35,10 +35,11 @@ class WarthogEnv(gym.Env):
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
     
-    def __init__(self, waypoint_file_path, trajectory_output_path):
+    def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
+        self.recorder = recorder
         
         self.waypoints_list   = []
         self.spacial_info = WarthogEnv.SpacialInformation([])
@@ -199,7 +200,7 @@ class WarthogEnv(gym.Env):
         return observation
 
 
-    def step(self, action):
+    def step(self, action, spacial_info_override=None):
         self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
         self.action_velocity, self.action_spin = action
         
@@ -215,7 +216,10 @@ class WarthogEnv(gym.Env):
         # 
         # handle action + spacial update
         # 
-        if True:
+        if type(spacial_info_override) != type(None):
+            # this is when the spacial_info is coming from the real world
+            self.spacial_info = spacial_info_override
+        else:
             velocity_action = self.action_velocity
             spin_action     = self.action_spin
             
@@ -284,12 +288,6 @@ class WarthogEnv(gym.Env):
                 horizon=self.horizon,
                 current_spacial_info=spacial_info_with_noise,
             )
-        
-        
-        # 
-        # Reward Calculation (uses noiseless data as input)
-        # 
-        if True:
             # 
             # get the true closest waypoint (e.g. perfect sensors)
             #
@@ -301,7 +299,11 @@ class WarthogEnv(gym.Env):
             )
             self.closest_index += closest_relative_index
             closest_waypoint = self.waypoints_list[self.closest_index]
-            
+        
+        # 
+        # Reward Calculation (uses noiseless data as input)
+        # 
+        if True:
             x_diff     = closest_waypoint.x - self.spacial_info.x
             y_diff     = closest_waypoint.y - self.spacial_info.y
             angle_diff = get_angle_from_origin(x_diff, y_diff)
@@ -378,39 +380,49 @@ class WarthogEnv(gym.Env):
         
         return observation, self.reward, done, additional_info
 
-    def reset(self):
+    def reset(self, spacial_info_override=None):
         self.is_episode_start = 1
         self.total_episode_reward = 0
         if self.max_velocity >= max_velocity_reset_number:
             self.max_velocity = 1
         
         # pick a random waypoint
-        index = np.random.randint(self.number_of_waypoints, size=1)[0]
-        waypoint = self.waypoints_list[index]
-        self.closest_index      = index
-        self.prev_closest_index = index
+        if type(spacial_info_override) != type(None):
+            # this is when the spacial_info is coming from the real world
+            self.spacial_info = spacial_info_override
+            self.closest_index = 0
+            self.prev_closest_index = 0
+        else:
+            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            waypoint = self.waypoints_list[index]
+            self.closest_index      = index
+            self.prev_closest_index = index
+            
+            self.spacial_info.x      = waypoint.x + self.random_start_position_offset
+            self.spacial_info.y      = waypoint.y + self.random_start_position_offset
+            self.spacial_info.angle  = waypoint.angle + self.random_start_angle_offset
+            self.x_pose = [self.spacial_info.x] * self.number_of_trajectories
+            self.y_pose = [self.spacial_info.y] * self.number_of_trajectories
+            self.spacial_info.velocity = 0
+            self.spacial_info.spin     = 0
+            for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
+                if desired_velocity > self.max_velocity:
+                    waypoint.velocity = self.max_velocity
+                else:
+                    waypoint.velocity = desired_velocity
+            
+            self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
         
-        self.spacial_info.x      = waypoint.x + self.random_start_position_offset
-        self.spacial_info.y      = waypoint.y + self.random_start_position_offset
-        self.spacial_info.angle  = waypoint.angle + self.random_start_angle_offset
-        self.x_pose = [self.spacial_info.x] * self.number_of_trajectories
-        self.y_pose = [self.spacial_info.y] * self.number_of_trajectories
-        self.spacial_info.velocity = 0
-        self.spacial_info.spin     = 0
-        for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
-            if desired_velocity > self.max_velocity:
-                waypoint.velocity = self.max_velocity
-            else:
-                waypoint.velocity = desired_velocity
-        
-        self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
-        
+        # 
+        # calculate closest index
+        # 
         closest_relative_index, self.closest_distance = WarthogEnv.get_closest(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             x=self.spacial_info.x,
             y=self.spacial_info.y,
         )
         self.closest_index += closest_relative_index
+        self.prev_closest_index = self.closest_index
         
         return WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
@@ -506,33 +518,3 @@ class WaypointEntry(numpy.ndarray):
     def velocity(self): return self[3]
     @velocity.setter
     def velocity(self, value): self[3] = value
-
-
-# import rospy
-# import pandas as pd
-# from nav_msgs.msg import Path
-# from geometry_msgs.msg import PoseStamped
-# import sys
-
-# def main():
-#     rospy.init_node("waypoint_publisher")
-#     file_name = sys.argv[1]
-#     path_topic = rospy.get_param("~path_topic", '/local_planning/path/final_trajectory')
-#     path_pub = rospy.Publisher(path_topic, Path, latch=True, queue_size=1)
-#     waypoint_path = Path()
-#     waypoint_path.header.frame_id = '/map'
-#     waypoint_path.header.stamp = rospy.get_rostime()
-# 
-#     df = pd.read_csv(file_name)
-#     print(df.keys())
-#     num_waypoints = len(df.index)
-#     print(df)
-#     for i in range(0, num_waypoints):
-#         current_pose = PoseStamped()
-#         current_pose.pose.position.x = df.iloc[i]["x"]
-#         current_pose.pose.position.y = df.iloc[i]["y"]
-#         current_pose.pose.position.z = df.iloc[i]["v"]
-#         waypoint_path.poses.append(current_pose)
-# 
-#     path_pub.publish(waypoint_path)
-#     rospy.spin()
