@@ -10,6 +10,7 @@ import blissful_basics as bb                                         # pip insta
 from blissful_basics import to_pure, countdown, print, singleton, FS # pip install blissful_basics
 from icecream import ic                                              # pip install icecream
 from trivial_torch_tools import to_tensor                            # pip install trivial_torch_tools
+import json_fix
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
@@ -18,6 +19,9 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 from generic_tools.numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
+
+import numpy
+json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 
 perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
@@ -28,6 +32,8 @@ perfect_answer = to_tensor([
 # init/reset the files
 FS.write(path=path_to.action_adjuster_data_buffer, data='[]')
 FS.write(path=path_to.action_adjuster_transform_file, data='')
+with open(path_to.action_adjuster_transform_file, 'w') as outfile:
+    json.dump(perfect_answer, outfile)
 
 # 
 # models
@@ -61,11 +67,11 @@ class Transform:
         return "[ " + ", ".join([ each_row for each_row in rows]) + " ]"
     
     def __json__(self):
-        return json.dumps(self._transform)
+        return self._transform.tolist()
     
     @staticmethod
-    def from_json(json_string):
-        return Transform(json.loads(json_string))
+    def from_json(json_parsed):
+        return Transform(json_parsed)
     
     @property
     def as_numpy(self):
@@ -138,7 +144,7 @@ class ActionAdjuster:
         
         self.processor_thread = threading.Thread(target=processor, args=())
         self.processor_thread.start()
-        
+    
     def write_to_data_buffer(self):
         buffer = []
         try:
@@ -175,8 +181,11 @@ class ActionAdjuster:
     
     def write_transform(self):
         print("writing transform")
-        with open(path_to.action_adjuster_transform_file, 'w') as out_file:
-            json.dump(self.transform, out_file)
+        try:
+            with open(path_to.action_adjuster_transform_file, 'w') as out_file:
+                json.dump(self.transform, out_file)
+        except Exception as error:
+            print(f'''error = {error}''')
     
     def read_transform(self):
         try:
@@ -185,7 +194,7 @@ class ActionAdjuster:
                     json.load(in_file)
                 )
         except Exception as error:
-            print("note, unable to read transform data")
+            print(f"note, unable to read transform data, {error}")
     
     def add_data(self, observation, additional_info, is_processor_thread=False):
         self.timestep += 1

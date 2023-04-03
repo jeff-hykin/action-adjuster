@@ -1,9 +1,9 @@
-- ros:
-    - find and process observation data
-    - publish control commands
 - create a file system passthrough to asyncly update things
     - have action adjuster add-info log observations to a folder
     - have seperate task read from folder, run the solver, then solved, write to `best_canidate.json`
+- test ROS imports on linux machine
+- test how much it improves policy reward
+- try to make fake ROS server
     
 - evaluate the difficulty of comparing to the meta learning paper
 - look up Trim control (for aircraft)
@@ -24,3 +24,6 @@ Experimental
 
 - DONE: implement the real policy instead of going straight, tensorflow v1 is too hard to
 - DONE: create a switch for publishing rospy stuff
+- DONE: ros:
+    - find and process observation data
+    - publish control commands
