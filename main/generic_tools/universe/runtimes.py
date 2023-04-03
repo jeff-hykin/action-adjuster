@@ -6,7 +6,7 @@ from generic_tools.universe.timestep import Timestep
 
 def basic(*, agent, env, max_timestep_index=math.inf, max_episode_index=math.inf, observation_modifier=None, reaction_modifier=None, reward_modifier=None):
     """
-    for episode_index, timestep_index, agent.timestep.observation, agent.timestep.reward, agent.timestep.is_last_step in traditional_runtime(agent=agent, env=env):
+    for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
         pass
     """
     if observation_modifier is None: observation_modifier = lambda each: each
@@ -49,7 +49,7 @@ def basic(*, agent, env, max_timestep_index=math.inf, max_episode_index=math.inf
             agent.timestep.is_last_step     = deepcopy(is_last_step)
             agent.when_timestep_ends()
             
-            yield episode_index, agent.timestep
+            yield episode_index, agent.timestep.index, agent.timestep.observation, agent.timestep.reward, agent.timestep.is_last_step
         
         if timestep_count >= max_timestep_index:
             break

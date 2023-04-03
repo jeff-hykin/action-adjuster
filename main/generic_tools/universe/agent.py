@@ -1,4 +1,4 @@
-from tools.universe.timestep import Timestep
+from generic_tools.universe.timestep import Timestep
 
 class Skeleton:
     # TODO: add a "dont_show_help" and default to listing out all the attributes that enhancements give an agent

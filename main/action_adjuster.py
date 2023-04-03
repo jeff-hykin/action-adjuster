@@ -313,7 +313,9 @@ class ActionAdjustedAgent(Skeleton):
         read: self.observation
         write: self.reaction = something
         """
-        self.timestep.reaction = self.action_adjuster.transform.modify_action(action)
+        self.timestep.reaction = self.action_adjuster.transform.modify_action(
+            self.policy(self.timestep.observation)
+        )
     def when_timestep_ends(self):
         """
         read: self.timestep.reward
@@ -322,7 +324,7 @@ class ActionAdjustedAgent(Skeleton):
         self.recorder.add(timestep=self.timestep.index)
         self.recorder.add(accumulated_reward=self.accumulated_reward)
         self.recorder.add(reward=self.timestep.reward)
-        self.action_adjuster.add_data(self.timestep.observation, self.timestep.additional_info)
+        self.action_adjuster.add_data(self.timestep.observation, self.timestep.hidden_info)
     def when_episode_ends(self):
         pass
     def when_mission_ends(self):

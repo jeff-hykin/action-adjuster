@@ -21,7 +21,7 @@ recorder = RecordKeeper(config=config)
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,
     trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
-    recorder=recorder,
+    # recorder=recorder,
 )
 
 # 
@@ -44,7 +44,8 @@ agent = ActionAdjustedAgent(
     recorder=recorder,
 )
 
-runtimes.basic(agent, env)
+for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
+    pass
 
 
     
