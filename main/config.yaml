@@ -9,6 +9,7 @@
         saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
         temp_policy_folder: "./saved_policies/temp.ignore/"
+        action_adjuster_data_buffer: "./temp.ignore/action_adjuster_data_buffer.json"
     
     (local_data): ./local_data.ignore.yaml
     
@@ -47,6 +48,8 @@
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
+                max_history_size: 10000 # timesteps
+                processor_sleep_time: 1 # seconds
             
             policy:
                 name: retrained # 'bicycle' or 'dummy' or 'retrained'

@@ -1,12 +1,14 @@
 import json
 from copy import deepcopy
+from time import sleep
+import math
 
-import torch                                                     # pip install torch
-import numpy                                                     # pip install numpy
-import blissful_basics as bb                                     # pip install blissful_basics
-from blissful_basics import to_pure, countdown, print, singleton # pip install blissful_basics
-from icecream import ic                                          # pip install icecream
-from trivial_torch_tools import to_tensor                        # pip install trivial_torch_tools
+import torch                                                         # pip install torch
+import numpy                                                         # pip install numpy
+import blissful_basics as bb                                         # pip install blissful_basics
+from blissful_basics import to_pure, countdown, print, singleton, FS # pip install blissful_basics
+from icecream import ic                                              # pip install icecream
+from trivial_torch_tools import to_tensor                            # pip install trivial_torch_tools
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
@@ -136,6 +138,12 @@ class ActionAdjuster:
         self.actual_spatial_values.append(additional_info["spacial_info_with_noise"])
         # NOTE: this^ is only grabbing the last, it would be valid to grab all of them
         # future work here might try grabbing all of them, or reducing the length, especially if the model/policy is thought to be bad/noisy
+        assert len(self.actual_spatial_values) == len(self.input_data)
+        # cap the history size
+        if config.action_adjuster.max_history_size < math.inf:
+            if len(self.actual_spatial_values) > config.action_adjuster.max_history_size:
+                self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
+                self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
         
         action = self.policy(observation)
         
@@ -147,7 +155,7 @@ class ActionAdjuster:
         if len(self.input_data) == 0:
             return
         
-        # skip the first X, because we are not predicting the first X
+        # skip the first X entries, because there is no predicted value for the first entry (predictions need source data)
         real_spatial_values = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
@@ -329,3 +337,26 @@ class ActionAdjustedAgent(Skeleton):
         pass
     def when_mission_ends(self):
         pass
+
+
+# 
+# data processor
+# 
+if __name__ == '__main__':
+    while True:
+        new_data = []
+        try:
+            with open(path_to.action_adjuster_data_buffer, 'r') as in_file:
+                new_data = json.load(in_file)
+            # consume the buffer
+            FS.write(path=path_to.action_adjuster_data_buffer, data="[]")
+        except Exception as error:
+            pass
+        
+        # if no new data, sleep
+        if len(new_data) == 0:
+            sleep(config.action_adjuster.processor_sleep_time)
+        # process new data
+        else:
+            # FIXME: test the new canidate
+            pass

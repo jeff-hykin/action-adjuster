@@ -13,7 +13,6 @@ from specific_tools.train_ppo import * # required because of pickle lookup
 from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
-from runtimes.warthog_ros import RosRuntime
 
 recorder = RecordKeeper(config=config)
 
@@ -50,6 +49,7 @@ agent = ActionAdjustedAgent(
 # Runtime
 # 
 if config.should_use_ros:
+    from runtimes.warthog_ros import RosRuntime
     RosRuntime(agent=agent, env=env)
 else:
     # basic runtime
