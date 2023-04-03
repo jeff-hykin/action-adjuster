@@ -1,6 +1,9 @@
-- DONE: implement the real policy instead of going straight, tensorflow v1 is too hard to
-- finish rospy:
-    simulate listener: /Users/jeffhykin/repos/action-adjuster/.ignore.repo/warthog_rl/ranger_sim_data_collecter_steering.py
+- ros:
+    - find and process observation data
+    - publish control commands
+    - create a listener
+    - finish rospy:
+        simulate listener: /Users/jeffhykin/repos/action-adjuster/.ignore.repo/warthog_rl/ranger_sim_data_collecter_steering.py
     
 - evaluate the difficulty of comparing to the meta learning paper
 - look up Trim control (for aircraft)
@@ -20,3 +23,7 @@
 Experimental
 - combine update frequency and step size into one hyperparameter for action adjuster
 - try using all the predicted points instead of just the far-out predicted values
+
+
+- DONE: implement the real policy instead of going straight, tensorflow v1 is too hard to
+- DONE: create a switch for publishing rospy stuff
