@@ -13,6 +13,8 @@ from config import config, path_to
 from envs.warthog import WarthogEnv
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 from generic_tools.numpy import shift_towards
+from generic_tools.hill_climbing import guess_to_maximize
+from generic_tools.universe.agent import Skeleton
 
 perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
@@ -87,7 +89,7 @@ class Transform:
 if config.action_adjuster.default_to_perfect:
     Transform.inital = perfect_answer[0:2,:]
 
-# FIXME: replace this with a normalization method
+# TODO: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
     1, # x
     1, # y
@@ -95,6 +97,7 @@ spacial_coefficients = WarthogEnv.SpacialInformation([
     0.3, # velocity # arbitraryly picked value 
     0.3, # spin # arbitraryly picked value 
 ])
+# TODO: combine this class with the ActionAdjustedAgent class
 class ActionAdjuster:
     def __init__(self, policy, initial_transform=None, recorder=None):
         self.original_policy = policy
@@ -281,46 +284,46 @@ class ActionAdjuster:
         
         return spacial_expectation, observation_expectation
 
-def guess_to_maximize(objective_function, initial_guess, stdev):
-    import cma
-    is_scalar = not bb.is_iterable(initial_guess)
-    new_objective = objective_function
-    if is_scalar: # wrap it
-        new_objective = lambda arg1: objective_function(arg1[0])
-        initial_guess = [initial_guess, 0]
-    else: # flatten it
-        initial_guess = numpy.array(initial_guess)
-        shape = initial_guess.shape
-        if shape == (1,):
-            new_objective = lambda arg1: objective_function(numpy.array([arg1[0]]))
-        elif len(shape) > 1:
-            new_objective = lambda arg1: objective_function(arg1.reshape(shape))
+class ActionAdjustedAgent(Skeleton):
+    previous_timestep = None
+    timestep          = None
+    next_timestep     = None
+    # timestep attributes:
+    # self.timestep.index
+    # self.timestep.observation
+    # self.timestep.is_last_step
+    # self.timestep.reward
+    # self.timestep.hidden_info
+    # self.timestep.reaction
     
-    import sys
-    
-    
-    xopt, es = cma.fmin2(
-        lambda *args: -new_objective(*args),
-        numpy.array(initial_guess.flat),
-        stdev,
-        options=dict(
-            verb_log=0                      ,
-            verbose=0                       ,
-            verb_plot=0                     ,
-            verb_disp=0                     ,
-            verb_filenameprefix="/dev/null" ,
-            verb_append=0                   ,
-            verb_time=False                 ,
-        ),
-    )
-    
-    output = xopt
-    if is_scalar: # wrap it
-        return output[0]
-    else: # un-flatten it
-        if shape == (1,):
-            return numpy.array([output[0]])
-        elif len(shape) > 1:
-            return output.reshape(shape)
-    
-    return output
+    def __init__(self, observation_space, reaction_space, policy, recorder, **config):
+        self.observation_space  = observation_space
+        self.reaction_space     = reaction_space
+        self.accumulated_reward = 0
+        self.policy   = policy
+        self.recorder = recorder
+        self.action_adjuster = ActionAdjuster(policy=policy, recorder=recorder)
+
+    def when_mission_starts(self):
+        pass
+    def when_episode_starts(self):
+        pass
+    def when_timestep_starts(self):
+        """
+        read: self.observation
+        write: self.reaction = something
+        """
+        self.timestep.reaction = self.action_adjuster.transform.modify_action(action)
+    def when_timestep_ends(self):
+        """
+        read: self.timestep.reward
+        """
+        self.accumulated_reward += self.timestep.reward
+        self.recorder.add(timestep=self.timestep.index)
+        self.recorder.add(accumulated_reward=self.accumulated_reward)
+        self.recorder.add(reward=self.timestep.reward)
+        self.action_adjuster.add_data(self.timestep.observation, self.timestep.additional_info)
+    def when_episode_ends(self):
+        pass
+    def when_mission_ends(self):
+        pass
