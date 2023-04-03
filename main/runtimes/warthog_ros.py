@@ -37,19 +37,23 @@ class RosRuntime:
         )
         self.first_observation_loaded = False
         
-        # FIXME: setup ros
-        self.cmd_vel_topic = rospy.get_param('~cmd_vel_topic', 'warthog_velocity_controller/cmd_vel')
-        #self.odom_topic = rospy.get_param('~odom_topic', 'odometry/filtered_map')
-        self.odom_topic = rospy.get_param('~odom_topic', 'odometry/filtered')
-        self.gps_odom_topic = rospy.get_param('~map_odom_topic', 'odometry/filtered2')
-        #self.odom_topic = rospy.get_param('~odom_topic', 'warthog_velocity_controller/odom')
-        # self.out_file = rospy.get_param('~out_file_name', 'real_remote_poses_ext_war_gps2.csv')
-        self.out_file = rospy.get_param('~out_file_name', 'rellis_mud1.csv')
-        self.file_h = open(self.out_file, 'w')
-        self.file_h.writelines("x,y,th,vel,w,v_cmd,w_cmd\n")
-        self.cmd_vel_sub = message_filters.Subscriber(self.cmd_vel_topic, Twist)
-        self.odom_sub = message_filters.Subscriber(self.odom_topic, Odometry)
-        self.gps_odom_sub = message_filters.Subscriber(self.gps_odom_topic, Odometry)
+        rospy.init_node(config.ros_runtime.main_node_name)
+        # FIXME: setup action publisher
+        self.odom_subscriber = message_filters.Subscriber(
+            rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic),
+            Odometry,
+        )
+        self.gps_subscriber = message_filters.Subscriber(
+            rospy.get_param('~map_odom_topic', config.ros_runtime.gps_topic),
+            Odometry
+        )
+        self.time_synchonizer = message_filters.ApproximateTimeSynchronizer(
+            [self.odom_subscriber, self.gps_subscriber],
+            config.ros_runtime.time_sync_size,
+            1,
+            allow_headerless=True
+        )
+        self.time_synchonizer.registerCallback(self.when_data_arrives)
     
     def publish_action(self, action):
         # FIXME

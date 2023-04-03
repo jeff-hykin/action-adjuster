@@ -1,15 +1,12 @@
 - ros:
     - find and process observation data
     - publish control commands
-    - create a listener
-    - finish rospy:
-        simulate listener: /Users/jeffhykin/repos/action-adjuster/.ignore.repo/warthog_rl/ranger_sim_data_collecter_steering.py
-    
-- evaluate the difficulty of comparing to the meta learning paper
-- look up Trim control (for aircraft)
 - create a file system passthrough to asyncly update things
     - have action adjuster add-info log observations to a folder
     - have seperate task read from folder, run the solver, then solved, write to `best_canidate.json`
+    
+- evaluate the difficulty of comparing to the meta learning paper
+- look up Trim control (for aircraft)
 - add lookbehind limiter, or maybe log
 - record noise performance
 - add sliding test

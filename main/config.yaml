@@ -71,7 +71,11 @@
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%
             
             ros_runtime:
+                main_node_name: 'warthog_listener'
                 velocity_controller: 'warthog_velocity_controller/cmd_vel'
+                odometry_topic: 'odometry/filtered'
+                gps_topic: 'odometry/filtered2'
+                time_sync_size: 10 # TODO: I don't actually know what this 10 does
             
             simulator:
                 save_data: True
