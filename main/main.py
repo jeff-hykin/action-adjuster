@@ -4,14 +4,16 @@ from random import random, sample, choices
 import torch
 from rigorous_recorder import RecordKeeper
 from stable_baselines3 import PPO
-from blissful_basics import FS, print
+from blissful_basics import FS, print, LazyDict
 
 from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent
 from config import config, path_to
 from specific_tools.train_ppo import * # required because of pickle lookup
 from generic_tools.universe.agent import Skeleton
+from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
+from runtimes.warthog_ros import RosRuntime
 
 recorder = RecordKeeper(config=config)
 
@@ -21,7 +23,7 @@ recorder = RecordKeeper(config=config)
 env = WarthogEnv(
     waypoint_file_path=path_to.default_waypoints,
     trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
-    # recorder=recorder,
+    recorder=recorder,
 )
 
 # 
@@ -44,28 +46,12 @@ agent = ActionAdjustedAgent(
     recorder=recorder,
 )
 
-for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
-    pass
-
-
-    
-# def reality_runtime():
-#     accumulated_reward = 0
-#     timestep = -1
-#     def init():
-#         pass
-    
-#     def when_observation_data_arrives(observation, reward, done, additional_info):
-#         timestep += 1
-        
-#         action          = policy(observation)
-#         adjusted_action = action_adjuster.transform.modify_action(action)
-#         observation, reward, done, additional_info = env.step(adjusted_action)
-#         accumulated_reward += reward
-#         recorder.add(timestep=timestep)
-#         recorder.add(accumulated_reward=accumulated_reward)
-#         recorder.add(reward=reward)
-#         action_adjuster.add_data(observation, additional_info)
-#         if done:
-#             break
-        
+# 
+# Runtime
+# 
+if config.should_use_ros:
+    RosRuntime(agent=agent, env=env)
+else:
+    # basic runtime
+    for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
+        pass
