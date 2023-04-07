@@ -26,3 +26,4 @@ dependencies:
 - cma>=3.3.0
 - tdqm>=0.0.1
 - stable-baselines3>=1.7.0
+- scipy

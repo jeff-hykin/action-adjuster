@@ -48,12 +48,10 @@ class RosRuntime:
             rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic),
             Odometry,
         )
-        self.gps_subscriber = message_filters.Subscriber(
-            rospy.get_param('~map_odom_topic', config.ros_runtime.gps_topic),
-            Odometry
-        )
         self.time_synchonizer = message_filters.ApproximateTimeSynchronizer(
-            [self.odom_subscriber, self.gps_subscriber],
+            [
+                self.odom_subscriber,
+            ],
             config.ros_runtime.time_sync_size,
             1,
             allow_headerless=True
@@ -68,13 +66,13 @@ class RosRuntime:
             message.angular.z = spin
             self.controller_publisher.publish(message)
     
-    def when_data_arrives(self, odom_msg, gps_msg):
+    def when_data_arrives(self, odom_msg):
         velocity = odom_msg.twist.twist.linear.x 
         spin     = odom_msg.twist.twist.angular.z 
-        x      = gps_msg.pose.pose.position.x
-        y      = gps_msg.pose.pose.position.y
-        temp_y = gps_msg.pose.pose.orientation.z
-        temp_x = gps_msg.pose.pose.orientation.w
+        x        = odom_msg.twist.twist.position.x
+        y        = odom_msg.twist.twist.position.y
+        temp_y   = odom_msg.twist.twist.orientation.z
+        temp_x   = odom_msg.twist.twist.orientation.w
         angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
         
         new_spacial_info = env.SpacialInformation([ x, y, angle, velocity, spin ])
