@@ -81,6 +81,9 @@
                 gps_topic: 'odometry/filtered2'
                 time_sync_size: 10 # TODO: I don't actually know what this 10 does
             
+            ros_faker:
+                main_node_name: 'warthog_faker'
+            
             simulator:
                 save_data: True
                 should_render: True
