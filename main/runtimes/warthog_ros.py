@@ -55,6 +55,8 @@ class RosRuntime:
             allow_headerless=True
         )
         self.time_synchonizer.registerCallback(self.when_data_arrives)
+        print("waiting for odom message")
+        rospy.spin()
     
     def publish_action(self, action):
         velocity, spin = action
@@ -65,13 +67,19 @@ class RosRuntime:
             self.controller_publisher.publish(message)
     
     def when_data_arrives(self, odom_msg):
-        velocity = odom_msg.twist.twist.linear.x 
-        spin     = odom_msg.twist.twist.angular.z 
-        x        = odom_msg.twist.twist.position.x
-        y        = odom_msg.twist.twist.position.y
-        temp_y   = odom_msg.twist.twist.orientation.z
-        temp_x   = odom_msg.twist.twist.orientation.w
-        angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
+        print(f'''odom_msg = {odom_msg}''')
+        x        = odom_msg.pose.pose.position.x
+        y        = odom_msg.pose.pose.position.y
+        velocity = odom_msg.twist.twist.linear.x
+        spin     = odom_msg.twist.twist.angular.x
+        
+        # velocity = odom_msg.twist.twist.linear.x 
+        # spin     = odom_msg.twist.twist.angular.z 
+        # x        = odom_msg.pose.pose.position.x
+        # y        = odom_msg.pose.pose.position.y
+        # temp_y   = odom_msg.pose.pose.orientation.z
+        # temp_x   = odom_msg.pose.pose.orientation.w
+        # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
         
         new_spacial_info = env.SpacialInformation([ x, y, angle, velocity, spin ])
         

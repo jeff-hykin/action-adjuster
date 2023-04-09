@@ -37,7 +37,7 @@ controller_subscriber = message_filters.Subscriber(
     Twist,
 )
 odom_publisher = rospy.Publisher(
-    odometry_topic
+    odometry_topic,
     Odometry,
     queue_size=1,
 )
@@ -56,12 +56,11 @@ time_synchonizer = message_filters.ApproximateTimeSynchronizer(
 # 
 def publish_position():
     odom_msg = Odometry()
-    odom_msg.twist.twist.linear.x       = env.spacial_info.x 
-    odom_msg.twist.twist.angular.z      = env.spacial_info.y     
-    odom_msg.twist.twist.position.x     = env.spacial_info.angle        
-    odom_msg.twist.twist.position.y     = env.spacial_info.velocity        
-    odom_msg.twist.twist.orientation.z  = env.spacial_info.spin    # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
-    # odom_msg.twist.twist.orientation.w  = temp_x   
+    odom_msg.pose.pose.position.x  = env.spacial_info.x
+    odom_msg.pose.pose.position.y  = env.spacial_info.y
+    odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
+    odom_msg.twist.twist.angular.x = env.spacial_info.spin
+    print("publishing odom message")
     odom_publisher.publish(odom_msg)
 
 env.reset()
@@ -75,3 +74,4 @@ def when_controller_command_sent(message):
     publish_position()
 
 time_synchonizer.registerCallback(when_controller_command_sent)
+rospy.spin()
