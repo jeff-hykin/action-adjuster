@@ -6,8 +6,6 @@ import rospy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from pyquaternion import Quaternion as qut
-from vn300.msg import ins
-from pacmod_msgs.msg import SystemRptFloat
 import message_filters
 from blissful_basics import print, LazyDict
 
