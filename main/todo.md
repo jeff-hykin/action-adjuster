@@ -1,8 +1,7 @@
-- create a file system passthrough to asyncly update things
-    - have action adjuster add-info log observations to a folder
-    - have seperate task read from folder, run the solver, then solved, write to `best_canidate.json`
-- test ROS imports on linux machine
+- create the warthog_faker for testing the ROS code
+
 - test how much it improves policy reward
+- use websockets instead of file-passing for async update
 - try to make fake ROS server
     
 - evaluate the difficulty of comparing to the meta learning paper
@@ -27,3 +26,4 @@ Experimental
 - DONE: ros:
     - find and process observation data
     - publish control commands
+- DONE: test ROS imports on linux machine
