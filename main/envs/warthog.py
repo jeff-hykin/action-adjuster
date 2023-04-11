@@ -463,10 +463,9 @@ class WarthogEnv(gym.Env):
         del self.y_pose[0]
         self.cur_pos.set_xdata(self.x_pose)
         self.cur_pos.set_ydata(self.y_pose)
-        # TODO: this is commented out only for debugging
-        # self.fig.canvas.draw()
-        # self.fig.canvas.flush_events()
-        # self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
 
     def _read_waypoint_file_path(self, filename):

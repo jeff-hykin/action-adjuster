@@ -15,6 +15,7 @@ from envs.warthog import WarthogEnv
 from config import config, path_to
 
 recorder = RecordKeeper(config=config)
+debug = False
 
 # 
 # env
@@ -52,13 +53,13 @@ def publish_position():
     odom_msg.pose.pose.position.z  = env.spacial_info.angle
     odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
     odom_msg.twist.twist.angular.x = env.spacial_info.spin
-    print("publishing odom message")
+    debug and print("publishing odom message")
     odom_publisher.publish(odom_msg)
-    print("published odom message")
+    debug and print("published odom message")
 
 @controller_subscriber.registerCallback
 def when_controller_command_sent(message):
-    print(f'''received control = {message}''')
+    debug and print(f'''received control = {message}''')
     velocity = message.linear.x
     spin     = message.angular.z   
     action = [ velocity, spin ]

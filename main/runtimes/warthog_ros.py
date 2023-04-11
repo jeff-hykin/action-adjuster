@@ -12,6 +12,8 @@ from blissful_basics import print, LazyDict
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
 
+debug = False
+
 class RosRuntime:
     def __init__(self, agent, env):
         self.agent = agent
@@ -68,7 +70,7 @@ class RosRuntime:
                 **(dict(stdout=sys.stdout) if debugging else dict(stdout=subprocess.PIPE)),
                 # stderr=subprocess.STDOUT,
             )
-        print("waiting for odom message")
+        debug and print("waiting for odom message")
         rospy.spin()
     
     def publish_action(self, action):
@@ -77,12 +79,12 @@ class RosRuntime:
             message = Twist()
             message.linear.x = velocity
             message.angular.z = spin
-            print("publishing control")
+            debug and print("publishing control")
             self.controller_publisher.publish(message)
-            print("published control")
+            debug and print("published control")
     
     def when_data_arrives(self, odom_msg):
-        print(f'''got odom_msg''')
+        debug and print(f'''got odom_msg''')
         x        = odom_msg.pose.pose.position.x
         y        = odom_msg.pose.pose.position.y
         angle    = odom_msg.pose.pose.position.z
