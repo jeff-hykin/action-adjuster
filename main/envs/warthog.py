@@ -387,14 +387,16 @@ class WarthogEnv(gym.Env):
         if self.max_velocity >= max_velocity_reset_number:
             self.max_velocity = 1
         
-        # pick a random waypoint
         if type(spacial_info_override) != type(None):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = spacial_info_override
             self.closest_index = 0
             self.prev_closest_index = 0
         else:
-            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            index = config.simulator.starting_waypoint
+            if config.simulator.starting_waypoint == 'random':
+                index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            # pick a random waypoint
             waypoint = self.waypoints_list[index]
             self.closest_index      = index
             self.prev_closest_index = index
