@@ -41,7 +41,7 @@ with open(path_to.action_adjuster_transform_file, 'w') as outfile:
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
 
-recorder_path = f"{path_to.default_output_folder}/recorder.yaml"
+recorder_path = f"{config.output_folder}/recorder.yaml"
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]

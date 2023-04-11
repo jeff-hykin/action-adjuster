@@ -1,5 +1,7 @@
 - zero-out the intial point
 - test how much it improves policy reward
+    - do 30 runs no-action adjuster, create a distribution of rewards after 1000 timesteps
+    - do 30 runs perfect action-adjuster, create a distribution of rewards after 1000 timesteps
 - use websockets instead of file-passing for async update
 
     

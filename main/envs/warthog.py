@@ -86,7 +86,7 @@ class WarthogEnv(gym.Env):
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
             self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
             
-            self.render_path = f"{path_to.default_output_folder}/render/"
+            self.render_path = f"{config.output_folder}/render/"
             FS.remove(self.render_path)
             FS.ensure_is_folder(self.render_path)
             plt.ion

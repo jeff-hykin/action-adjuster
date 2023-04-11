@@ -205,3 +205,16 @@
                         standard_deviation: 0 # meters per second
                     "spin":
                         standard_deviation: 0 # radians per action_duration (default 15 hertz)
+        NO_ADJUSTER:
+            action_adjuster:
+                disabled: True
+                
+        NORMAL_ADJUSTER:
+            action_adjuster:
+                disabled: False
+                default_to_perfect: False
+        
+        PERFECT_ADJUSTER:
+            action_adjuster:
+                disabled: False
+                default_to_perfect: True

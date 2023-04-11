@@ -168,7 +168,7 @@ if __name__ == "__main__":
         # 
         env = WarthogEnv(
             waypoint_file_path=path_to.default_waypoints,
-            trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
+            trajectory_output_path=f"{config.output_folder}/trajectory.log",
             recorder=recorder,
         )
 
