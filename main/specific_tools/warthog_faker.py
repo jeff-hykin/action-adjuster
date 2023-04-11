@@ -49,12 +49,16 @@ def publish_position():
     odom_msg = Odometry()
     odom_msg.pose.pose.position.x  = env.spacial_info.x
     odom_msg.pose.pose.position.y  = env.spacial_info.y
+    odom_msg.pose.pose.position.z  = env.spacial_info.angle
     odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
     odom_msg.twist.twist.angular.x = env.spacial_info.spin
     print("publishing odom message")
     odom_publisher.publish(odom_msg)
 
-env.reset()
+# env.reset()
+from time import sleep
+sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
+
 publish_position()
 @controller_subscriber.registerCallback
 def when_controller_command_sent(message):

@@ -55,6 +55,19 @@ class RosRuntime:
             allow_headerless=True
         )
         self.time_synchonizer.registerCallback(self.when_data_arrives)
+        if config.ros_faker.enable:
+            import subprocess
+            from blissful_basics import FS
+            import sys
+            debugging = True
+            _process = subprocess.Popen(
+                [
+                    sys.executable,
+                    FS.local_path("../specific_tools/warthog_faker.py",),
+                ],
+                **(dict(stdout=sys.stdout) if debugging else dict(stdout=subprocess.PIPE)),
+                # stderr=subprocess.STDOUT,
+            )
         print("waiting for odom message")
         rospy.spin()
     
@@ -70,6 +83,7 @@ class RosRuntime:
         print(f'''odom_msg = {odom_msg}''')
         x        = odom_msg.pose.pose.position.x
         y        = odom_msg.pose.pose.position.y
+        angle    = odom_msg.pose.pose.position.z
         velocity = odom_msg.twist.twist.linear.x
         spin     = odom_msg.twist.twist.angular.x
         
@@ -81,7 +95,7 @@ class RosRuntime:
         # temp_x   = odom_msg.pose.pose.orientation.w
         # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
         
-        new_spacial_info = env.SpacialInformation([ x, y, angle, velocity, spin ])
+        new_spacial_info = self.env.SpacialInformation([ x, y, angle, velocity, spin ])
         
         env   = self.env
         agent = self.agent

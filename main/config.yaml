@@ -82,6 +82,7 @@
                 time_sync_size: 10 # TODO: I don't actually know what this 10 does
             
             ros_faker:
+                enable: True
                 main_node_name: 'warthog_faker'
             
             simulator:
