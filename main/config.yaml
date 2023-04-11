@@ -41,7 +41,7 @@
     (profiles):
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
-            should_use_ros: False
+            should_use_ros: True
             action_adjuster:
                 disabled: True
                 default_to_perfect: True

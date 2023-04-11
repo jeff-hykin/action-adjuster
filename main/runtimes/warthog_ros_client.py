@@ -14,7 +14,12 @@ from config import config, path_to
 
 debug = False
 
+# 
+# client
+# 
+this_file = __file__ # for some reason, __file__ changes throughout the runtime, so the value needs to be saved in another variable
 class RosRuntime:
+    # needs env just for recording data, the env itself is basically disabled
     def __init__(self, agent, env):
         self.agent = agent
         self.env   = env
@@ -65,7 +70,7 @@ class RosRuntime:
             _process = subprocess.Popen(
                 [
                     sys.executable,
-                    FS.local_path("../specific_tools/warthog_faker.py",),
+                    this_file,
                 ],
                 **(dict(stdout=sys.stdout) if debugging else dict(stdout=subprocess.PIPE)),
                 # stderr=subprocess.STDOUT,
@@ -131,4 +136,82 @@ class RosRuntime:
     def __del__(self):
         self.agent.when_episode_ends()
         self.agent.when_mission_ends()
-    
+
+# 
+# warthog ros fake server 
+# 
+if __name__ == "__main__":
+    import rospy
+    from geometry_msgs.msg import Twist
+    from nav_msgs.msg import Odometry
+    import message_filters
+
+    from statistics import mean as average
+    from random import random, sample, choices
+
+    import torch
+    from rigorous_recorder import RecordKeeper
+    from stable_baselines3 import PPO
+    from blissful_basics import FS, print, LazyDict
+
+    from envs.warthog import WarthogEnv
+    from config import config, path_to
+
+    recorder = RecordKeeper(config=config)
+    debug = False
+
+    # 
+    # env
+    # 
+    env = WarthogEnv(
+        waypoint_file_path=path_to.default_waypoints,
+        trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
+        recorder=recorder,
+    )
+
+
+    # 
+    # setup ROS
+    # 
+    rospy.init_node(config.ros_faker.main_node_name)
+    controller_topic = rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic)
+    odometry_topic   = rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic)
+    controller_subscriber = message_filters.Subscriber(
+        controller_topic,
+        Twist,
+    )
+    odom_publisher = rospy.Publisher(
+        odometry_topic,
+        Odometry,
+        queue_size=20,
+    )
+
+    # 
+    # send out messages/responses 
+    # 
+    def publish_position():
+        odom_msg = Odometry()
+        odom_msg.pose.pose.position.x  = env.spacial_info.x
+        odom_msg.pose.pose.position.y  = env.spacial_info.y
+        odom_msg.pose.pose.position.z  = env.spacial_info.angle
+        odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
+        odom_msg.twist.twist.angular.x = env.spacial_info.spin
+        debug and print("publishing odom message")
+        odom_publisher.publish(odom_msg)
+        debug and print("published odom message")
+
+    @controller_subscriber.registerCallback
+    def when_controller_command_sent(message):
+        debug and print(f'''received control = {message}''')
+        velocity = message.linear.x
+        spin     = message.angular.z   
+        action = [ velocity, spin ]
+        env.step(action)
+        publish_position()
+
+    # env.reset()
+    from time import sleep
+    sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
+
+    publish_position()
+    rospy.spin()
