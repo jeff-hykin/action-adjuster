@@ -40,7 +40,7 @@ class RosRuntime:
         self.controller_publisher = rospy.Publisher(
             rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic),
             Twist,
-            queue_size=1,
+            queue_size=20,
         )
         self.odom_subscriber = message_filters.Subscriber(
             rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic),
@@ -72,13 +72,14 @@ class RosRuntime:
         rospy.spin()
     
     def publish_action(self, action):
-        print("publishing control")
         velocity, spin = action
         if not rospy.is_shutdown():
             message = Twist()
             message.linear.x = velocity
             message.angular.z = spin
+            print("publishing control")
             self.controller_publisher.publish(message)
+            print("published control")
     
     def when_data_arrives(self, odom_msg):
         print(f'''got odom_msg''')

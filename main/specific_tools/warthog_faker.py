@@ -39,7 +39,7 @@ controller_subscriber = message_filters.Subscriber(
 odom_publisher = rospy.Publisher(
     odometry_topic,
     Odometry,
-    queue_size=1,
+    queue_size=20,
 )
 
 # 
@@ -54,10 +54,11 @@ def publish_position():
     odom_msg.twist.twist.angular.x = env.spacial_info.spin
     print("publishing odom message")
     odom_publisher.publish(odom_msg)
+    print("published odom message")
 
 @controller_subscriber.registerCallback
 def when_controller_command_sent(message):
-    print(f'''command = {message}''')
+    print(f'''received control = {message}''')
     velocity = message.linear.x
     spin     = message.angular.z   
     action = [ velocity, spin ]
@@ -69,3 +70,4 @@ from time import sleep
 sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
 
 publish_position()
+rospy.spin()
