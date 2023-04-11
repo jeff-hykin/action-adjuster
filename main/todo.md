@@ -1,4 +1,5 @@
-- create the warthog_faker for testing the ROS code
+- start at the first waypoint, not a random waypoint
+- zero-out the intial point
 
 - test how much it improves policy reward
 - use websockets instead of file-passing for async update
@@ -27,3 +28,4 @@ Experimental
     - find and process observation data
     - publish control commands
 - DONE: test ROS imports on linux machine
+- DONE create the warthog_faker for testing the ROS code
