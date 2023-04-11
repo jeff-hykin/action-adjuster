@@ -4,12 +4,12 @@ from time import sleep
 import math
 import threading
 
-import torch                                                         # pip install torch
-import numpy                                                         # pip install numpy
-import blissful_basics as bb                                         # pip install blissful_basics
-from blissful_basics import to_pure, countdown, print, singleton, FS # pip install blissful_basics
-from icecream import ic                                              # pip install icecream
-from trivial_torch_tools import to_tensor                            # pip install trivial_torch_tools
+import torch                                                                    # pip install torch
+import numpy                                                                    # pip install numpy
+import blissful_basics as bb                                                    # pip install blissful_basics
+from blissful_basics import to_pure, countdown, print, singleton, FS, stringify # pip install blissful_basics
+from icecream import ic                                                         # pip install icecream
+from trivial_torch_tools import to_tensor                                       # pip install trivial_torch_tools
 import json_fix
 ic.configureOutput(includeContext=True)
 

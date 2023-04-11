@@ -49,10 +49,11 @@ agent = ActionAdjustedAgent(
 # 
 # Runtime
 # 
-if config.should_use_ros:
-    from runtimes.warthog_ros_client import RosRuntime
-    RosRuntime(agent=agent, env=env)
-else:
-    # basic runtime
-    for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
-        pass
+with print.indent:
+    if config.should_use_ros:
+        from runtimes.warthog_ros_client import RosRuntime
+        RosRuntime(agent=agent, env=env)
+    else:
+        # basic runtime
+        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
+            pass

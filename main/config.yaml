@@ -41,7 +41,7 @@
     (profiles):
         (default):
             vehicle: null # filled in by "WARTHOG" profile below (way below)
-            should_use_ros: False
+            should_use_ros: True
             action_adjuster:
                 disabled: True
                 default_to_perfect: True
@@ -79,6 +79,7 @@
                 odometry_topic: 'odometry/filtered'
                 gps_topic: 'odometry/filtered2'
                 time_sync_size: 10 # TODO: I don't actually know what this 10 does
+                is_client: True
             
             ros_faker:
                 enable: True

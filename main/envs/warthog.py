@@ -1,18 +1,17 @@
+import math
+import time
+
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import matplotlib as mpl
 import numpy
 import numpy as np
-import math
 import gym
-import csv
-import time
 from blissful_basics import Csv, create_named_list_class, FS, print, stringify
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
-max_velocity_reset_number = 5 # TODO: check this
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
@@ -59,7 +58,6 @@ class WarthogEnv(gym.Env):
         self.prev_closest_index     = 0
         self.closest_distance       = math.inf
         self.desired_velocities     = []
-        self.max_velocity           = 1  # TODO: currently increases over time, not sure if thats intended
         self.episode_steps          = 0
         self.total_episode_reward   = 0
         self.reward                 = 0
@@ -201,7 +199,6 @@ class WarthogEnv(gym.Env):
 
 
     def step(self, action, override_next_spacial_info=None):
-        print(f'''action = {action}''')
         self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
         self.action_velocity, self.action_spin = action
         
@@ -385,8 +382,6 @@ class WarthogEnv(gym.Env):
     def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
         self.total_episode_reward = 0
-        if self.max_velocity >= max_velocity_reset_number:
-            self.max_velocity = 1
         
         index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
@@ -412,12 +407,8 @@ class WarthogEnv(gym.Env):
             self.spacial_info.velocity = 0
             self.spacial_info.spin     = 0
             for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
-                if desired_velocity > self.max_velocity:
-                    waypoint.velocity = self.max_velocity
-                else:
-                    waypoint.velocity = desired_velocity
+                waypoint.velocity = desired_velocity
             
-            self.max_velocity = self.max_velocity + 1 # TODO: check that this is right
         
         # 
         # calculate closest index
@@ -435,7 +426,7 @@ class WarthogEnv(gym.Env):
             horizon=self.horizon,
             current_spacial_info=self.spacial_info,
         )
-        print(f'''observation = {stringify(observation)}''')
+        print(f'''{get_name()} reset: observation = {stringify(observation)}''')
         return observation
 
     def render(self, mode="human"):
@@ -457,7 +448,7 @@ class WarthogEnv(gym.Env):
         self.text = self.ax.text(
             self.spacial_info.x + 1,
             self.spacial_info.y + 2,
-            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\nmax_vel={self.max_velocity:.4f}\nomega_reward={omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
+            f"vel_error={self.velocity_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_episode_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self.velocity_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
@@ -526,3 +517,6 @@ class WaypointEntry(numpy.ndarray):
     def velocity(self): return self[3]
     @velocity.setter
     def velocity(self, value): self[3] = value
+    
+    def __repr__(self):
+        return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''

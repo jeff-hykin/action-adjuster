@@ -13,6 +13,7 @@ from generic_tools.universe.timestep import Timestep
 from config import config, path_to
 
 debug = False
+config.ros_runtime.is_client = True
 
 # 
 # client
@@ -110,12 +111,9 @@ class RosRuntime:
         # initalize on first run
         if not self.first_observation_loaded:
             agent.next_timestep.observation = env.reset(override_next_spacial_info=new_spacial_info)
-            print(f'''first_observation = {stringify(agent.next_timestep.observation)}''')
+            debug and config.ros_runtime.is_client and print(f'''first_observation = {stringify(agent.next_timestep.observation)}''')
             agent.when_episode_starts()
         
-            agent.previous_timestep = agent.timestep
-            agent.timestep          = agent.next_timestep
-            agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
             self.first_observation_loaded = True
         else:
             # previous reaction was based on previous observation, but we can't call env.step until after we have the NEXT observation (e.g. this func call is that "NEXT")
@@ -125,10 +123,14 @@ class RosRuntime:
             agent.timestep.is_last_step     = deepcopy(is_last_step)
             agent.when_timestep_ends()
         
+        agent.previous_timestep = agent.timestep
+        agent.timestep          = agent.next_timestep
+        agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
+        
         # always compute the reaction to the data that arrived
         agent.when_timestep_starts()
         reaction = agent.timestep.reaction
-        print(f'''reaction = {reaction}''')
+        debug and config.ros_runtime.is_client and print(f'''reaction = {reaction}''')
         if type(reaction) == type(None):
             reaction = env.action_space.sample()
         self.publish_action(reaction)
@@ -159,60 +161,61 @@ if __name__ == "__main__":
     from config import config, path_to
 
     recorder = RecordKeeper(config=config)
+    config.ros_runtime.is_client = False
+    with print.indent:
+        # 
+        # env
+        # 
+        env = WarthogEnv(
+            waypoint_file_path=path_to.default_waypoints,
+            trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
+            recorder=recorder,
+        )
 
-    # 
-    # env
-    # 
-    env = WarthogEnv(
-        waypoint_file_path=path_to.default_waypoints,
-        trajectory_output_path=f"{path_to.default_output_folder}/trajectory.log",
-        recorder=recorder,
-    )
 
+        # 
+        # setup ROS
+        # 
+        rospy.init_node(config.ros_faker.main_node_name)
+        controller_topic = rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic)
+        odometry_topic   = rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic)
+        controller_subscriber = message_filters.Subscriber(
+            controller_topic,
+            Twist,
+        )
+        odom_publisher = rospy.Publisher(
+            odometry_topic,
+            Odometry,
+            queue_size=20,
+        )
 
-    # 
-    # setup ROS
-    # 
-    rospy.init_node(config.ros_faker.main_node_name)
-    controller_topic = rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic)
-    odometry_topic   = rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic)
-    controller_subscriber = message_filters.Subscriber(
-        controller_topic,
-        Twist,
-    )
-    odom_publisher = rospy.Publisher(
-        odometry_topic,
-        Odometry,
-        queue_size=20,
-    )
+        # 
+        # send out messages/responses 
+        # 
+        def publish_position():
+            odom_msg = Odometry()
+            odom_msg.pose.pose.position.x  = env.spacial_info.x
+            odom_msg.pose.pose.position.y  = env.spacial_info.y
+            odom_msg.pose.pose.position.z  = env.spacial_info.angle
+            odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
+            odom_msg.twist.twist.angular.x = env.spacial_info.spin
+            # print(f'''server: env.spacial_info = {env.spacial_info}''')
+            debug and print("publishing odom message")
+            odom_publisher.publish(odom_msg)
+            debug and print("published odom message")
 
-    # 
-    # send out messages/responses 
-    # 
-    def publish_position():
-        odom_msg = Odometry()
-        odom_msg.pose.pose.position.x  = env.spacial_info.x
-        odom_msg.pose.pose.position.y  = env.spacial_info.y
-        odom_msg.pose.pose.position.z  = env.spacial_info.angle
-        odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
-        odom_msg.twist.twist.angular.x = env.spacial_info.spin
-        # print(f'''server: env.spacial_info = {env.spacial_info}''')
-        debug and print("publishing odom message")
-        odom_publisher.publish(odom_msg)
-        debug and print("published odom message")
+        @controller_subscriber.registerCallback
+        def when_controller_command_sent(message):
+            debug and print(f'''received control = {message}''')
+            velocity = message.linear.x
+            spin     = message.angular.z   
+            action = [ velocity, spin ]
+            # print(f'''server: action = {action}''')
+            env.step(action)
+            publish_position()
 
-    @controller_subscriber.registerCallback
-    def when_controller_command_sent(message):
-        debug and print(f'''received control = {message}''')
-        velocity = message.linear.x
-        spin     = message.angular.z   
-        action = [ velocity, spin ]
-        # print(f'''server: action = {action}''')
-        env.step(action)
+        env.reset()
+        import time
+        time.sleep(1) # NOTE: this is VERY important. I have no idea why, but things just do not work if this sleep is not here
         publish_position()
-
-    env.reset()
-    import time
-    time.sleep(1) # NOTE: this is VERY important. I have no idea why, but things just do not work if this sleep is not here
-    publish_position()
-    rospy.spin()
+        rospy.spin()
