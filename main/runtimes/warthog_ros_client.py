@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from pyquaternion import Quaternion as qut
 import message_filters
-from blissful_basics import print, LazyDict
+from blissful_basics import print, LazyDict, stringify
 
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
@@ -25,10 +25,8 @@ class RosRuntime:
         self.env   = env
         self.is_first_observation = True
         self.previous_action      = None
-        self.timestep_count       = 0
         
         self.agent.when_mission_starts()
-        self.timestep_count = 0
         
         self.agent.previous_timestep = Timestep(
             index=-2,
@@ -109,30 +107,33 @@ class RosRuntime:
         env   = self.env
         agent = self.agent
         
-        # initalize
+        # initalize on first run
         if not self.first_observation_loaded:
-            agent.next_timestep.observation = env.reset(spacial_info_override=new_spacial_info)
-            self.first_observation_loaded = True
+            agent.next_timestep.observation = env.reset(override_next_spacial_info=new_spacial_info)
+            print(f'''first_observation = {stringify(agent.next_timestep.observation)}''')
             agent.when_episode_starts()
         
+            agent.previous_timestep = agent.timestep
+            agent.timestep          = agent.next_timestep
+            agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
+            self.first_observation_loaded = True
+        else:
+            # previous reaction was based on previous observation, but we can't call env.step until after we have the NEXT observation (e.g. this func call is that "NEXT")
+            observation, reward, is_last_step, agent.timestep.hidden_info = env.step(self.previous_action, override_next_spacial_info=new_spacial_info)
+            agent.next_timestep.observation = deepcopy(observation)
+            agent.timestep.reward           = deepcopy(reward)
+            agent.timestep.is_last_step     = deepcopy(is_last_step)
+            agent.when_timestep_ends()
         
-        self.timestep_count += 1
-        
-        agent.previous_timestep = agent.timestep
-        agent.timestep          = agent.next_timestep
-        agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
-        
+        # always compute the reaction to the data that arrived
         agent.when_timestep_starts()
         reaction = agent.timestep.reaction
+        print(f'''reaction = {reaction}''')
         if type(reaction) == type(None):
             reaction = env.action_space.sample()
         self.publish_action(reaction)
-        observation, reward, is_last_step, agent.timestep.hidden_info = env.step(reaction, spacial_info_override=new_spacial_info)
-        agent.next_timestep.observation = deepcopy(observation)
-        agent.timestep.reward           = deepcopy(reward)
-        agent.timestep.is_last_step     = deepcopy(is_last_step)
-        agent.when_timestep_ends()
-    
+        self.previous_action = reaction
+        
     def __del__(self):
         self.agent.when_episode_ends()
         self.agent.when_mission_ends()
@@ -158,7 +159,6 @@ if __name__ == "__main__":
     from config import config, path_to
 
     recorder = RecordKeeper(config=config)
-    debug = False
 
     # 
     # env
@@ -196,6 +196,7 @@ if __name__ == "__main__":
         odom_msg.pose.pose.position.z  = env.spacial_info.angle
         odom_msg.twist.twist.linear.x  = env.spacial_info.velocity
         odom_msg.twist.twist.angular.x = env.spacial_info.spin
+        # print(f'''server: env.spacial_info = {env.spacial_info}''')
         debug and print("publishing odom message")
         odom_publisher.publish(odom_msg)
         debug and print("published odom message")
@@ -206,12 +207,12 @@ if __name__ == "__main__":
         velocity = message.linear.x
         spin     = message.angular.z   
         action = [ velocity, spin ]
+        # print(f'''server: action = {action}''')
         env.step(action)
         publish_position()
 
-    # env.reset()
-    from time import sleep
-    sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
-
+    env.reset()
+    import time
+    time.sleep(1) # NOTE: this is VERY important. I have no idea why, but things just do not work if this sleep is not here
     publish_position()
     rospy.spin()

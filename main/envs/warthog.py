@@ -7,7 +7,7 @@ import math
 import gym
 import csv
 import time
-from blissful_basics import Csv, create_named_list_class, FS, print
+from blissful_basics import Csv, create_named_list_class, FS, print, stringify
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
@@ -200,7 +200,8 @@ class WarthogEnv(gym.Env):
         return observation
 
 
-    def step(self, action, spacial_info_override=None):
+    def step(self, action, override_next_spacial_info=None):
+        print(f'''action = {action}''')
         self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
         self.action_velocity, self.action_spin = action
         
@@ -216,9 +217,9 @@ class WarthogEnv(gym.Env):
         # 
         # handle action + spacial update
         # 
-        if type(spacial_info_override) != type(None):
+        if type(override_next_spacial_info) != type(None):
             # this is when the spacial_info is coming from the real world
-            self.spacial_info = spacial_info_override
+            self.spacial_info = override_next_spacial_info
         else:
             velocity_action = self.action_velocity
             spin_action     = self.action_spin
@@ -381,22 +382,24 @@ class WarthogEnv(gym.Env):
         
         return observation, self.reward, done, additional_info
 
-    def reset(self, spacial_info_override=None):
+    def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
         self.total_episode_reward = 0
         if self.max_velocity >= max_velocity_reset_number:
             self.max_velocity = 1
         
-        if type(spacial_info_override) != type(None):
+        index = config.simulator.starting_waypoint
+        if config.simulator.starting_waypoint == 'random':
+            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            
+        # if position is overriden by (most likely) the real world position
+        if type(override_next_spacial_info) != type(None):
             # this is when the spacial_info is coming from the real world
-            self.spacial_info = spacial_info_override
-            self.closest_index = 0
-            self.prev_closest_index = 0
+            self.spacial_info = override_next_spacial_info
+            self.closest_index = index
+            self.prev_closest_index = index
+        # simulator position
         else:
-            index = config.simulator.starting_waypoint
-            if config.simulator.starting_waypoint == 'random':
-                index = np.random.randint(self.number_of_waypoints, size=1)[0]
-            # pick a random waypoint
             waypoint = self.waypoints_list[index]
             self.closest_index      = index
             self.prev_closest_index = index
@@ -427,11 +430,13 @@ class WarthogEnv(gym.Env):
         self.closest_index += closest_relative_index
         self.prev_closest_index = self.closest_index
         
-        return WarthogEnv.generate_observation(
+        observation = WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
             current_spacial_info=self.spacial_info,
         )
+        print(f'''observation = {stringify(observation)}''')
+        return observation
 
     def render(self, mode="human"):
         self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
