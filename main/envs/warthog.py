@@ -426,7 +426,6 @@ class WarthogEnv(gym.Env):
             horizon=self.horizon,
             current_spacial_info=self.spacial_info,
         )
-        print(f'''{get_name()} reset: observation = {stringify(observation)}''')
         return observation
 
     def render(self, mode="human"):

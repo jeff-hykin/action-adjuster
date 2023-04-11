@@ -1,9 +1,7 @@
-- start at the first waypoint, not a random waypoint
 - zero-out the intial point
-
 - test how much it improves policy reward
 - use websockets instead of file-passing for async update
-- try to make fake ROS server
+
     
 - evaluate the difficulty of comparing to the meta learning paper
 - look up Trim control (for aircraft)
@@ -29,3 +27,5 @@ Experimental
     - publish control commands
 - DONE: test ROS imports on linux machine
 - DONE create the warthog_faker for testing the ROS code
+- DONE: try to make fake ROS server
+- DONE: start at the first waypoint, not a random waypoint
