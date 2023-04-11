@@ -55,11 +55,6 @@ def publish_position():
     print("publishing odom message")
     odom_publisher.publish(odom_msg)
 
-# env.reset()
-from time import sleep
-sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
-
-publish_position()
 @controller_subscriber.registerCallback
 def when_controller_command_sent(message):
     print(f'''command = {message}''')
@@ -68,3 +63,9 @@ def when_controller_command_sent(message):
     action = [ velocity, spin ]
     env.step(action)
     publish_position()
+
+# env.reset()
+from time import sleep
+sleep(1) # PAIN: this sleep is VERY important, I have no idea why but removing it breaks the ros events and freezes
+
+publish_position()

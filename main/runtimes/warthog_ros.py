@@ -72,6 +72,7 @@ class RosRuntime:
         rospy.spin()
     
     def publish_action(self, action):
+        print("publishing control")
         velocity, spin = action
         if not rospy.is_shutdown():
             message = Twist()
@@ -80,7 +81,7 @@ class RosRuntime:
             self.controller_publisher.publish(message)
     
     def when_data_arrives(self, odom_msg):
-        print(f'''odom_msg = {odom_msg}''')
+        print(f'''got odom_msg''')
         x        = odom_msg.pose.pose.position.x
         y        = odom_msg.pose.pose.position.y
         angle    = odom_msg.pose.pose.position.z
@@ -105,24 +106,24 @@ class RosRuntime:
             agent.next_timestep.observation = env.reset(spacial_info_override=new_spacial_info)
             self.first_observation_loaded = True
             agent.when_episode_starts()
-        # typical timestep incrementation
-        else:
-            self.timestep_count += 1
-            
-            agent.previous_timestep = agent.timestep
-            agent.timestep          = agent.next_timestep
-            agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
-            
-            agent.when_timestep_starts()
-            reaction = agent.timestep.reaction
-            if type(reaction) == type(None):
-                reaction = env.action_space.sample()
-            self.publish_action(reaction)
-            observation, reward, is_last_step, agent.timestep.hidden_info = env.step(reaction, spacial_info_override=new_spacial_info)
-            agent.next_timestep.observation = deepcopy(observation)
-            agent.timestep.reward           = deepcopy(reward)
-            agent.timestep.is_last_step     = deepcopy(is_last_step)
-            agent.when_timestep_ends()
+        
+        
+        self.timestep_count += 1
+        
+        agent.previous_timestep = agent.timestep
+        agent.timestep          = agent.next_timestep
+        agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
+        
+        agent.when_timestep_starts()
+        reaction = agent.timestep.reaction
+        if type(reaction) == type(None):
+            reaction = env.action_space.sample()
+        self.publish_action(reaction)
+        observation, reward, is_last_step, agent.timestep.hidden_info = env.step(reaction, spacial_info_override=new_spacial_info)
+        agent.next_timestep.observation = deepcopy(observation)
+        agent.timestep.reward           = deepcopy(reward)
+        agent.timestep.is_last_step     = deepcopy(is_last_step)
+        agent.when_timestep_ends()
     
     def __del__(self):
         self.agent.when_episode_ends()
