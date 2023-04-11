@@ -41,15 +41,6 @@ odom_publisher = rospy.Publisher(
     Odometry,
     queue_size=1,
 )
-time_synchonizer = message_filters.ApproximateTimeSynchronizer(
-    [
-        controller_subscriber,
-    ],
-    config.ros_runtime.time_sync_size,
-    1,
-    allow_headerless=True
-)
-
 
 # 
 # send out messages/responses 
@@ -65,6 +56,7 @@ def publish_position():
 
 env.reset()
 publish_position()
+@controller_subscriber.registerCallback
 def when_controller_command_sent(message):
     print(f'''command = {message}''')
     velocity = message.linear.x
@@ -72,6 +64,3 @@ def when_controller_command_sent(message):
     action = [ velocity, spin ]
     env.step(action)
     publish_position()
-
-time_synchonizer.registerCallback(when_controller_command_sent)
-rospy.spin()
