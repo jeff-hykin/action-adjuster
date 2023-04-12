@@ -67,6 +67,9 @@ class Transform:
         else:
             self._transform = to_tensor(value).numpy()
         
+        if config.action_adjuster.always_perfect:
+            self._transform = perfect_answer[0:2,:]
+        
     def __deepcopy__(self, arg1):
         return Transform(to_tensor(self._transform).numpy())
     
@@ -281,7 +284,7 @@ class ActionAdjuster:
         # 
         # overfitting protection (validate the canidate)
         # 
-        if not config.action_adjuster.disabled:
+        if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             solutions = list(self.selected_solutions) + [ self.canidate_transform ]
             scores = tuple(
                 objective_function(each_transform.as_numpy)
@@ -312,13 +315,17 @@ class ActionAdjuster:
         
         if True:
             score_before     = objective_function(self.transform.as_numpy)
+            # kill this process once the limit is reaced
+            if self.recorder.pending_record.get("timestep", 0) > config.simulator.max_episode_steps:
+                exit()
+            
             self.recorder.add(line_fit_score=score_before)
             self.recorder.commit()
         
         # 
         # generate new canidate
         # 
-        if not config.action_adjuster.disabled:
+        if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             # find next best
             best_new_transform = Transform(
                 guess_to_maximize(

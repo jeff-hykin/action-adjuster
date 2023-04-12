@@ -4,7 +4,7 @@ import json
 from config import path_to
 from subprocess import Popen, PIPE
 
-finished = 1
+finished = 0
 number_of_data_points_per_scenario = 30
 for run_number in range(finished, number_of_data_points_per_scenario):
     processes = []

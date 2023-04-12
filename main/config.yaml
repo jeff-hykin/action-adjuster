@@ -46,6 +46,7 @@
             action_adjuster:
                 disabled: True
                 default_to_perfect: True
+                always_perfect: False
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
@@ -214,8 +215,10 @@
             action_adjuster:
                 disabled: False
                 default_to_perfect: False
+                always_perfect: False
         
         PERFECT_ADJUSTER:
             action_adjuster:
                 disabled: False
                 default_to_perfect: True
+                always_perfect: True
