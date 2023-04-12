@@ -1,4 +1,4 @@
-from blissful_basics import wrap_around_get, stringify
+from blissful_basics import wrap_around_get, stringify, FS
 
 class Colors:
     def __init__(self, color_mapping):
@@ -47,7 +47,7 @@ xd_theme = Colors({
     "soft_red":         '#f07178',
 })
 
-def graph_lines(*args, title, x_axis_name, y_axis_name, ):
+def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
     """
         Example:
             graph_lines(
@@ -86,4 +86,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, ):
     for line_index, line_info in enumerate(args):
         if line_info.get("color", None):
             fig.data[line_index].line.color = line_info["color"]
+    if save_to:
+        FS.ensure_is_folder(FS.parent_path(save_to))
+        fig.write_html(save_to)
     fig.show()

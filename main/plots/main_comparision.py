@@ -30,4 +30,5 @@ graph_lines(
     title="Heavy Noise Comparision",
     x_axis_name="Timestep",
     y_axis_name="AccumulatedReward",
+    save_to=FS.local_path(FS.name(__file__)+".html"),
 )

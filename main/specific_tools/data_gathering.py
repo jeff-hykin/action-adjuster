@@ -4,7 +4,7 @@ import pandas as pd
 
 from config import config, path_to
 
-def get_recorder_data(*names):
+def get_recorder_data(*names, quiet=False):
     which_experiments = []
     file_paths = FS.list_paths_in(path_to.records)
     file_paths.sort()
@@ -23,6 +23,8 @@ def get_recorder_data(*names):
         
     output = []
     for path in which_experiments:
+        if not quiet:
+            print(f"    parsing: {path}")
         recorder_path = path+"/recorder.yaml"
         if FS.is_file(recorder_path):
             data = LazyDict(
