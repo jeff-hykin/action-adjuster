@@ -5,7 +5,7 @@ from config import path_to
 from subprocess import Popen, PIPE
 
 number_of_data_points_per_scenario = 30
-for run_number in range(number_of_iterations):
+for run_number in range(number_of_data_points_per_scenario):
     processes = []
     for each_profile in [ "@NO_ADJUSTER", "@PERFECT_ADJUSTER", "@NORMAL_ADJUSTER" ]:
         output_folder = f"{path_to.records}/{each_profile}|{run_number}"
