@@ -6,18 +6,20 @@ from config import config, path_to
 
 def get_recorder_data(*names):
     which_experiments = []
+    file_paths = FS.list_paths_in(path_to.records)
+    file_paths.sort()
     if len(names) == 0:
-        which_experiments = FS.list_paths_in(path_to.records)
+        which_experiments = file_paths
     else:
         # case-insensive filter by basename
-        which_experiments = [
-            each
-                for each in FS.list_paths_in(path_to.records)
-                    if any([
-                            each_name.lower() in FS.basename(each).lower() 
-                                for each_name in names 
-                        ]) 
-        ]
+        which_experiments = []
+        for each_name_to_include in names:
+            which_experiments += [
+                each_path
+                    for each_path in file_paths
+                        if each_name_to_include.lower() in FS.basename(each_path).lower() and each_path not in which_experiments
+            ]
+            
         
     output = []
     for path in which_experiments:
