@@ -180,7 +180,6 @@ class ActionAdjuster:
         return buffer
     
     def write_transform(self):
-        print("writing transform")
         try:
             with open(path_to.action_adjuster_transform_file, 'w') as out_file:
                 json.dump(self.transform, out_file)

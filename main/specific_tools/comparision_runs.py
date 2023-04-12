@@ -1,7 +1,13 @@
+import sys
 import subprocess
 import json
-for each_profile in [ "@NO_ADJUSTER", "@PERFECT_ADJUSTER", "@NORMAL_ADJUSTER" ]:
-    for run_number in range(30):
-        output_folder = f"./records/{each_profile}|{run_number}"
+from config import path_to
+from subprocess import Popen, PIPE
+
+number_of_iterations = 30
+for run_number in range(30):
+    for each_profile in [ "@NO_ADJUSTER", "@PERFECT_ADJUSTER", "@NORMAL_ADJUSTER" ]:
+        output_folder = f"{path_to.records}/{each_profile}|{run_number}"
         print(f"working on: {output_folder}")
-        subprocess.check_output([ sys.executable, "main.py", each_profile, f"output_folder:{json.dumps(output_folder)}",  ]).decode('utf-8')[0:-1]
+        proc = Popen([ sys.executable, path_to.main, "@WARTHOG", "@HEAVY_NOISE", each_profile, f"output_folder:{json.dumps(output_folder)}",  ])
+        proc.wait()
