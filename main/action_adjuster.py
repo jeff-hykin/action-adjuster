@@ -3,6 +3,7 @@ from copy import deepcopy
 from time import sleep
 import math
 import threading
+from random import random, sample, choices
 
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
@@ -23,6 +24,16 @@ from generic_tools.universe.agent import Skeleton
 import numpy
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 
+
+# 
+# establish filepaths
+# 
+process_id = random() # needed so that two of these can run in parallel
+data_buffer_path    = path_to.action_adjuster_data_buffer+f".{process_id}.json"
+transform_file_path = path_to.action_adjuster_transform_file+f".{process_id}.json"
+
+
+# for testing, setup the perfect adjuster as comparison
 perfect_answer = to_tensor([
     [ 1,     0,    config.simulator.velocity_offset, ],
     [ 0,     1,        config.simulator.spin_offset, ],
@@ -30,9 +41,9 @@ perfect_answer = to_tensor([
 ]).numpy()
 
 # init/reset the files
-FS.write(path=path_to.action_adjuster_data_buffer, data='[]')
-FS.write(path=path_to.action_adjuster_transform_file, data='')
-with open(path_to.action_adjuster_transform_file, 'w') as outfile:
+FS.write(path=data_buffer_path, data='[]')
+FS.write(path=transform_file_path, data='')
+with open(transform_file_path, 'w') as outfile:
     json.dump(perfect_answer, outfile)
 
 # 
@@ -148,7 +159,7 @@ class ActionAdjuster:
     def write_to_data_buffer(self):
         buffer = []
         try:
-            with open(path_to.action_adjuster_data_buffer, 'r') as in_file:
+            with open(data_buffer_path, 'r') as in_file:
                 buffer = json.load(in_file)
         except Exception as error:
             pass
@@ -162,16 +173,16 @@ class ActionAdjuster:
             )))
         self.buffer_for_write.clear()
         
-        FS.write(data=json.dumps(buffer), path=path_to.action_adjuster_data_buffer)
+        FS.write(data=json.dumps(buffer), path=data_buffer_path)
     
     def read_from_buffer(self):
         buffer = []
         try:
-            with open(path_to.action_adjuster_data_buffer, 'r') as in_file:
+            with open(data_buffer_path, 'r') as in_file:
                 buffer = json.load(in_file)
         except Exception as error:
             pass
-        FS.write(data='[]', path=path_to.action_adjuster_data_buffer)
+        FS.write(data='[]', path=data_buffer_path)
         
         # add back class data
         for observation, additional_info in buffer:
@@ -181,14 +192,14 @@ class ActionAdjuster:
     
     def write_transform(self):
         try:
-            with open(path_to.action_adjuster_transform_file, 'w') as out_file:
+            with open(transform_file_path, 'w') as out_file:
                 json.dump(self.transform, out_file)
         except Exception as error:
             print(f'''error = {error}''')
     
     def read_transform(self):
         try:
-            with open(path_to.action_adjuster_transform_file, 'r') as in_file:
+            with open(transform_file_path, 'r') as in_file:
                 self.transform = Transform.from_json(
                     json.load(in_file)
                 )
