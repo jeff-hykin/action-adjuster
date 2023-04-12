@@ -8,7 +8,7 @@ from generic_tools.plotting import graph_lines
 
 lines = []
 for name, data in get_recorder_data("@NO_ADJUSTER|0", "@NORMAL_ADJUSTER|0", "@PERFECT_ADJUSTER|0",):
-    # data = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
+    # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
     lines.append(
         dict(
             x_values=[ each.timestep           for each in data.records ],

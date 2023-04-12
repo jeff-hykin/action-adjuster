@@ -425,6 +425,8 @@ class ActionAdjustedAgent(Skeleton):
         self.recorder.add(timestep=self.timestep.index)
         self.recorder.add(accumulated_reward=self.accumulated_reward)
         self.recorder.add(reward=self.timestep.reward)
+        self.recorder.commit()
+        self.recorder.add(timestep=self.timestep.index) # encase there's another commit during the same timestep
         self.action_adjuster.add_data(self.timestep.observation, self.timestep.hidden_info)
     def when_episode_ends(self):
         pass
