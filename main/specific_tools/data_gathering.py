@@ -10,7 +10,14 @@ def get_recorder_data(*names):
         which_experiments = FS.list_paths_in(path_to.records)
     else:
         # case-insensive filter by basename
-        which_experiments = [ each for each in FS.list_paths_in(path_to.records) if name.lower() in FS.basename(each).lower() ]
+        which_experiments = [
+            each
+                for each in FS.list_paths_in(path_to.records)
+                    if any([
+                            each_name.lower() in FS.basename(each).lower() 
+                                for each_name in names 
+                        ]) 
+        ]
         
     output = []
     for path in which_experiments:

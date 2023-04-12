@@ -55,5 +55,5 @@ with print.indent:
         RosRuntime(agent=agent, env=env)
     else:
         # basic runtime
-        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env):
+        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=699):
             pass
