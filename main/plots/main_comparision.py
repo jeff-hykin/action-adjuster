@@ -1,5 +1,5 @@
 import os
-from statistics import median, mean as average
+from statistics import median, mean
 
 import ez_yaml
 from blissful_basics import FS, LazyDict
@@ -10,7 +10,7 @@ from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, xd_theme
 
 should_flatten_graph = True
-should_average = False
+should_average = True
 averaging_function = median
 groups = LazyDict(
     no_adjuster=LazyDict(
@@ -19,7 +19,7 @@ groups = LazyDict(
         lines=[],
     ),
     normal_adjuster=LazyDict(
-        folder_name_must_include="@NORMAL_ADJUSTER",
+        folder_name_must_include="@MINIMAL_ADJUSTER",
         color=xd_theme.blue,
         lines=[],
     ),
