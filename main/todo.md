@@ -1,7 +1,16 @@
 - zero-out the intial point
 - test how much it improves policy reward
-    - do 30 runs no-action adjuster, create a distribution of rewards after 1000 timesteps
-    - do 30 runs perfect action-adjuster, create a distribution of rewards after 1000 timesteps
+    - perform tons of tests (30 runs each)
+        - DONE: compare NO_ADJUST, ADJUST, ORACLE with 10000 history size, heavy noise
+            - variance (individual plots)
+            - average
+            - median
+        - DONE: compare NO_ADJUST, ADJUST, ORACLE with 50 history size, heavy noise
+        
+    - case where the perfect transformation shifts over time
+    - case with no noise
+    - 
+    
 - use websockets instead of file-passing for async update
 
     

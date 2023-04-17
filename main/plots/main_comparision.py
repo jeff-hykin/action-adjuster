@@ -1,12 +1,17 @@
+import os
+from statistics import median, mean as average
+
 import ez_yaml
 from blissful_basics import FS, LazyDict
 import pandas as pd
-import os
 
 from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, xd_theme
 
+should_flatten_graph = True
+should_average = False
+averaging_function = median
 groups = LazyDict(
     no_adjuster=LazyDict(
         folder_name_must_include="@NO_ADJUSTER",
@@ -44,7 +49,6 @@ for group_name, group_info in groups.items():
 # 
 # flatten
 # 
-should_flatten_graph = True
 if should_flatten_graph:
     # find the min y value for each x
     from collections import defaultdict
@@ -63,7 +67,6 @@ if should_flatten_graph:
 # 
 # group average
 # 
-should_average = True
 if should_average:
     def points_to_function(x_values, y_values, method="linear"):
         values = list(zip(x_values, y_values))
@@ -107,14 +110,14 @@ if should_average:
                     
         return new_function
             
-    from statistics import median, mean as average
+    
     new_lines = []
     for group_name, each_group in groups.items():
         print(f'''computing average for {group_name}''')
         x_values = each_group.lines[0]["x_values"]
         functions = [ points_to_function(each["x_values"], each["y_values"]) for each in each_group.lines ]
         y_values = [
-            median([ each_function(each_x) for each_function in functions ])
+            averaging_function([ each_function(each_x) for each_function in functions ])
                 for each_x in x_values
         ]
         print(f'''y_values = {y_values}''')
