@@ -14,7 +14,7 @@ groups = LazyDict(
         lines=[],
     ),
     normal_adjuster=LazyDict(
-        folder_name_must_include="@NORMAL_ADJUSTER_50",
+        folder_name_must_include="@NORMAL_ADJUSTER",
         color=xd_theme.blue,
         lines=[],
     ),
@@ -117,6 +117,7 @@ if should_average:
             median([ each_function(each_x) for each_function in functions ])
                 for each_x in x_values
         ]
+        print(f'''y_values = {y_values}''')
         new_lines.append(
             dict(
                 x_values=x_values,
