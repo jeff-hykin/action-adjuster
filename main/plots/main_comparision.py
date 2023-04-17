@@ -1,5 +1,5 @@
 import ez_yaml
-from blissful_basics import FS
+from blissful_basics import FS, LazyDict
 import pandas as pd
 import os
 
@@ -7,24 +7,39 @@ from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, xd_theme
 
+groups = LazyDict(
+    no_adjuster=LazyDict(
+        folder_name_must_include="@NO_ADJUSTER",
+        color=xd_theme.red,
+        lines=[],
+    ),
+    normal_adjuster=LazyDict(
+        folder_name_must_include="@NORMAL_ADJUSTER_50",
+        color=xd_theme.blue,
+        lines=[],
+    ),
+    perfect_adjuster=LazyDict(
+        folder_name_must_include="@PERFECT_ADJUSTER",
+        color=xd_theme.green,
+        lines=[],
+    ),
+)
+
 lines = []
-for name, data in get_recorder_data("@NO_ADJUSTER", "@NORMAL_ADJUSTER", "@PERFECT_ADJUSTER",):
-    print(f'''processing {name}''')
-    # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
-    group_name = name.replace("@","").split("|")[0]
-    reward_data = [ each for each in data.records if each.get("accumulated_reward", None) != None ]
-    lines.append(
-        dict(
+for group_name, group_info in groups.items():
+    for file_name, data in get_recorder_data(group_info.folder_name_must_include):
+        print(f'''processing {file_name}''')
+        # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
+        plot_name = file_name.replace("@","").replace("|"," ").lower()
+        reward_data = [ each for each in data.records if each.get("accumulated_reward", None) != None ]
+        line_data = dict(
             x_values=[ each.timestep           for each in reward_data ],
             y_values=[ each.accumulated_reward for each in reward_data ],
-            name=name.replace("@","").replace("|"," ").lower(),
-            color=dict(
-                NO_ADJUSTER=xd_theme.red,
-                NORMAL_ADJUSTER=xd_theme.blue,
-                PERFECT_ADJUSTER=xd_theme.green,
-            )[group_name],
+            name=plot_name,
+            color=group_info.color,
         )
-    )
+        group_info.lines.append(line_data)
+        lines.append(line_data)
 
 # 
 # flatten
@@ -50,11 +65,6 @@ if should_flatten_graph:
 # 
 should_average = True
 if should_average:
-    group_lines = {
-        "no_adjuster": [],
-        "normal_adjuster": [],
-        "perfect_adjuster": [],
-    }
     def points_to_function(x_values, y_values, method="linear"):
         values = list(zip(x_values, y_values))
         values.sort(reverse=False, key=lambda each: each[0])
@@ -97,17 +107,12 @@ if should_average:
                     
         return new_function
             
-    for group_name, each_group_lines in group_lines.items():
-        for each_line in lines:
-            if group_name in each_line["name"]:
-                each_group_lines.append(each_line)
-
     from statistics import median, mean as average
     new_lines = []
-    for group_name, each_group_lines in group_lines.items():
+    for group_name, each_group in groups.items():
         print(f'''computing average for {group_name}''')
-        x_values = each_group_lines[0]["x_values"]
-        functions = [ points_to_function(each["x_values"], each["y_values"]) for each in each_group_lines ]
+        x_values = each_group.lines[0]["x_values"]
+        functions = [ points_to_function(each["x_values"], each["y_values"]) for each in each_group.lines ]
         y_values = [
             median([ each_function(each_x) for each_function in functions ])
                 for each_x in x_values
@@ -117,11 +122,7 @@ if should_average:
                 x_values=x_values,
                 y_values=y_values,
                 name=group_name,
-                color=dict(
-                    no_adjuster=xd_theme.red,
-                    normal_adjuster=xd_theme.blue,
-                    perfect_adjuster=xd_theme.green,
-                )[group_name],
+                color=each_group.color,
             )
         )
     
