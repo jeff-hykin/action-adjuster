@@ -19,7 +19,7 @@ from blissful_basics import FS, print
 
 # torch.manual_seed(100)
 eps = np.finfo(np.float32).eps.item()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 def discount_cumsum(x, discount):
     """
