@@ -6,6 +6,10 @@
             - average
             - median
         - DONE: compare NO_ADJUST, ADJUST, ORACLE with 50 history size, heavy noise
+            - variance (individual plots)
+            - average
+            - median
+        - compare with 10000 history size, no noise
         
     - case where the perfect transformation shifts over time
     - case with no noise
