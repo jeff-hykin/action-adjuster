@@ -8,13 +8,13 @@ from blissful_basics import FS, print, LazyDict
 
 from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, ActionAdjuster
-from config import config, path_to
+from config import config, path_to, selected_profiles
 from specific_tools.train_ppo import * # required because of pickle lookup
 from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
 
-recorder = RecordKeeper(config=config)
+recorder = RecordKeeper(selected_profiles=selected_profiles, config=config)
 
 # 
 # env

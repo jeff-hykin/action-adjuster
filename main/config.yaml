@@ -51,7 +51,7 @@
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 20 # timesteps
-                max_history_size: 50 # timesteps
+                max_history_size: 10000 # timesteps
                 processor_sleep_time: 1 # seconds
             
             policy:
@@ -118,7 +118,7 @@
                 # action offset 
                 # 
                 velocity_offset: 0 # will be added to the velocity_action value every step
-                spin_offset: 0.20 # will be added to the spin_action value every step
+                spin_offset: 0.20 # (radians per sec) will be added to the spin_action value every step
                 
                 # 
                 # action noise
@@ -182,7 +182,7 @@
                 # action offset 
                 # 
                 velocity_offset: 0 # will be added to the velocity_action value every step
-                spin_offset: 0.20 # will be added to the spin_action value every step
+                spin_offset: 0.20 # (radians per sec) will be added to the spin_action value every step
                 
                 # 
                 # action noise
@@ -208,6 +208,47 @@
                         standard_deviation: 0 # meters per second
                     "spin":
                         standard_deviation: 0 # radians per action_duration (default 15 hertz)
+        ADVERSITY=WEAK:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0 # will be added to the velocity_action value every step
+            spin_offset: 0.20 # (radians per sec) will be added to the spin_action value every step
+        
+        ADVERSITY=STRONG:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0.5 # will be added to the velocity_action value every step
+            spin_offset: 0.75 #  (radians per sec), 0.75 ~= 45°, this value will be added to the spin_action value every step
+        
+        NOISE=NONE:
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: False
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.00001 # meters per second
+                    spin_action:
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: False
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.00001 # meters
+                    "y":
+                        standard_deviation: 0.00001 # meters
+                    "angle":
+                        standard_deviation: 0.00001 # radians
+                    "velocity":
+                        standard_deviation: 0.00001 # meters per second
+                    "spin":
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+        
         NO_ADJUSTER:
             action_adjuster:
                 disabled: True

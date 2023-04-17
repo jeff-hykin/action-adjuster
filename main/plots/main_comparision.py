@@ -10,31 +10,32 @@ from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, xd_theme
 
-should_flatten_graph = True
-should_average = True
-averaging_function = median
+# action_adjuster.max_history_size
+
 groups = LazyDict(
     no_adjuster=LazyDict(
         folder_name_must_include="@NO_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=LazyDict(
-        folder_name_must_include="@MINIMAL_ADJUSTER",
+        folder_name_must_include="@NORMAL_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=LazyDict(
         folder_name_must_include="@PERFECT_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.green,
         lines=[],
     ),
 )
 
-lines = []
-for group_name, group_info in groups.items():
-    for file_name, data in get_recorder_data(group_info.folder_name_must_include):
-        print(f'''processing {file_name}''')
+def extract_accumulated_reward_as_lines(groups):
+    lines = []
+    for group_name, group_info, file_name, data in load_group_data(groups):
         # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
         plot_name = file_name.replace("@","").replace("|"," ").lower()
         reward_data = [ each for each in data.records if each.get("accumulated_reward", None) != None ]
@@ -46,6 +47,13 @@ for group_name, group_info in groups.items():
         )
         group_info.lines.append(line_data)
         lines.append(line_data)
+    return lines
+
+def load_group_data(groups):
+    for group_name, group_info in groups.items():
+        for file_name, data in get_recorder_data(group_info.folder_name_must_include):
+            if group_info.summary_filter(data.parent_data_snapshot):
+                yield group_name, group_info, file_name, data
 
 def create_graph(
     graph_name,
@@ -149,28 +157,28 @@ def create_graph(
         save_to="./main/plots/"+FS.name(__file__)+"_"+graph_name+".html",
     )
 
-
-create_graph(
-    graph_name="variance",
-    lines=deepcopy(lines),
-    groups=deepcopy(groups),,
-    should_flatten_graph=True,
-    should_average=False,
-    averaging_function=None,
-)
-create_graph(
-    graph_name="mean",
-    lines=deepcopy(lines),
-    groups=deepcopy(groups),,
-    should_flatten_graph=True,
-    should_average=True,
-    averaging_function=mean,
-)
-create_graph(
-    graph_name="median",
-    lines=deepcopy(lines),
-    groups=deepcopy(groups),,
-    should_flatten_graph=True,
-    should_average=True,
-    averaging_function=median,
-)
+def create_all_graphs(lines, groups):
+    create_graph(
+        graph_name="variance",
+        lines=deepcopy(lines),
+        groups=deepcopy(groups),,
+        should_flatten_graph=True,
+        should_average=False,
+        averaging_function=None,
+    )
+    create_graph(
+        graph_name="mean",
+        lines=deepcopy(lines),
+        groups=deepcopy(groups),,
+        should_flatten_graph=True,
+        should_average=True,
+        averaging_function=mean,
+    )
+    create_graph(
+        graph_name="median",
+        lines=deepcopy(lines),
+        groups=deepcopy(groups),,
+        should_flatten_graph=True,
+        should_average=True,
+        averaging_function=median,
+    )

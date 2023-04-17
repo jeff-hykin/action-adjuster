@@ -10,6 +10,9 @@
             - average
             - median
         - compare with 10000 history size, no noise
+        - non linear adverse
+        - one layer network
+        - theorical
         
     - case where the perfect transformation shifts over time
     - case with no noise
