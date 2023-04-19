@@ -65,6 +65,24 @@ def create_graph(
     averaging_function,
 ):
     # 
+    # flatten
+    # 
+    if should_flatten_graph:
+        # find the min y value for each x
+        from collections import defaultdict
+        per_x_value = defaultdict(lambda:[])
+        for each_line in lines:
+            for each_x, each_y in zip(each_line["x_values"], each_line["y_values"]):
+                per_x_value[each_x].append(each_y)
+        min_per_x = {}
+        for each_x, values in per_x_value.items():
+            min_per_x[each_x] = min(values)
+        # flatten all the data
+        for each_line in lines:
+            for index, (each_x, each_y) in enumerate(zip(each_line["x_values"], each_line["y_values"])):
+                each_line["y_values"][index] = each_y - min_per_x[each_x]
+    
+    # 
     # group average
     # 
     if should_average:
@@ -130,24 +148,6 @@ def create_graph(
             )
         
         lines = new_lines
-    
-    # 
-    # flatten
-    # 
-    if should_flatten_graph:
-        # find the min y value for each x
-        from collections import defaultdict
-        per_x_value = defaultdict(lambda:[])
-        for each_line in lines:
-            for each_x, each_y in zip(each_line["x_values"], each_line["y_values"]):
-                per_x_value[each_x].append(each_y)
-        min_per_x = {}
-        for each_x, values in per_x_value.items():
-            min_per_x[each_x] = min(values)
-        # flatten all the data
-        for each_line in lines:
-            for index, (each_x, each_y) in enumerate(zip(each_line["x_values"], each_line["y_values"])):
-                each_line["y_values"][index] = each_y - min_per_x[each_x]
     
     graph_lines(
         *lines,
