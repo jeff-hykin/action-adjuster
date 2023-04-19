@@ -1,17 +1,21 @@
 import ez_yaml
 from blissful_basics import FS, LazyDict
 import pandas as pd
+from cool_cache import cache, settings
 
 from config import config, path_to
 
 recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else LazyDict({ key: recursive_lazy_dict(value) for key, value in arg.items() })
 
 path_cache = {}
-def load_recorder(path):
+@cache(watch_filepaths=lambda path, *args, **kwargs: [ FS.make_absolute_path(path) ])
+def load_recorder(path, quiet=False):
     path = FS.make_absolute_path(path)
     if not path_cache.get(path, None):
         output = None
         if FS.is_file(path):
+            if not quiet:
+                print(f"    parsing: {path}")
             data = recursive_lazy_dict(
                 ez_yaml.to_object(
                     string=FS.read(path)
@@ -44,8 +48,8 @@ def get_recorder_data(*names, quiet=False):
     
     output = []
     for path in which_experiments:
-        if not quiet:
-            print(f"    parsing: {path}")
-        data = load_recorder(path+"/recorder.yaml")
+        data = load_recorder(path+"/recorder.yaml", quiet=quiet)
+        if data:
+            output.append((FS.basename(path), data))
     
     return output

@@ -52,8 +52,9 @@ def extract_accumulated_reward_as_lines(groups):
 def load_group_data(groups):
     for group_name, group_info in groups.items():
         for file_name, data in get_recorder_data(group_info.folder_name_must_include):
+            data.parent_data_snapshot.setdefault("selected_profiles", []) # some datasets were made before this was a saved attribute
             if group_info.summary_filter(data.parent_data_snapshot):
-                yield group_name, group_info, file_name, data
+                yield (group_name, group_info, file_name, data)
 
 def create_graph(
     graph_name,
@@ -63,24 +64,6 @@ def create_graph(
     should_average,
     averaging_function,
 ):
-    # 
-    # flatten
-    # 
-    if should_flatten_graph:
-        # find the min y value for each x
-        from collections import defaultdict
-        per_x_value = defaultdict(lambda:[])
-        for each_line in lines:
-            for each_x, each_y in zip(each_line["x_values"], each_line["y_values"]):
-                per_x_value[each_x].append(each_y)
-        min_per_x = {}
-        for each_x, values in per_x_value.items():
-            min_per_x[each_x] = min(values)
-        # flatten all the data
-        for each_line in lines:
-            for index, (each_x, each_y) in enumerate(zip(each_line["x_values"], each_line["y_values"])):
-                each_line["y_values"][index] = each_y - min_per_x[each_x]
-
     # 
     # group average
     # 
@@ -130,14 +113,13 @@ def create_graph(
         
         new_lines = []
         for group_name, each_group in groups.items():
-            print(f'''computing average for {group_name}''')
             x_values = each_group.lines[0]["x_values"]
+                
             functions = [ points_to_function(each["x_values"], each["y_values"]) for each in each_group.lines ]
             y_values = [
                 averaging_function([ each_function(each_x) for each_function in functions ])
                     for each_x in x_values
             ]
-            print(f'''y_values = {y_values}''')
             new_lines.append(
                 dict(
                     x_values=x_values,
@@ -148,37 +130,62 @@ def create_graph(
             )
         
         lines = new_lines
-
+    
+    # 
+    # flatten
+    # 
+    if should_flatten_graph:
+        # find the min y value for each x
+        from collections import defaultdict
+        per_x_value = defaultdict(lambda:[])
+        for each_line in lines:
+            for each_x, each_y in zip(each_line["x_values"], each_line["y_values"]):
+                per_x_value[each_x].append(each_y)
+        min_per_x = {}
+        for each_x, values in per_x_value.items():
+            min_per_x[each_x] = min(values)
+        # flatten all the data
+        for each_line in lines:
+            for index, (each_x, each_y) in enumerate(zip(each_line["x_values"], each_line["y_values"])):
+                each_line["y_values"][index] = each_y - min_per_x[each_x]
+    
     graph_lines(
         *lines,
         title="Heavy Noise Comparision",
         x_axis_name="Timestep",
         y_axis_name="AccumulatedReward",
-        save_to="./main/plots/"+FS.name(__file__)+"_"+graph_name+".html",
+        save_to="./plots/"+FS.name(__file__)+"_"+graph_name+".html",
     )
 
 def create_all_graphs(lines, groups):
     create_graph(
-        graph_name="variance",
-        lines=deepcopy(lines),
-        groups=deepcopy(groups),,
-        should_flatten_graph=True,
-        should_average=False,
-        averaging_function=None,
-    )
-    create_graph(
         graph_name="mean",
         lines=deepcopy(lines),
-        groups=deepcopy(groups),,
+        groups=deepcopy(groups),
         should_flatten_graph=True,
         should_average=True,
         averaging_function=mean,
     )
     create_graph(
+        graph_name="variance",
+        lines=deepcopy(lines),
+        groups=deepcopy(groups),
+        should_flatten_graph=True,
+        should_average=False,
+        averaging_function=None,
+    )
+    create_graph(
         graph_name="median",
         lines=deepcopy(lines),
-        groups=deepcopy(groups),,
+        groups=deepcopy(groups),
         should_flatten_graph=True,
         should_average=True,
         averaging_function=median,
     )
+
+lines=extract_accumulated_reward_as_lines(groups)
+
+create_all_graphs(
+    lines=lines,
+    groups=groups,
+)

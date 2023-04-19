@@ -16,6 +16,7 @@ quik-config = "^1.7.0"
 cma = "^3.3.0"
 tdqm = "^0.0.1"
 torch = "1.13.1"
+cool_cache = "0.3.0"
 stable-baselines3 = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
