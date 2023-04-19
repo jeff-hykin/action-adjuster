@@ -12,6 +12,8 @@ from generic_tools.plotting import graph_lines, xd_theme
 
 # action_adjuster.max_history_size
 
+experiment_name = "NOISE=NONE,ADVERSITY=STRONG"
+
 groups = LazyDict(
     no_adjuster=LazyDict(
         folder_name_must_include="@NO_ADJUSTER",
@@ -34,6 +36,7 @@ groups = LazyDict(
 )
 
 def extract_accumulated_reward_as_lines(groups):
+    groups = deepcopy(groups)
     lines = []
     for group_name, group_info, file_name, data in load_group_data(groups):
         # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
@@ -47,7 +50,24 @@ def extract_accumulated_reward_as_lines(groups):
         )
         group_info.lines.append(line_data)
         lines.append(line_data)
-    return lines
+    return lines, groups
+
+def extract_curve_fit_as_lines(groups):
+    groups = deepcopy(groups)
+    lines = []
+    for group_name, group_info, file_name, data in load_group_data(groups):
+        # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
+        plot_name = file_name.replace("@","").replace("|"," ").lower()
+        entry_data = [ each for each in data.records if each.get("line_fit_score", None) != None ]
+        line_data = dict(
+            x_values=[ each.timestep       for each in entry_data ],
+            y_values=[ each.line_fit_score for each in entry_data ],
+            name=plot_name,
+            color=group_info.color,
+        )
+        group_info.lines.append(line_data)
+        lines.append(line_data)
+    return lines, groups
 
 def load_group_data(groups):
     for group_name, group_info in groups.items():
@@ -57,7 +77,9 @@ def load_group_data(groups):
                 yield (group_name, group_info, file_name, data)
 
 def create_graph(
+    title,
     graph_name,
+    y_axis_name,
     lines,
     groups,
     should_flatten_graph,
@@ -117,8 +139,8 @@ def create_graph(
                     elif each_x > x_input > prev_x:
                         the_range = each_x - prev_x
                         relative_amount = x_input - prev_x
-                        propotion = relative_amount/the_range
-                        return shift_towards(new_value=each_x, old_value=prev_x, propotion=propotion)
+                        proportion = relative_amount/the_range
+                        return shift_towards(new_value=each_x, old_value=prev_x, proportion=proportion)
                     
                     prev_x = each_x
                     prev_y = each_y
@@ -151,41 +173,54 @@ def create_graph(
     
     graph_lines(
         *lines,
-        title="Heavy Noise Comparision",
+        title=title,
         x_axis_name="Timestep",
-        y_axis_name="AccumulatedReward",
+        y_axis_name=y_axis_name,
         save_to="./plots/"+FS.name(__file__)+"_"+graph_name+".html",
     )
 
-def create_all_graphs(lines, groups):
+def graph_variance_median_mean(lines, groups, prefix=""):
     create_graph(
-        graph_name="mean",
-        lines=deepcopy(lines),
-        groups=deepcopy(groups),
-        should_flatten_graph=True,
-        should_average=True,
-        averaging_function=mean,
-    )
-    create_graph(
-        graph_name="variance",
+        title=prefix+f"_variance {experiment_name}",
+        graph_name=prefix+"_variance",
         lines=deepcopy(lines),
         groups=deepcopy(groups),
         should_flatten_graph=True,
         should_average=False,
         averaging_function=None,
+        y_axis_name=prefix,
     )
     create_graph(
-        graph_name="median",
+        title=prefix+f"_median {experiment_name}",
+        graph_name=prefix+"_median",
         lines=deepcopy(lines),
         groups=deepcopy(groups),
         should_flatten_graph=True,
         should_average=True,
         averaging_function=median,
+        y_axis_name=prefix,
+    )
+    create_graph(
+        title=prefix+f"_mean {experiment_name}",
+        graph_name=prefix+"_mean",
+        lines=deepcopy(lines),
+        groups=deepcopy(groups),
+        should_flatten_graph=True,
+        should_average=True,
+        averaging_function=mean,
+        y_axis_name=prefix,
     )
 
-lines=extract_accumulated_reward_as_lines(groups)
+reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
+graph_variance_median_mean(
+    lines=reward_lines,
+    groups=reward_groups,
+    prefix="reward",
+)
 
-create_all_graphs(
-    lines=lines,
-    groups=groups,
+curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
+graph_variance_median_mean(
+    lines=curve_fit_lines,
+    groups=curve_fit_groups,
+    prefix="curve_loss",
 )
