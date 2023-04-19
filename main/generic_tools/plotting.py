@@ -154,16 +154,29 @@ def graph_groups(
         
         new_lines = []
         for group_index, (group_name, each_group) in enumerate(groups.items()):
-            x_values = each_group["lines"][0]["x_values"]
-                
-            functions = [ points_to_function(each["x_values"], each["y_values"]) for each in each_group["lines"] ]
+            lines = each_group["lines"]
+            
+            functions = [
+                points_to_function(
+                    # sort (x_vals, y_vals) sorted by x
+                    *zip(*sorted(zip(each["x_values"], each["y_values"]), key=lambda each: each[0]))
+                )
+                    for each in lines
+            ]
+            
+            # x values might not be the same across lines, so get all of them
+            any_x_value = set()
+            for each_line in lines:
+                any_x_value |= set(each_line["x_values"])
+            any_x_value = sorted(any_x_value)
+            
             y_values = [
                 group_averaging_function([ each_function(each_x) for each_function in functions ])
-                    for each_x in x_values
+                    for each_x in any_x_value
             ]
             new_lines.append(
                 dict(
-                    x_values=x_values,
+                    x_values=any_x_value,
                     y_values=y_values,
                     name=group_name,
                     color=each_group.get("color", theme[group_index]),

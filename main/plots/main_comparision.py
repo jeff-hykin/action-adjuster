@@ -83,7 +83,7 @@ def graph_variance_median_mean(lines, groups, prefix=""):
         title=prefix+f"_{graph_name} {experiment_name}",
         x_axis_name="Timestep",
         y_axis_name=prefix,
-        save_to="./plots/"+FS.name(__file__)prefix+"_"+graph_name+".html",
+        save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=None,
     )
@@ -93,7 +93,7 @@ def graph_variance_median_mean(lines, groups, prefix=""):
         title=prefix+f"_{graph_name} {experiment_name}",
         x_axis_name="Timestep",
         y_axis_name=prefix,
-        save_to="./plots/"+FS.name(__file__)prefix+"_"+graph_name+".html",
+        save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=median,
     )
@@ -103,7 +103,7 @@ def graph_variance_median_mean(lines, groups, prefix=""):
         title=prefix+f"_{graph_name} {experiment_name}",
         x_axis_name="Timestep",
         y_axis_name=prefix,
-        save_to="./plots/"+FS.name(__file__)prefix+"_"+graph_name+".html",
+        save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=mean,
     )
@@ -119,5 +119,5 @@ curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
 graph_variance_median_mean(
     lines=curve_fit_lines,
     groups=curve_fit_groups,
-    prefix="curve_loss",
+    prefix="line_fit_score",
 )
