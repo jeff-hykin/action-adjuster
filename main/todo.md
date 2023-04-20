@@ -1,3 +1,4 @@
+- fix the timestep logging issue
 - zero-out the intial point
 - test how much it improves policy reward
     - perform tons of tests (30 runs each)
