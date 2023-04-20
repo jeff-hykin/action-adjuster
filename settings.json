@@ -6,6 +6,9 @@
         "cool_cache": {
             "path": "__sources__/cool_cache/main/cool_cache"
         },
+        "elegant_events": {
+            "path": "__sources__/elegant_events/main/elegant_events"
+        },
         "quik_config": {
             "path": "__sources__/quik_config/main/quik_config"
         }
