@@ -1,0 +1,8 @@
+{
+    "pure_python_packages": {
+        "json_fix": {
+            "path": "__sources__/json_fix/main/json_fix",
+            "eval": "json_fix"
+        }
+    }
+}

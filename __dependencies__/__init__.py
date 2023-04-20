@@ -1,9 +1,10 @@
-import sys
-import os
-from os.path import isabs, isfile, isdir, join, dirname, basename, exists, splitext, relpath
 from os import remove, getcwd, makedirs, listdir, rename, rmdir, system
+from os.path import isabs, isfile, isdir, join, dirname, basename, exists, splitext, relpath, join, dirname
 from pathlib import Path
-from os.path import join, dirname
+import glob
+import os
+import shutil
+import sys
 import warnings
 
 # 
@@ -48,12 +49,21 @@ def path_pieces(path):
     filename, file_extension = os.path.splitext(file)
     return [ *folders, filename, file_extension ]
 
+def remove(path):
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        try:
+            os.remove(path)
+        except:
+            pass
+
 # 
 # globals
 # 
 this_file = make_absolute_path(__file__)
 this_folder = dirname(this_file)
-dependency_mapping_path = join(this_folder, '__dependency_mapping__.json')
+settings_path = join(this_folder, '..', 'settings.json')
 
 # 
 # find closest import path
@@ -89,13 +99,18 @@ if best_import_zone_match is None:
 import json
 from os.path import join
 # ensure it exists
-if not isfile(dependency_mapping_path):
-    with open(dependency_mapping_path, 'w') as the_file:
+if not isfile(settings_path):
+    with open(settings_path, 'w') as the_file:
         the_file.write(str("{}"))
-with open(dependency_mapping_path, 'r') as in_file:
-    dependency_mapping = json.load(in_file)
-    if not isinstance(dependency_mapping, dict):
-        raise Exception(f"""\n\n\nThis file is corrupt (it should be a JSON object):{dependency_mapping_path}""")
+with open(settings_path, 'r') as in_file:
+    settings = json.load(in_file)
+    if not isinstance(settings, dict):
+        raise Exception(f"""\n\n\nThis file is corrupt (it should be a JSON object):{settings_path}""")
+
+# ensure that pure_python_packages exists
+if not isinstance(settings.get("pure_python_packages", None), dict):
+    settings["pure_python_packages"] = {}
+dependency_mapping = settings["pure_python_packages"]
 
 # 
 # calculate paths
@@ -106,7 +121,7 @@ import_strings = []
 for dependency_name, dependency_info in dependency_mapping.items():
     counter += 1
     if dependency_name.startswith("__"):
-        raise Exception(f"""dependency names cannot start with "__", but this one does: {dependency_name}. This source of that name is in: {dependency_mapping_path}""")
+        raise Exception(f"""dependency names cannot start with "__", but this one does: {dependency_name}. This source of that name is in: {settings_path}""")
     
     target_path = join(this_folder, dependency_info["path"])
     relative_target_path = make_relative_path(to=target_path, coming_from=best_import_zone_match)
@@ -114,22 +129,8 @@ for dependency_name, dependency_info in dependency_mapping.items():
     *path_parts, _, _ = path_pieces(join(relative_target_path, "_"))
     eval_part = dependency_info.get("eval", dependency_name)
     unique_name = f"{dependency_name}_{random()}_{counter}".replace(".","")
-    if os.path.isdir(target_path):
-        if all(each.isidentifier() for each in path_parts):
-            import_strings.append(f"import {'.'.join(path_parts)} as {unique_name};{dependency_name} = (lambda {dependency_name}: {eval_part})({unique_name})")
-        else:
-            warnings.warn(f"There's a dependency path that contains a name that is not acceptable as an identifier:\npath parts: {path_parts}")
-    else:
-        warnings.warn(f"There's a dependency path but it doesnt have the right folder structure. This path isn't a folder: {join(*path_parts)}")
-
-# 
-# do the actual importing
-#
-import_string = "\n".join(import_strings)
-try:
-    exec(import_string)
-except Exception as error:
-    print(error)
-    indented = import_string.replace('\n', '\n    ')
-    print(f"Issue while trying to run the following:\n    {indented}")
-    raise error
+    target_folder_for_import = join(this_folder, dependency_name)
+    if exists(target_folder_for_import):
+        remove(target_folder_for_import)
+    # symlink the folder
+    Path(target_folder_for_import).symlink_to(dependency_info["path"])
