@@ -103,7 +103,7 @@ def graph_groups(
     groups = deepcopy(groups)
     lines = []
     for each in groups.values():
-        lines += each.lines
+        lines += each["lines"]
     
     # 
     # group average

@@ -5,7 +5,6 @@ from copy import deepcopy
 from __dependencies__.blissful_basics import FS, LazyDict
 import ez_yaml
 import pandas as pd
-from super_map import LazyDict
 
 from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
@@ -18,19 +17,19 @@ experiment_name = "NOISE=NONE,ADVERSITY=STRONG"
 groups = dict(
     no_adjuster=dict(
         folder_name_must_include="@NO_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
         folder_name_must_include="@NORMAL_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
         folder_name_must_include="@PERFECT_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
+        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],
     ),
@@ -38,16 +37,26 @@ groups = dict(
 
 def load_group_data(groups):
     for group_name, group_info in groups.items():
-        print(f'''group_info = {group_info}''')
         for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
-            data.parent_data_snapshot.setdefault("selected_profiles", []) # some datasets were made before this was a saved attribute
-            if group_info["summary_filter"](data.parent_data_snapshot):
+            # some datasets were made before this was a saved attribute
+            while True:
+                child = data["parent_data_snapshot"]
+                print(f'''child["selected_profiles"] = {child["selected_profiles"]}''')
+                value = child.get("selected_profiles", []) or []
+                print(f'''value = {value}''')
+                child["selected_profiles"] = value
+                import code; code.interact(local={**globals(),**locals()})
+                print(f'''child["selected_profiles"] = {child["selected_profiles"]}''')
+                print(f'''data["parent_data_snapshot"]["selected_profiles"] = {data["parent_data_snapshot"]["selected_profiles"]}''')
+                print(f'''child.__dict__["selected_profiles"] = {child.__dict__["selected_profiles"]}''')
+                if data["parent_data_snapshot"]["selected_profiles"] != None:
+                    break
+            if group_info["summary_filter"](data["parent_data_snapshot"]):
                 yield (group_name, group_info, file_name, data)
 
 def extract_accumulated_reward_as_lines(groups):
     groups = deepcopy(groups)
     lines = []
-    print(f'''groups = {groups}''')
     for group_name, group_info, file_name, data in load_group_data(groups):
         # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
         plot_name = file_name.replace("@","").replace("|"," ").lower()
@@ -111,7 +120,6 @@ def graph_variance_median_mean(lines, groups, prefix=""):
         group_averaging_function=mean,
     )
 
-print(f'''groups1 = {groups}''')
 reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
 graph_variance_median_mean(
     lines=reward_lines,

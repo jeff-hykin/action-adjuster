@@ -4,7 +4,7 @@ from random import random, sample, choices
 import torch
 from rigorous_recorder import RecordKeeper
 from stable_baselines3 import PPO
-from blissful_basics import FS, print, LazyDict
+from __dependencies__.blissful_basics import FS, print, LazyDict
 
 from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, ActionAdjuster
