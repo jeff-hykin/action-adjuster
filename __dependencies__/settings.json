@@ -1,7 +1,0 @@
-{
-    "pure_python_packages": {
-        "blissful_basics": {
-            "path": "__sources__/blissful_basics/main/blissful_basics/"
-        }
-    }
-}

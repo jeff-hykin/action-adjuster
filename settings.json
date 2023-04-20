@@ -1,12 +1,7 @@
 {
     "pure_python_packages": {
         "blissful_basics": {
-            "path": "__sources__/blissful_basics/main/blissful_basics",
-            "eval": "blissful_basics"
-        },
-        "json_fix": {
-            "path": "__sources__/json_fix/main/json_fix",
-            "eval": "json_fix"
+            "path": "__sources__/blissful_basics/main/blissful_basics/"
         }
     }
 }
