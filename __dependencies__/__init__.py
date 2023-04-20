@@ -1,15 +1,28 @@
 from os import remove, getcwd, makedirs, listdir, rename, rmdir, system
 from os.path import isabs, isfile, isdir, join, dirname, basename, exists, splitext, relpath, join, dirname
 from pathlib import Path
-import glob
 import os
 import shutil
 import sys
-import warnings
+import warnings # TODO: convert serveral prints to warnings
+from hashlib import md5 
 
 # 
 # helpers
 # 
+def consistent_hash(value):
+    if isinstance(value, bytes):
+        return md5(value).hexdigest()
+    
+    if isinstance(value, str):
+        return md5(("@"+value).encode('utf-8')).hexdigest()
+    
+    if isinstance(value, (bool, int, float, type(None))):
+        return md5(str(value).encode('utf-8')).hexdigest()
+        
+    else:
+        return md5(pickle.dumps(value, protocol=4)).hexdigest()
+
 def make_absolute_path(to, coming_from=None):
     # if coming from cwd, its easy
     if coming_from is None:
@@ -58,6 +71,17 @@ def remove(path):
         except:
             pass
 
+def final_target_of(path):
+    # resolve symlinks
+    if os.path.islink(path):
+        have_seen = set()
+        while os.path.islink(path):
+            path = os.readlink(path)
+            if path in have_seen:
+                return None # circular broken link
+            have_seen.add(path)
+    return path
+    
 # 
 # globals
 # 
@@ -122,6 +146,8 @@ for dependency_name, dependency_info in dependency_mapping.items():
     counter += 1
     if dependency_name.startswith("__"):
         raise Exception(f"""dependency names cannot start with "__", but this one does: {dependency_name}. This source of that name is in: {settings_path}""")
+    if not dependency_name.isidentifier():
+        raise Exception(f"""dependency names must be an identifier ("blah".isidentifier() in python), but this one is not: {dependency_name}. This source of that name is in: {settings_path}""")
     
     target_path = join(this_folder, dependency_info["path"])
     relative_target_path = make_relative_path(to=target_path, coming_from=best_import_zone_match)
@@ -130,7 +156,23 @@ for dependency_name, dependency_info in dependency_mapping.items():
     eval_part = dependency_info.get("eval", dependency_name)
     unique_name = f"{dependency_name}_{random()}_{counter}".replace(".","")
     target_folder_for_import = join(this_folder, dependency_name)
-    if exists(target_folder_for_import):
+    if not Path(target_folder_for_import).is_symlink() or final_target_of(target_folder_for_import) != dependency_info["path"]:
+        # clear the way
         remove(target_folder_for_import)
-    # symlink the folder
-    Path(target_folder_for_import).symlink_to(dependency_info["path"])
+        # symlink the folder
+        Path(target_folder_for_import).symlink_to(dependency_info["path"])
+
+# import the paths
+__all__ = []
+for dependency_name, dependency_info in dependency_mapping.items():
+    # this will register it with python and convert it to a proper module with a unique path (important for pickling things)
+    try:
+        exec(f"""from .{dependency_name} import __file__ as _""")
+        __all__.append(dependency_name)
+    except ImportError as error:
+        if f"{error}" == "ImportError: cannot import name '__file__'":
+            # this means top level folder isn't a module or doesnt have a __init__.py
+            # some modules simply are like this
+            pass
+        else:
+            raise error
