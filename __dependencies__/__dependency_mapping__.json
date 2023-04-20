@@ -7,6 +7,10 @@
         "path": "super_hash/main/super_hash",
         "eval": "super_hash"
     },
+    "blissful_basics": {
+        "path": "blissful_basics/main/blissful_basics",
+        "eval": "blissful_basics"
+    },
     "toml": {
         "path": "toml/toml",
         "eval": "toml"
