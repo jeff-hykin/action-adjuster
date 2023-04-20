@@ -5,10 +5,10 @@ import math
 import threading
 from random import random, sample, choices
 
+import __dependencies__.blissful_basics as bb                                                   
+from __dependencies__.blissful_basics import to_pure, countdown, print, singleton, FS, stringify
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
-import blissful_basics as bb                                                    # pip install blissful_basics
-from blissful_basics import to_pure, countdown, print, singleton, FS, stringify # pip install blissful_basics
 from icecream import ic                                                         # pip install icecream
 from trivial_torch_tools import to_tensor                                       # pip install trivial_torch_tools
 import json_fix
@@ -21,7 +21,6 @@ from generic_tools.numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
 
-import numpy
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 
 

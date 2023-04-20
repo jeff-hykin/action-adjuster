@@ -1,5 +1,5 @@
+import __dependencies__.blissful_basics as bb
 import cma
-import blissful_basics as bb
 import numpy
 
 def guess_to_maximize(objective_function, initial_guess, stdev):
