@@ -1,5 +1,5 @@
-from quik_config import find_and_load
-import file_system_py as FS
+from __dependencies__.quik_config import find_and_load
+from __dependencies__.blissful_basics import FS
 
 info = find_and_load(
     "main/config.yaml",

@@ -6,6 +6,9 @@
         "cool_cache": {
             "path": "__sources__/cool_cache/main/cool_cache"
         },
+        "quik_config": {
+            "path": "__sources__/quik_config/main/quik_config"
+        },
         "json_fix": {
             "path": "__sources__/json_fix/main/json_fix"
         }
