@@ -1,14 +1,7 @@
-try:
-    from .__dependencies__ import json_fix
-    from .__dependencies__ import file_system_py as FS
-    from .__dependencies__ import super_map
-    from .__dependencies__ import super_hash
-# python 3.6 seems to not like from .__dependencies__
-except Exception as error:
-    import json_fix
-    import file_system_py as FS
-    import super_map
-    import super_hash
+from .__dependencies__ import json_fix
+from .__dependencies__ import file_system_py as FS
+from .__dependencies__ import super_map
+from .__dependencies__ import super_hash
 
 hash_file = super_hash.hash_file
 super_hash = super_hash.super_hash

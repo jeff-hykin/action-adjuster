@@ -5,6 +5,7 @@ from copy import deepcopy
 from __dependencies__.blissful_basics import FS, LazyDict
 import ez_yaml
 import pandas as pd
+from super_map import LazyDict
 
 from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
@@ -14,20 +15,20 @@ from generic_tools.plotting import graph_lines, graph_groups, xd_theme
 
 experiment_name = "NOISE=NONE,ADVERSITY=STRONG"
 
-groups = LazyDict(
-    no_adjuster=LazyDict(
+groups = dict(
+    no_adjuster=dict(
         folder_name_must_include="@NO_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.red,
         lines=[],
     ),
-    normal_adjuster=LazyDict(
+    normal_adjuster=dict(
         folder_name_must_include="@NORMAL_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.blue,
         lines=[],
     ),
-    perfect_adjuster=LazyDict(
+    perfect_adjuster=dict(
         folder_name_must_include="@PERFECT_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data.selected_profiles and "NOISE=NONE" in data.selected_profiles,
         color=xd_theme.green,
@@ -37,14 +38,16 @@ groups = LazyDict(
 
 def load_group_data(groups):
     for group_name, group_info in groups.items():
-        for file_name, data in get_recorder_data(group_info.folder_name_must_include):
+        print(f'''group_info = {group_info}''')
+        for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
             data.parent_data_snapshot.setdefault("selected_profiles", []) # some datasets were made before this was a saved attribute
-            if group_info.summary_filter(data.parent_data_snapshot):
+            if group_info["summary_filter"](data.parent_data_snapshot):
                 yield (group_name, group_info, file_name, data)
 
 def extract_accumulated_reward_as_lines(groups):
     groups = deepcopy(groups)
     lines = []
+    print(f'''groups = {groups}''')
     for group_name, group_info, file_name, data in load_group_data(groups):
         # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.18230862363710315}
         plot_name = file_name.replace("@","").replace("|"," ").lower()
@@ -53,9 +56,9 @@ def extract_accumulated_reward_as_lines(groups):
             x_values=[ each.timestep           for each in reward_data ],
             y_values=[ each.accumulated_reward for each in reward_data ],
             name=plot_name,
-            color=group_info.color,
+            color=group_info["color"],
         )
-        group_info.lines.append(line_data)
+        group_info["lines"].append(line_data)
         lines.append(line_data)
     return lines, groups
 
@@ -70,9 +73,9 @@ def extract_curve_fit_as_lines(groups):
             x_values=[ each.timestep       for each in entry_data ],
             y_values=[ each.line_fit_score for each in entry_data ],
             name=plot_name,
-            color=group_info.color,
+            color=group_info["color"],
         )
-        group_info.lines.append(line_data)
+        group_info["lines"].append(line_data)
         lines.append(line_data)
     return lines, groups
 
@@ -108,6 +111,7 @@ def graph_variance_median_mean(lines, groups, prefix=""):
         group_averaging_function=mean,
     )
 
+print(f'''groups1 = {groups}''')
 reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
 graph_variance_median_mean(
     lines=reward_lines,

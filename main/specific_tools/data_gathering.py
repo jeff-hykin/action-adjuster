@@ -1,7 +1,8 @@
 import ez_yaml
-from blissful_basics import FS, LazyDict
+from blissful_basics import FS
 import pandas as pd
 from cool_cache import cache, settings
+from super_map import LazyDict
 
 from config import config, path_to
 

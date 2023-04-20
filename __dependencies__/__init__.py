@@ -50,7 +50,7 @@ def path_pieces(path):
     return [ *folders, filename, file_extension ]
 
 def remove(path):
-    if os.path.isdir(path):
+    if not Path(path).is_symlink() and os.path.isdir(path):
         shutil.rmtree(path)
     else:
         try:
