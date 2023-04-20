@@ -327,7 +327,6 @@ class LazyDict(dict):
     def __getitem__(self, key):
         # defaulter value
         defaulter = defaulters.get(id(self))
-        print(f'''defaulter = {defaulter}''')
         if defaulter:
             if key not in self.__dict__:
                 return defaulter(key)

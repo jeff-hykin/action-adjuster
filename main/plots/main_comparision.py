@@ -38,19 +38,7 @@ groups = dict(
 def load_group_data(groups):
     for group_name, group_info in groups.items():
         for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
-            # some datasets were made before this was a saved attribute
-            while True:
-                child = data["parent_data_snapshot"]
-                print(f'''child["selected_profiles"] = {child["selected_profiles"]}''')
-                value = child.get("selected_profiles", []) or []
-                print(f'''value = {value}''')
-                child["selected_profiles"] = value
-                import code; code.interact(local={**globals(),**locals()})
-                print(f'''child["selected_profiles"] = {child["selected_profiles"]}''')
-                print(f'''data["parent_data_snapshot"]["selected_profiles"] = {data["parent_data_snapshot"]["selected_profiles"]}''')
-                print(f'''child.__dict__["selected_profiles"] = {child.__dict__["selected_profiles"]}''')
-                if data["parent_data_snapshot"]["selected_profiles"] != None:
-                    break
+            data["parent_data_snapshot"].setdefault("selected_profiles", []) # some datasets were made before this was a saved attribute
             if group_info["summary_filter"](data["parent_data_snapshot"]):
                 yield (group_name, group_info, file_name, data)
 
