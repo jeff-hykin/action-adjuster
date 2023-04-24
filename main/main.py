@@ -2,7 +2,7 @@ from statistics import mean as average
 from random import random, sample, choices
 
 from __dependencies__.rigorous_recorder import RecordKeeper
-from __dependencies__.blissful_basics import FS, print, LazyDict
+from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 import torch
 from stable_baselines3 import PPO
 
@@ -13,6 +13,8 @@ from specific_tools.train_ppo import * # required because of pickle lookup
 from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
+
+run_main_hooks_if_needed(__name__)
 
 recorder = RecordKeeper(selected_profiles=selected_profiles, config=config)
 
@@ -43,7 +45,7 @@ agent = ActionAdjustedAgent(
     reaction_space=env.action_space,
     policy=policy,
     recorder=recorder,
-    waypoints_list=tuple(waypoints_list),
+    waypoints_list=tuple(env.waypoints_list),
 )
 
 # 

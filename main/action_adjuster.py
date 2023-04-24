@@ -29,8 +29,6 @@ json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy a
 # establish filepaths
 # 
 process_id = random() # needed so that two of these can run in parallel
-buffer_for_actual_spatial_values_path    = path_to.action_adjuster_buffer_for_actual_spatial_values+f".{process_id}.json"
-transform_file_path = path_to.action_adjuster_transform_file+f".{process_id}.json"
 recorder_path       = f"{config.output_folder}/recorder.yaml" 
 
 # for testing, setup the perfect adjuster as comparison
@@ -40,18 +38,14 @@ perfect_answer = to_tensor([
     [ 0,     0,                                   1, ],
 ]).numpy()
 
-# init/reset the files
-FS.write(path=buffer_for_actual_spatial_values_path, data='[]')
-FS.write(path=transform_file_path, data='')
-with open(transform_file_path, 'w') as outfile:
-    json.dump(perfect_answer, outfile)
-
 # 
 # models
 # 
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
 shared_thread_data = None
+def get_shared_thread_data():
+    return shared_thread_data
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
@@ -162,7 +156,6 @@ class ActionAdjuster:
         self.recorder.add(timestep=self.timestep)
         
         self.buffer_for_input_data.append(dict(
-            policy=self.policy,
             historic_transform=deepcopy(self.transform),
             observation=observation,
             additional_info=[
@@ -188,10 +181,10 @@ class ActionAdjuster:
         
     def receive_output_from_solver(self):
         with shared_thread_data.lock:
-            self.incoming_records_to_log += shared_thread_data["records_to_log"]
+            self.incoming_records_to_log += shared_thread_data.get("records_to_log", [])
             shared_thread_data["records_to_log"] = []
             self.transform = Transform.from_json(
-                json.load("canidate_transform_json")
+                json.loads(shared_thread_data.get("canidate_transform_json", json.dumps(self.transform)))
             )
     
     def write_pending_records(self):
@@ -217,9 +210,9 @@ class ActionAdjusterSolver:
             # 
             # actual main loop
             # 
-            if not self.receive_data_from_main_thread(): continue
-            self.fit_points()
-            self.send_data_to_main_thread()
+            if not action_adjuster_processor.receive_data_from_main_thread(): continue
+            action_adjuster_processor.fit_points()
+            action_adjuster_processor.send_data_to_main_thread()
 
     def __init__(self, policy, waypoints_list):
         self.original_policy = policy
@@ -237,7 +230,7 @@ class ActionAdjusterSolver:
     def receive_data_from_main_thread(self):
         existing_data_count = len(self.input_data)
         with shared_thread_data.lock:
-            self.timestep_of_shared_info = shared_thread_data["timestep"]
+            self.timestep_of_shared_info = shared_thread_data.get("timestep", 0)
             self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
             self.actual_spatial_values += shared_thread_data.get("buffer_for_actual_spatial_values", [])
         
@@ -260,8 +253,6 @@ class ActionAdjusterSolver:
                 self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
                 self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
         
-        return new_data
-    
     def send_data_to_main_thread(self):
         with shared_thread_data.lock:
             shared_thread_data["records_to_log"] = shared_thread_data.get("records_to_log", []) + self.local_buffer_for_records
@@ -281,6 +272,7 @@ class ActionAdjusterSolver:
                 spacial_expectation, observation_expectation = self.project(
                     transform=transform,
                     real_transformation=False,
+                    policy=self.policy,
                     **each_input_data,
                 )
                 predicted_spatial_values.append(spacial_expectation[-1]) 
@@ -472,7 +464,10 @@ class ActionAdjustedAgent(Skeleton):
         pass
 
 
-if __name__ == '__main__':
-    manager = Manager()
-    shared_thread_data = manager.dict()
+@bb.run_in_main
+def _():
+    global shared_thread_data
+    shared_thread_data = Manager().dict()
     shared_thread_data.lock = threading.Lock()
+
+bb.run_main_hooks_if_needed(__name__)

@@ -1,7 +1,7 @@
 from .__dependencies__ import json_fix
 from .__dependencies__ import file_system_py as FS
 from .__dependencies__.super_map import LazyDict, Map
-from .__dependencies__.super_hash import super_hash, hash_file
+from .__dependencies__.super_hash import super_hash, hash_file, consistent_hash
 
 from time import time as now
 from random import shuffle
@@ -77,47 +77,53 @@ if True:
             for index, each in enumerate(names):
                 names_to_index[each] = index
         
-        class NamedList(list):
+        hash_id = consistent_hash(__name__)+consistent_hash(tuple(names))
+        # this is done in an exec for python pickling reasons
+        exec(
+            f"""
+            \nclass NamedList{hash_id}(list):
+            
+            names_to_index = {repr(names_to_index)}
             def __getitem__(self, key):
                 if isinstance(key, (int, slice)):
-                    return super(NamedList, self).__getitem__(key)
+                    return super(NamedList{hash_id}, self).__getitem__(key)
                 # assume its a name
                 else:
                     try:
-                        index = names_to_index[key]
+                        index = NamedList{hash_id}.names_to_index[key]
                     except:
-                        raise KeyError(f'''key={key} not in named list: {self}''')
+                        raise KeyError(f'''key={{key}} not in named list: {{self}}''')
                     if index >= len(self):
                         return None
                     return self[index]
             
             def __getattr__(self, key):
-                if key in names_to_index:
+                if key in NamedList{hash_id}.names_to_index:
                     return self[key]
                 else:
-                    super(NamedList, self).__getattribute__(key)
+                    super(NamedList{hash_id}, self).__getattribute__(key)
             
             def __setattr__(self, key, value):
-                if key in names_to_index:
-                    index = names_to_index[key]
+                if key in NamedList{hash_id}.names_to_index:
+                    index = NamedList{hash_id}.names_to_index[key]
                     while index >= len(self):
-                        super(NamedList, self).append(None)
-                    super(NamedList, self).__setitem__(index, value)
+                        super(NamedList{hash_id}, self).append(None)
+                    super(NamedList{hash_id}, self).__setitem__(index, value)
                 else:
-                    super(NamedList, self).__setattr__(key, value)
+                    super(NamedList{hash_id}, self).__setattr__(key, value)
             
             def __setitem__(self, key, value):
                 if isinstance(key, int):
-                    super(NamedList, self).__setitem__(key, value)
+                    super(NamedList{hash_id}, self).__setitem__(key, value)
                 # assume its a name
                 else:
-                    index = names_to_index[key]
+                    index = NamedList{hash_id}.names_to_index[key]
                     while index >= len(self):
-                        super(NamedList, self).append(None)
-                    super(NamedList, self).__setitem__(index, value)
+                        super(NamedList{hash_id}, self).append(None)
+                    super(NamedList{hash_id}, self).__setitem__(index, value)
                     
             def keys(self):
-                return list(names_to_index.keys())
+                return list(NamedList{hash_id}.names_to_index.keys())
             
             def values(self):
                 return self
@@ -132,7 +138,7 @@ if True:
                 return zip(self.keys(), self.values())
             
             def update(self, other):
-                for each_key in names_to_index:
+                for each_key in NamedList{hash_id}.names_to_index:
                     if each_key in other:
                         self[each_key] = other[each_key]
                 return self
@@ -142,20 +148,24 @@ if True:
                 out_string = '['
                 named_values = 0
                 
-                reverse_lookup = {}
-                for each_name, each_index in names_to_index.items():
+                reverse_lookup = {{}}
+                for each_name, each_index in NamedList{hash_id}.names_to_index.items():
                     reverse_lookup[each_index] = reverse_lookup.get(each_index, []) + [ each_name ]
                     
                 for each_index, value in enumerate(self):
                     name = "=".join(reverse_lookup.get(each_index, []))
                     if name:
                         name += '='
-                    out_string += f' {name}{value},'
+                    out_string += f' {{name}}{{value}},'
                 
                 out_string += ' ]'
                 return out_string
+            """,
+            globals(),
+            globals()
+        )
                 
-        return NamedList
+        return globals()[f"NamedList{hash_id}"]
 
 # 
 # warnings
@@ -1649,3 +1659,39 @@ class Console:
             sys.stderr = self.real_stderr
             if self.filepath:
                 self.file.close()
+
+# 
+# threading
+# 
+if True:
+    def run_main_hooks_if_needed(name):
+        """
+        Summary:
+            call this function `run_main_hooks_if_needed(__name__)` at the bottom
+            of all files in a project to allow main hooks to be run from anywhere
+        """
+        if name == '__main__':
+            for each in globals().get("__main_callbacks__", []):
+                each()
+    
+    def run_in_main(function_being_wrapped):
+        """
+        Summary:
+            use this in a module to ensure that some section of code
+            gets run inside the main module. Requires the main module to call
+            `run_main_hooks_if_needed(__name__)`
+        Example:
+            @run_in_main
+            def _():
+                manager = Manager()
+                shared_thread_data = manager.dict()
+        """
+        global_vars = globals()
+        global_vars.setdefault("__main_callbacks__", [])
+        global_vars["__main_callbacks__"].append(function_being_wrapped)
+        def wrapper(*args, **kwargs):
+            modify_args_somehow
+            output = function_being_wrapped(*args, **kwargs)
+            modify_output_somehow
+            return output
+        return wrapper
