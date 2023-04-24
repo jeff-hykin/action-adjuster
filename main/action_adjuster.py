@@ -11,7 +11,6 @@ import torch                                                                    
 import numpy                                                                    # pip install numpy
 from icecream import ic                                                         # pip install icecream
 from trivial_torch_tools import to_tensor                                       # pip install trivial_torch_tools
-import json_fix
 ic.configureOutput(includeContext=True)
 
 from config import config, path_to
