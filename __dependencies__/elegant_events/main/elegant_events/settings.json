@@ -1,0 +1,10 @@
+{
+    "pure_python_packages": {
+        "websockets": {
+            "path": "__sources__/websockets/src/websockets"
+        },
+        "json_fix": {
+            "path": "__sources__/json_fix/main/json_fix"
+        }
+    }
+}
