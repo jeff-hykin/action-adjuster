@@ -1,10 +1,10 @@
 from statistics import mean as average
 from random import random, sample, choices
 
-import torch
-from rigorous_recorder import RecordKeeper
-from stable_baselines3 import PPO
+from __dependencies__.rigorous_recorder import RecordKeeper
 from __dependencies__.blissful_basics import FS, print, LazyDict
+import torch
+from stable_baselines3 import PPO
 
 from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, ActionAdjuster

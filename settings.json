@@ -6,8 +6,8 @@
         "cool_cache": {
             "path": "__sources__/cool_cache/main/cool_cache"
         },
-        "rigourous_recorder": {
-            "path": "__sources__/rigourous_recorder/main/rigourous_recorder"
+        "rigorous_recorder": {
+            "path": "__sources__/rigorous_recorder/main/rigorous_recorder"
         },
         "elegant_events": {
             "path": "__sources__/elegant_events/main/elegant_events"

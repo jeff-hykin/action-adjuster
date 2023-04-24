@@ -146,7 +146,7 @@ class ActionAdjuster:
         self.incoming_records_to_log          = []
         
         if self.recorder == None:
-            from rigorous_recorder import RecordKeeper
+            from __dependencies__.rigorous_recorder import RecordKeeper
             self.recorder = RecordKeeper()
         
         self.recorder.live_write_to(recorder_path, as_yaml=True)
