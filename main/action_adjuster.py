@@ -184,7 +184,7 @@ class ActionAdjuster:
             self.incoming_records_to_log += shared_thread_data.get("records_to_log", [])
             shared_thread_data["records_to_log"] = []
             self.transform = Transform.from_json(
-                json.loads(shared_thread_data.get("canidate_transform_json", json.dumps(self.transform)))
+                json.loads(shared_thread_data.get("transform_json", json.dumps(self.transform)))
             )
     
     def write_pending_records(self):
@@ -234,11 +234,6 @@ class ActionAdjusterSolver:
             self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
             self.actual_spatial_values += shared_thread_data.get("buffer_for_actual_spatial_values", [])
         
-        # FIXME: if youre reading this you can remove the commented out stuff here
-        # add back class data
-        # for observation, additional_info in new_data:
-        #     additional_info["spacial_info_with_noise"] = WarthogEnv.SpacialInformation(additional_info["spacial_info_with_noise"])
-        
         # if no new data
         if existing_data_count == len(self.input_data): 
             sleep(1)
@@ -256,7 +251,7 @@ class ActionAdjusterSolver:
     def send_data_to_main_thread(self):
         with shared_thread_data.lock:
             shared_thread_data["records_to_log"] = shared_thread_data.get("records_to_log", []) + self.local_buffer_for_records
-            shared_thread_data["canidate_transform_json"] = json.dumps(self.transform)
+            shared_thread_data["transform_json"] = json.dumps(self.transform)
         
     def fit_points(self):
         # no data
