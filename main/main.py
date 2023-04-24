@@ -38,12 +38,12 @@ if config.policy.name == 'retrained':
 # 
 # agent
 # 
-ActionAdjuster.waypoints_list = env.waypoints_list # Hacky but needed so that waypoint data doesn't get sent across threads at every timesteps
 agent = ActionAdjustedAgent(
     observation_space=env.observation_space,
     reaction_space=env.action_space,
     policy=policy,
     recorder=recorder,
+    waypoints_list=tuple(waypoints_list),
 )
 
 # 

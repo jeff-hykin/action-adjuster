@@ -1,12 +1,14 @@
-import json
 from copy import deepcopy
+from random import random, sample, choices
 from time import sleep
+import json
 import math
 import threading
-from random import random, sample, choices
+from multiprocessing import Manager
 
 import __dependencies__.blissful_basics as bb                                                   
 from __dependencies__.blissful_basics import to_pure, countdown, print, singleton, FS, stringify
+from __dependencies__.elegant_events import Server
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
 from icecream import ic                                                         # pip install icecream
@@ -27,9 +29,9 @@ json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy a
 # establish filepaths
 # 
 process_id = random() # needed so that two of these can run in parallel
-data_buffer_path    = path_to.action_adjuster_data_buffer+f".{process_id}.json"
+buffer_for_actual_spatial_values_path    = path_to.action_adjuster_buffer_for_actual_spatial_values+f".{process_id}.json"
 transform_file_path = path_to.action_adjuster_transform_file+f".{process_id}.json"
-
+recorder_path       = f"{config.output_folder}/recorder.yaml" 
 
 # for testing, setup the perfect adjuster as comparison
 perfect_answer = to_tensor([
@@ -39,7 +41,7 @@ perfect_answer = to_tensor([
 ]).numpy()
 
 # init/reset the files
-FS.write(path=data_buffer_path, data='[]')
+FS.write(path=buffer_for_actual_spatial_values_path, data='[]')
 FS.write(path=transform_file_path, data='')
 with open(transform_file_path, 'w') as outfile:
     json.dump(perfect_answer, outfile)
@@ -49,8 +51,7 @@ with open(transform_file_path, 'w') as outfile:
 # 
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
-
-recorder_path = f"{config.output_folder}/recorder.yaml"
+shared_thread_data = None
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
@@ -129,24 +130,20 @@ spacial_coefficients = WarthogEnv.SpacialInformation([
     0.3, # velocity # arbitraryly picked value 
     0.3, # spin # arbitraryly picked value 
 ])
-# TODO: combine this class with the ActionAdjustedAgent class
+# this class does a little data organization, then sends data to the solver, and receives answers from the solver
 class ActionAdjuster:
     self = None
-    waypoints_list = []
-    def __init__(self, policy, initial_transform=None, recorder=None):
+    def __init__(self, policy, waypoints_list, recorder=None):
         ActionAdjuster.self = self
         self.original_policy = policy
         self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
-        self.actual_spatial_values = []
-        self.input_data            = []
-        self.transform             = Transform()
-        self.canidate_transform    = Transform()
+        self.transform = Transform()
         self.should_update = countdown(config.action_adjuster.update_frequency)
-        self.stdev = 0.01
-        self.selected_solutions = set([ self.transform ])
-        self.recorder = recorder
-        self.timestep = 0
-        self.buffer_for_write = []
+        self.recorder = recorder            
+        self.timestep = 0                   
+        self.buffer_for_actual_spatial_values = []
+        self.buffer_for_input_data            = []
+        self.incoming_records_to_log          = []
         
         if self.recorder == None:
             from rigorous_recorder import RecordKeeper
@@ -154,95 +151,122 @@ class ActionAdjuster:
         
         self.recorder.live_write_to(recorder_path, as_yaml=True)
         
-        self.processor_thread = threading.Thread(target=processor, args=())
+        self.processor_thread = threading.Thread(
+            target=ActionAdjusterSolver.solver_loop,
+            args=(shared_thread_data, waypoints_list)
+        )
         self.processor_thread.start()
     
-    def write_to_data_buffer(self):
-        buffer = []
-        try:
-            with open(data_buffer_path, 'r') as in_file:
-                buffer = json.load(in_file)
-        except Exception as error:
-            pass
-        
-        for observation, additional_info in self.buffer_for_write:
-            buffer.append((observation, dict(
-                spacial_info_with_noise=additional_info["spacial_info_with_noise"],
-                current_waypoint_index=additional_info["current_waypoint_index"],
-                horizon=additional_info["horizon"],
-                action_duration=additional_info["action_duration"],
-            )))
-        self.buffer_for_write.clear()
-        
-        FS.write(data=json.dumps(buffer), path=data_buffer_path)
-    
-    def read_from_buffer(self):
-        buffer = []
-        try:
-            with open(data_buffer_path, 'r') as in_file:
-                buffer = json.load(in_file)
-        except Exception as error:
-            pass
-        FS.write(data='[]', path=data_buffer_path)
-        
-        # add back class data
-        for observation, additional_info in buffer:
-            additional_info["spacial_info_with_noise"] = WarthogEnv.SpacialInformation(additional_info["spacial_info_with_noise"])
-            
-        return buffer
-    
-    def write_transform(self):
-        try:
-            with open(transform_file_path, 'w') as out_file:
-                json.dump(self.transform, out_file)
-        except Exception as error:
-            print(f'''error = {error}''')
-    
-    def read_transform(self):
-        try:
-            with open(transform_file_path, 'r') as in_file:
-                self.transform = Transform.from_json(
-                    json.load(in_file)
-                )
-        except Exception as error:
-            print(f"note, unable to read transform data, {error}")
-    
-    def add_data(self, observation, additional_info, is_processor_thread=False):
+    def add_data(self, observation, additional_info):
         self.timestep += 1
         self.recorder.add(timestep=self.timestep)
         
-        if not is_processor_thread:
-            self.buffer_for_write.append((observation, additional_info))
-            if self.should_update():
-                self.write_to_data_buffer()
-                self.read_transform()
-        else:
-            self.input_data.append(dict(
-                policy=self.policy,
-                historic_transform=deepcopy(self.transform),
-                observation=observation,
-                additional_info=[
-                    additional_info["spacial_info_with_noise"],
-                    additional_info["current_waypoint_index"],
-                    additional_info["horizon"],
-                    additional_info["action_duration"],
-                ],
-            ))
-            self.actual_spatial_values.append(additional_info["spacial_info_with_noise"])
-            # NOTE: this^ is only grabbing the last, it would be valid to grab all of them
-            # future work here might try grabbing all of them, or reducing the length, especially if the model/policy is thought to be bad/noisy
-            assert len(self.actual_spatial_values) == len(self.input_data)
-            # cap the history size
-            if config.action_adjuster.max_history_size < math.inf:
-                if len(self.actual_spatial_values) > config.action_adjuster.max_history_size:
-                    self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
-                    self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
-            
-            action = self.policy(observation)
-            
-            if self.should_update():
-                self.fit_points()
+        self.buffer_for_input_data.append(dict(
+            policy=self.policy,
+            historic_transform=deepcopy(self.transform),
+            observation=observation,
+            additional_info=[
+                additional_info["spacial_info_with_noise"],
+                additional_info["current_waypoint_index"],
+                additional_info["horizon"],
+                additional_info["action_duration"],
+            ],
+        ))
+        self.buffer_for_actual_spatial_values.append(additional_info["spacial_info_with_noise"])
+        if self.should_update():
+            self.send_data_to_solver()
+            self.receive_output_from_solver()
     
+    def send_data_to_solver(self):
+        # append the new data
+        with shared_thread_data.lock:
+            shared_thread_data["timestep"] = self.timestep
+            shared_thread_data["buffer_for_actual_spatial_values"] = shared_thread_data.get("buffer_for_actual_spatial_values", []) + self.buffer_for_actual_spatial_values
+            shared_thread_data["buffer_for_input_data"]            = shared_thread_data.get("buffer_for_input_data",            []) + self.buffer_for_input_data
+        self.buffer_for_actual_spatial_values.clear()
+        self.buffer_for_input_data.clear()
+        
+    def receive_output_from_solver(self):
+        with shared_thread_data.lock:
+            self.incoming_records_to_log += shared_thread_data["records_to_log"]
+            shared_thread_data["records_to_log"] = []
+            self.transform = Transform.from_json(
+                json.load("canidate_transform_json")
+            )
+    
+    def write_pending_records(self):
+        for each in self.incoming_records_to_log:
+            self.recorder.commit(**each)
+        
+    
+class ActionAdjusterSolver:
+    @staticmethod
+    def solver_loop(shared_thread_data, waypoints_list):
+        action_adjuster_processor = None
+        while True:
+            # 
+            # init
+            # 
+            if not action_adjuster_processor:
+                if ActionAdjuster.self:
+                    action_adjuster_processor = ActionAdjusterSolver(ActionAdjuster.self.policy, waypoints_list)
+                    continue
+                sleep(1)
+                continue
+            
+            # 
+            # actual main loop
+            # 
+            if not self.receive_data_from_main_thread(): continue
+            self.fit_points()
+            self.send_data_to_main_thread()
+
+    def __init__(self, policy, waypoints_list):
+        self.original_policy = policy
+        self.waypoints_list = waypoints_list
+        self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
+        self.actual_spatial_values = []
+        self.input_data            = []
+        self.transform             = Transform()
+        self.canidate_transform    = Transform()
+        self.stdev = 0.01
+        self.selected_solutions = set([ self.transform ])
+        self.local_buffer_for_records = []  # only the processor thread should use this attribute
+        self.timestep_of_shared_info = None # only the processor thread should use this attribute
+        
+    def receive_data_from_main_thread(self):
+        existing_data_count = len(self.input_data)
+        with shared_thread_data.lock:
+            self.timestep_of_shared_info = shared_thread_data["timestep"]
+            self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
+            self.actual_spatial_values += shared_thread_data.get("buffer_for_actual_spatial_values", [])
+        
+        # FIXME: if youre reading this you can remove the commented out stuff here
+        # add back class data
+        # for observation, additional_info in new_data:
+        #     additional_info["spacial_info_with_noise"] = WarthogEnv.SpacialInformation(additional_info["spacial_info_with_noise"])
+        
+        # if no new data
+        if existing_data_count == len(self.input_data): 
+            sleep(1)
+            return False
+        
+        assert len(self.actual_spatial_values) == len(self.input_data)
+        # 
+        # cap the history size
+        # 
+        if config.action_adjuster.max_history_size < math.inf:
+            if len(self.actual_spatial_values) > config.action_adjuster.max_history_size:
+                self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
+                self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
+        
+        return new_data
+    
+    def send_data_to_main_thread(self):
+        with shared_thread_data.lock:
+            shared_thread_data["records_to_log"] = shared_thread_data.get("records_to_log", []) + self.local_buffer_for_records
+            shared_thread_data["canidate_transform_json"] = json.dumps(self.transform)
+        
     def fit_points(self):
         # no data
         if len(self.input_data) == 0:
@@ -311,14 +335,22 @@ class ActionAdjuster:
                 # use the canidate transform as the base for finding new answers
                 self.transform = self.canidate_transform
         
+        # 
+        # record data
+        # 
         if True:
-            score_before     = objective_function(self.transform.as_numpy)
+            score_before = objective_function(self.transform.as_numpy)
+            timestep = self.timestep_of_shared_info
             # kill this process once the limit is reaced
-            if self.recorder.pending_record.get("timestep", 0) > config.simulator.max_episode_steps:
+            if timestep > config.simulator.max_episode_steps:
                 exit()
             
-            self.recorder.add(line_fit_score=score_before)
-            self.recorder.commit()
+            self.local_buffer_for_records.append(dict(
+                timestep=shared_thread_data["timestep"], # the timestep the computation was finished
+                timestep_started=timestep, # the timestep of the data that was used for the calculation
+                line_fit_score=score_before,
+                is_active_transform=True,
+            ))
         
         # 
         # generate new canidate
@@ -353,7 +385,7 @@ class ActionAdjuster:
     # returns twos list, one of projected spacial_info's one of projected observations
     def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None):
         current_spatial_info, current_waypoint_index, horizon, action_duration = additional_info
-        remaining_waypoints = ActionAdjuster.waypoints_list[current_waypoint_index:]
+        remaining_waypoints = self.waypoints_list[current_waypoint_index:]
         observation_expectation = []
         spacial_expectation = []
         for each in range(config.action_adjuster.future_projection_length):
@@ -402,13 +434,13 @@ class ActionAdjustedAgent(Skeleton):
     # self.timestep.hidden_info
     # self.timestep.reaction
     
-    def __init__(self, observation_space, reaction_space, policy, recorder, **config):
+    def __init__(self, observation_space, reaction_space, policy, recorder, waypoints_list, **config):
         self.observation_space  = observation_space
         self.reaction_space     = reaction_space
         self.accumulated_reward = 0
         self.policy   = policy
         self.recorder = recorder
-        self.action_adjuster = ActionAdjuster(policy=policy, recorder=recorder)
+        self.action_adjuster = ActionAdjuster(policy=policy, recorder=recorder, waypoints_list=waypoints_list)
 
     def when_mission_starts(self):
         pass
@@ -431,6 +463,7 @@ class ActionAdjustedAgent(Skeleton):
         self.recorder.add(accumulated_reward=self.accumulated_reward)
         self.recorder.add(reward=self.timestep.reward)
         self.recorder.commit()
+        self.action_adjuster.write_pending_records()
         self.recorder.add(timestep=self.timestep.index) # encase there's another commit during the same timestep
         self.action_adjuster.add_data(self.timestep.observation, self.timestep.hidden_info)
     def when_episode_ends(self):
@@ -438,21 +471,8 @@ class ActionAdjustedAgent(Skeleton):
     def when_mission_ends(self):
         pass
 
-# runs in parallel, reading the observation data, computing a better transform, and writing the transform to a file that the main thread reads
-def processor():
-    while True:
-        if not ActionAdjuster.self:
-            sleep(1)
-            continue
-        
-        self = ActionAdjuster.self
-    
-        new_data = self.read_from_buffer()
-        if len(new_data) == 0:
-            sleep(1)
-            continue
-            
-        for observation, additional_info in new_data:
-            self.add_data(observation, additional_info, is_processor_thread=True)
-            
-        self.write_transform()
+
+if __name__ == '__main__':
+    manager = Manager()
+    shared_thread_data = manager.dict()
+    shared_thread_data.lock = threading.Lock()
