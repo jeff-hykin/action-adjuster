@@ -303,8 +303,9 @@ class ActionAdjusterSolver:
                 objective_function(each_transform.as_numpy)
                     for each_transform in solutions
             )
+            print("evaluating transforms:")
             for each_transform, each_score in zip(solutions, scores):
-                print(f'''    {each_score}: {each_transform}''')
+                print(f'''    {each_score:.3f}: {each_transform}''')
             
             best_with_new_data = bb.arg_maxs(
                 args=solutions,
