@@ -211,7 +211,9 @@ class ActionAdjusterSolver:
             # actual main loop
             # 
             if not action_adjuster_processor.receive_data_from_main_thread(): continue
+            print("fitting points")
             action_adjuster_processor.fit_points()
+            print("points have been fit")
             action_adjuster_processor.send_data_to_main_thread()
 
     def __init__(self, policy, waypoints_list):
@@ -247,6 +249,8 @@ class ActionAdjusterSolver:
             if len(self.actual_spatial_values) > config.action_adjuster.max_history_size:
                 self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
                 self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
+        
+        return True
         
     def send_data_to_main_thread(self):
         with shared_thread_data.lock:
