@@ -170,7 +170,7 @@ for dependency_name, dependency_info in dependency_mapping.items():
         exec(f"""from .{dependency_name} import __file__ as _""")
         __all__.append(dependency_name)
     except ImportError as error:
-        if f"{error}" == "ImportError: cannot import name '__file__'":
+        if f"{error}" == "cannot import name '__file__'":
             # this means top level folder isn't a module or doesnt have a __init__.py
             # some modules simply are like this
             pass

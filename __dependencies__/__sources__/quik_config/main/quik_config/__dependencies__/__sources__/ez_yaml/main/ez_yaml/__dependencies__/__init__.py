@@ -188,6 +188,4 @@ for dependency_name, dependency_info in dependency_mapping.items():
     # this '''
     #     ^( *)import ruamel(.*?)(?=#|$)
     # '''
-    # replaced by '''
-    #     $1exec(f"""import {".".join(__name__.split(".")[:-2])}$2;ruamel = {".".join(__name__.split(".")[:-2])}""")
-    # '''
+    # had to be manually refactored
