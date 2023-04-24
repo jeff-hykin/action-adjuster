@@ -51,6 +51,7 @@
                 update_frequency: 20 # timesteps
                 max_history_size: 10000 # timesteps
                 processor_sleep_time: 1 # seconds
+                solver_max_iterations: 50
             
             policy:
                 name: retrained # 'bicycle' or 'dummy' or 'retrained'

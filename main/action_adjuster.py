@@ -189,14 +189,15 @@ class ActionAdjuster:
     
     def write_pending_records(self):
         for each in self.incoming_records_to_log:
-            self.recorder.commit(**each)
+            self.recorder.commit(additional_info=each)
+        self.incoming_records_to_log.clear()
         
     
 class ActionAdjusterSolver:
     @staticmethod
     def solver_loop(shared_thread_data, waypoints_list):
         action_adjuster_processor = None
-        while True:
+        while threading.main_thread().is_alive():
             # 
             # init
             # 
@@ -211,9 +212,7 @@ class ActionAdjusterSolver:
             # actual main loop
             # 
             if not action_adjuster_processor.receive_data_from_main_thread(): continue
-            print("fitting points")
             action_adjuster_processor.fit_points()
-            print("points have been fit")
             action_adjuster_processor.send_data_to_main_thread()
 
     def __init__(self, policy, waypoints_list):
@@ -256,6 +255,7 @@ class ActionAdjusterSolver:
         with shared_thread_data.lock:
             shared_thread_data["records_to_log"] = shared_thread_data.get("records_to_log", []) + self.local_buffer_for_records
             shared_thread_data["transform_json"] = json.dumps(self.transform)
+        self.local_buffer_for_records.clear()
         
     def fit_points(self):
         # no data
@@ -352,7 +352,8 @@ class ActionAdjusterSolver:
                 guess_to_maximize(
                     objective_function,
                     initial_guess=self.transform.as_numpy,
-                    stdev=self.stdev
+                    stdev=self.stdev,
+                    max_iterations=config.action_adjuster.solver_max_iterations,
                 )
             )
             

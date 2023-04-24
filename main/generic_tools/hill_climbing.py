@@ -2,7 +2,7 @@ import __dependencies__.blissful_basics as bb
 import cma
 import numpy
 
-def guess_to_maximize(objective_function, initial_guess, stdev):
+def guess_to_maximize(objective_function, initial_guess, stdev, max_iterations=None):
     is_scalar = not bb.is_iterable(initial_guess)
     new_objective = objective_function
     if is_scalar: # wrap it
@@ -31,6 +31,7 @@ def guess_to_maximize(objective_function, initial_guess, stdev):
             verb_filenameprefix="/dev/null" ,
             verb_append=0                   ,
             verb_time=False                 ,
+            maxiter=max_iterations          ,
         ),
     )
     
