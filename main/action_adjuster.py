@@ -46,8 +46,6 @@ perfect_transform = perfect_answer[0:2,:]
 generate_next_spacial_info = WarthogEnv.sim_warthog
 generate_next_observation  = WarthogEnv.generate_observation
 shared_thread_data = None
-def get_shared_thread_data():
-    return shared_thread_data
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
@@ -120,8 +118,8 @@ if config.action_adjuster.default_to_perfect:
 
 # TODO: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
-    1, # x
-    1, # y
+    100, # x
+    100, # y
     1, # angle
     0.3, # velocity # arbitraryly picked value 
     0.3, # spin # arbitraryly picked value 
@@ -247,6 +245,11 @@ class ActionAdjusterSolver:
             self.timestep_of_shared_info = shared_thread_data.get("timestep", 0)
             self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
             self.actual_spatial_values += shared_thread_data.get("buffer_for_actual_spatial_values", [])
+            shared_thread_data["buffer_for_input_data"] = []
+            shared_thread_data["buffer_for_actual_spatial_values"] = []
+        
+        if any(each.x == each.y == 0 for each in self.actual_spatial_values[1:]):
+            import code; code.interact(local={**globals(),**locals()})
         
         # if no new data
         if existing_data_count == len(self.input_data): 
@@ -291,7 +294,7 @@ class ActionAdjusterSolver:
             
             exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
             # loss function
-            loss = 0
+            losses = [0,0,0,0,0] # x, y, angle, velocity, spin
             # Note: len(predicted_spatial_values) should == len(real_spatial_values) + future_projection_length
             # however, it will be automatically truncated because of the zip behavior
             with print.indent:
@@ -299,15 +302,15 @@ class ActionAdjusterSolver:
                     x1, y1, angle1, velocity1, spin1 = each_actual
                     x2, y2, angle2, velocity2, spin2 = each_predicted
                     iteration_total = 0
-                    iteration_total += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-                    iteration_total += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-                    iteration_total += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                    iteration_total += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-                    iteration_total += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
-                    
-                    loss += iteration_total
+                    losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+                    losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+                    losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                    losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+                    losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
+            
+                print(f'''losses = {losses}''')
             # print(f'''    {-loss}: {transform}''')
-            return -loss
+            return -sum(losses)
         
         # 
         # overfitting protection (validate the canidate)
@@ -425,11 +428,11 @@ class ActionAdjusterSolver:
                 spin_action=spin_action,
                 action_duration=action_duration,
             )
-            next_observation = WarthogEnv.ObservationClass(generate_next_observation(
+            next_observation = generate_next_observation(
                 remaining_waypoints=remaining_waypoints,
                 horizon=horizon,
                 current_spacial_info=next_spacial_info,
-            ))
+            )
             spacial_expectation.append(next_spacial_info)
             observation_expectation.append(next_observation)
             

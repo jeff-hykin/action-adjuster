@@ -7,6 +7,7 @@ import matplotlib as mpl
 import numpy
 import numpy as np
 import gym
+import blissful_basics as bb
 from blissful_basics import Csv, create_named_list_class, FS, print, stringify
 
 from config import config, path_to
@@ -81,6 +82,17 @@ class WarthogEnv(gym.Env):
         self.phi_error        = 0
         self.prev_timestamp   = time.time()
         self.should_render    = config.simulator.should_render
+        
+        self.ObservationClass = create_named_list_class(
+            bb.flatten(
+                [
+                    [ f"gap_of_distance_{index}", f"gap_of_angle_directly_towards_next_{index}", f"gap_of_desired_angle_at_next_{index}", f"gap_of_velocity_{index}" ]
+                        for index in range(self.horizon) 
+                ] + [
+                    "velocity", "spin"
+                ]
+            )
+        )
         
         if self.should_render:
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
@@ -281,11 +293,11 @@ class WarthogEnv(gym.Env):
                 self.spacial_info.velocity + velocity_noise,
                 self.spacial_info.spin     + spin_noise    ,
             ])
-            observation = WarthogEnv.generate_observation(
+            observation = self.ObservationClass( WarthogEnv.generate_observation(
                 remaining_waypoints=self.waypoints_list[self.closest_index:],
                 horizon=self.horizon,
                 current_spacial_info=spacial_info_with_noise,
-            )
+            ))
             # 
             # get the true closest waypoint (e.g. perfect sensors)
             #
@@ -421,11 +433,11 @@ class WarthogEnv(gym.Env):
         self.closest_index += closest_relative_index
         self.prev_closest_index = self.closest_index
         
-        observation = WarthogEnv.generate_observation(
+        observation = self.ObservationClass( WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             horizon=self.horizon,
             current_spacial_info=self.spacial_info,
-        )
+        ))
         return observation
 
     def render(self, mode="human"):

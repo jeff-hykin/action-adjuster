@@ -1,4 +1,5 @@
 - figure out why the objective function isn't optimizing the reward
+    - fix the double-stacking of points
     - weird things:
         - the actual_location values has a weird teleportation issue
         - predicted x and y are basically always exactly accurate, but velocity and spin are not
