@@ -7,7 +7,7 @@ import threading
 from multiprocessing import Manager
 
 import __dependencies__.blissful_basics as bb                                                   
-from __dependencies__.blissful_basics import to_pure, countdown, print, singleton, FS, stringify
+from __dependencies__.blissful_basics import to_pure, countdown, print, singleton, FS, stringify, LazyDict
 from __dependencies__.elegant_events import Server
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
@@ -147,11 +147,14 @@ class ActionAdjuster:
         
         self.recorder.live_write_to(recorder_path, as_yaml=True)
         
-        self.processor_thread = threading.Thread(
-            target=ActionAdjusterSolver.solver_loop,
-            args=(shared_thread_data, waypoints_list)
-        )
-        self.processor_thread.start()
+        if not config.action_adjuster.use_threading:
+            self.solver = ActionAdjusterSolver(ActionAdjuster.self.policy, waypoints_list)
+        else:
+            self.processor_thread = threading.Thread(
+                target=ActionAdjusterSolver.solver_loop,
+                args=(shared_thread_data, waypoints_list)
+            )
+            self.processor_thread.start()
     
     def add_data(self, observation, additional_info):
         with shared_thread_data.lock:
@@ -174,6 +177,11 @@ class ActionAdjuster:
         self.buffer_for_actual_spatial_values.append(additional_info["spacial_info_with_noise"])
         if self.should_update():
             self.send_data_to_solver()
+            # run solver each update step
+            if not config.action_adjuster.use_threading:
+                if self.solver.receive_data_from_main_thread():
+                    self.solver.fit_points()
+                    self.solver.send_data_to_main_thread()
             self.receive_output_from_solver()
     
     def send_data_to_solver(self):
@@ -286,17 +294,18 @@ class ActionAdjusterSolver:
             loss = 0
             # Note: len(predicted_spatial_values) should == len(real_spatial_values) + future_projection_length
             # however, it will be automatically truncated because of the zip behavior
-            for each_actual, each_predicted in zip(real_spatial_values, predicted_spatial_values):
-                x1, y1, angle1, velocity1, spin1 = each_actual
-                x2, y2, angle2, velocity2, spin2 = each_predicted
-                iteration_total = 0
-                iteration_total += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-                iteration_total += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-                iteration_total += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                iteration_total += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-                iteration_total += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
-                
-                loss += iteration_total
+            with print.indent:
+                for each_actual, each_predicted in zip(real_spatial_values, predicted_spatial_values):
+                    x1, y1, angle1, velocity1, spin1 = each_actual
+                    x2, y2, angle2, velocity2, spin2 = each_predicted
+                    iteration_total = 0
+                    iteration_total += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+                    iteration_total += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+                    iteration_total += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                    iteration_total += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+                    iteration_total += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
+                    
+                    loss += iteration_total
             # print(f'''    {-loss}: {transform}''')
             return -loss
         
@@ -416,11 +425,11 @@ class ActionAdjusterSolver:
                 spin_action=spin_action,
                 action_duration=action_duration,
             )
-            next_observation = generate_next_observation(
+            next_observation = WarthogEnv.ObservationClass(generate_next_observation(
                 remaining_waypoints=remaining_waypoints,
                 horizon=horizon,
                 current_spacial_info=next_spacial_info,
-            )
+            ))
             spacial_expectation.append(next_spacial_info)
             observation_expectation.append(next_observation)
             
@@ -482,7 +491,11 @@ class ActionAdjustedAgent(Skeleton):
 @bb.run_in_main
 def _():
     global shared_thread_data
-    shared_thread_data = Manager().dict()
-    shared_thread_data.lock = threading.Lock()
+    if config.action_adjuster.use_threading:
+        shared_thread_data = Manager().dict()
+        shared_thread_data.lock = threading.Lock()
+    else:
+        shared_thread_data = LazyDict()
+        shared_thread_data.lock = threading.Lock()
 
 bb.run_main_hooks_if_needed(__name__)

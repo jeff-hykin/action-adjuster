@@ -1,4 +1,8 @@
-- fix the timestep logging issue
+- figure out why the objective function isn't optimizing the reward
+    - weird things:
+        - the actual_location values has a weird teleportation issue
+        - predicted x and y are basically always exactly accurate, but velocity and spin are not
+        - the observation values don't make sense unless they're relative, which would be weird
 - zero-out the intial point
 - test how much it improves policy reward
     - perform tons of tests (30 runs each)
@@ -17,7 +21,6 @@
         
     - case where the perfect transformation shifts over time
     - case with no noise
-    - 
     
 - use websockets instead of file-passing for async update
 

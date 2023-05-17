@@ -53,8 +53,9 @@
                 max_history_size: 10000 # timesteps
                 processor_sleep_time: 1 # seconds
                 solver_max_iterations: 100
+                use_threading: False
             
-            curve_fitting_loss: 'straight_line' # straight_line, or mean_squared_error
+            curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
                 name: retrained # 'bicycle' or 'dummy' or 'retrained'
                 
