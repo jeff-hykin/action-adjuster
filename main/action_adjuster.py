@@ -23,7 +23,8 @@ from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
 
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
-
+mean_squared_error_core = torch.nn.MSELoss()
+mean_squared_error = lambda arg1, arg2: to_pure(mean_squared_error_core(to_tensor(arg1), to_tensor(arg2)))
 
 # 
 # establish filepaths
@@ -37,6 +38,7 @@ perfect_answer = to_tensor([
     [ 0,     1,        config.simulator.spin_offset, ],
     [ 0,     0,                                   1, ],
 ]).numpy()
+perfect_transform = perfect_answer[0:2,:]
 
 # 
 # models
@@ -61,7 +63,7 @@ class Transform:
             self._transform = to_tensor(value).numpy()
         
         if config.action_adjuster.always_perfect:
-            self._transform = perfect_answer[0:2,:]
+            self._transform = perfect_transform
         
     def __deepcopy__(self, arg1):
         return Transform(to_tensor(self._transform).numpy())
@@ -114,7 +116,7 @@ class Transform:
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
 if config.action_adjuster.default_to_perfect:
-    Transform.inital = perfect_answer[0:2,:]
+    Transform.inital = perfect_transform
 
 # TODO: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
@@ -152,6 +154,10 @@ class ActionAdjuster:
         self.processor_thread.start()
     
     def add_data(self, observation, additional_info):
+        with shared_thread_data.lock:
+            shared_thread_data["timestep"] = self.timestep
+            sleep(0.5)
+        
         self.timestep += 1
         self.recorder.add(timestep=self.timestep)
         
@@ -173,7 +179,6 @@ class ActionAdjuster:
     def send_data_to_solver(self):
         # append the new data
         with shared_thread_data.lock:
-            shared_thread_data["timestep"] = self.timestep
             shared_thread_data["buffer_for_actual_spatial_values"] = shared_thread_data.get("buffer_for_actual_spatial_values", []) + self.buffer_for_actual_spatial_values
             shared_thread_data["buffer_for_input_data"]            = shared_thread_data.get("buffer_for_input_data",            []) + self.buffer_for_input_data
         self.buffer_for_actual_spatial_values.clear()
@@ -276,6 +281,7 @@ class ActionAdjusterSolver:
                 )
                 predicted_spatial_values.append(spacial_expectation[-1]) 
             
+            exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
             # loss function
             loss = 0
             # Note: len(predicted_spatial_values) should == len(real_spatial_values) + future_projection_length
@@ -284,11 +290,11 @@ class ActionAdjusterSolver:
                 x1, y1, angle1, velocity1, spin1 = each_actual
                 x2, y2, angle2, velocity2, spin2 = each_predicted
                 iteration_total = 0
-                iteration_total += spacial_coefficients.x        * abs((x1        - x2       ))
-                iteration_total += spacial_coefficients.y        * abs((y1        - y2       ))
-                iteration_total += spacial_coefficients.angle    * (abs_angle_difference(angle1, angle2)) # angle is different cause it wraps (0 == 2π)
-                iteration_total += spacial_coefficients.velocity * abs((velocity1 - velocity2))
-                iteration_total += spacial_coefficients.spin     * abs((spin1     - spin2    ))
+                iteration_total += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+                iteration_total += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+                iteration_total += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                iteration_total += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+                iteration_total += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
                 
                 loss += iteration_total
             # print(f'''    {-loss}: {transform}''')
@@ -299,13 +305,20 @@ class ActionAdjusterSolver:
         # 
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             solutions = list(self.selected_solutions) + [ self.canidate_transform ]
+            perfect_score = objective_function(perfect_transform)
+            print("")
+            print(f'''perfect objective value: {perfect_score}''')
             scores = tuple(
                 objective_function(each_transform.as_numpy)
                     for each_transform in solutions
             )
+            distances_from_perfect = tuple(
+                mean_squared_error(each_transform.as_numpy, perfect_transform)
+                    for each_transform in solutions
+            )
             print("evaluating transforms:")
-            for each_transform, each_score in zip(solutions, scores):
-                print(f'''    {each_score:.3f}: {each_transform}''')
+            for each_transform, each_score, each_distance in zip(solutions, scores, distances_from_perfect):
+                print(f'''    objective value: {each_score:.3f}: distance from perfect:{each_distance:.4f}: {each_transform}''')
             
             best_with_new_data = bb.arg_maxs(
                 args=solutions,
@@ -366,6 +379,7 @@ class ActionAdjusterSolver:
                     proportion=config.action_adjuster.update_rate,
                 )
             )
+            self.local_buffer_for_records.append(dict(canidate_transform=self.canidate_transform))
             
             score_after = objective_function(self.canidate_transform.as_numpy)
             print(f'''new canidate transform = {self.canidate_transform}''')
