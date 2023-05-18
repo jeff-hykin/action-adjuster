@@ -16,6 +16,7 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
+WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
 
 class WarthogEnv(gym.Env):
     random_start_position_offset = config.simulator.random_start_position_offset
@@ -33,7 +34,48 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
-    SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", ])
+    SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", "timestep" ])
+    ActionClass = create_named_list_class([ "velocity", "spin", "timestep" ])
+    class ObservationClass:
+        def __init__(self, values=None):
+            self.timestep = None
+            self.spin     = None
+            self.velocity = None
+            self.waypoint_gaps = []
+            if bb.is_iterable(values):
+                values = list(values)
+                self.timestep = values.pop(-1)
+                self.spin     = values.pop(-1)
+                self.velocity = values.pop(-1)
+                while len(values) > 0:
+                    waypoint_gap = []
+                    for index in range(len(WaypointGap.names_to_index)):
+                        waypoint_gap.append(values.pop(-1))
+                    self.waypoint_gaps.append(
+                        WaypointGap(
+                            reversed(waypoint_gap)
+                        )
+                    )
+            else:
+                raise Exception(f'''ObservationClass() got non-iterable argument''')
+        
+        def __json__(self):
+            output = []
+            for each_waypoint_gap in self.waypoint_gaps:
+                for each_value in each_waypoint_gap:
+                    output.append(each_value)
+            output.append(self.velocity)
+            output.append(self.spin)
+            output.append(self.timestep)
+            return output
+        
+        def to_numpy(self):
+            as_list = self.__json__()
+            as_list.pop(-1)
+            return numpy.array(as_list)
+        
+        def __repr__(self):
+            return f"""Observation(timestep={self.timestep}, velocity={f"{self.velocity:0.4f}".ljust(6,"0")}, spin={f"{self.spin:0.4f}".ljust(6,"0")}, waypoint_gaps=[len({len(self.waypoint_gaps)})])"""
     
     def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
         super(WarthogEnv, self).__init__()
@@ -48,11 +90,11 @@ class WarthogEnv(gym.Env):
         self.spacial_info.angle            = 0
         self.spacial_info.velocity         = 0
         self.spacial_info.spin             = 0
+        self.spacial_info.timestep         = 0
         
         self.max_episode_steps      = config.simulator.max_episode_steps
         self.save_data              = config.simulator.save_data
         self.action_duration        = config.simulator.action_duration  
-        self.horizon                = config.simulator.horizon # number of waypoints in the observation
         self.number_of_trajectories = config.simulator.number_of_trajectories
         self.render_axis_size       = 20
         self.closest_index          = 0
@@ -69,6 +111,7 @@ class WarthogEnv(gym.Env):
         self.is_episode_start       = 1
         self.trajectory_file        = None
         self.global_timestep        = 0
+        self.episode_timestep       = 0
         self.action_buffer          = [ (0,0) ] * config.simulator.action_delay # seed the buffer with delays
         
         if self.waypoint_file_path is not None:
@@ -82,17 +125,6 @@ class WarthogEnv(gym.Env):
         self.phi_error        = 0
         self.prev_timestamp   = time.time()
         self.should_render    = config.simulator.should_render
-        
-        self.ObservationClass = create_named_list_class(
-            bb.flatten(
-                [
-                    [ f"gap_of_distance_{index}", f"gap_of_angle_directly_towards_next_{index}", f"gap_of_desired_angle_at_next_{index}", f"gap_of_velocity_{index}" ]
-                        for index in range(self.horizon) 
-                ] + [
-                    "velocity", "spin"
-                ]
-            )
-        )
         
         if self.should_render:
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
@@ -141,7 +173,7 @@ class WarthogEnv(gym.Env):
         self.ax.plot(x, y, "+r")
 
     @staticmethod
-    def sim_warthog(old_spacial_info, velocity_action, spin_action, action_duration, debug=False):
+    def generate_next_spacial_info(old_spacial_info, velocity_action, spin_action, action_duration, debug=False):
         '''
             Inputs:
                 velocity_action: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
@@ -184,6 +216,7 @@ class WarthogEnv(gym.Env):
         new_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * action_duration
         new_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * action_duration
         new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)
+        new_spacial_info.timestep = old_spacial_info.timestep + 1
         if debug:
             with print.indent:
                 print(f'''new_spacial_info = {new_spacial_info}''')
@@ -203,13 +236,13 @@ class WarthogEnv(gym.Env):
         return closest_index, closest_distance
 
     @staticmethod
-    def generate_observation(remaining_waypoints, horizon, current_spacial_info):
+    def generate_observation(remaining_waypoints, current_spacial_info):
         original_velocity = current_spacial_info.velocity
         original_spin     = current_spacial_info.spin
         
         observation = []
         closest_index, closest_distance = WarthogEnv.get_closest(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
-        for horizon_index in range(0, horizon):
+        for horizon_index in range(0, config.simulator.horizon):
             waypoint_index = horizon_index + closest_index
             if waypoint_index < len(remaining_waypoints):
                 waypoint = remaining_waypoints[waypoint_index]
@@ -236,6 +269,7 @@ class WarthogEnv(gym.Env):
         
         observation.append(original_velocity)
         observation.append(original_spin)
+        observation = WarthogEnv.ObservationClass(observation+[current_spacial_info.timestep])
         return observation
 
 
@@ -249,6 +283,7 @@ class WarthogEnv(gym.Env):
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_velocity}, {self.action_spin}, {self.is_episode_start}\n")
         self.global_timestep += 1
+        self.episode_timestep += 1
         self.episode_steps = self.episode_steps + 1
         self.is_episode_start = 0
         
@@ -263,8 +298,9 @@ class WarthogEnv(gym.Env):
             spin_action     = self.action_spin
             
             # 
-            # add offsets
+            # ADVERSITY
             # 
+            # for now, just additive adversity
             velocity_action += config.simulator.velocity_offset
             spin_action     += config.simulator.spin_offset
         
@@ -287,7 +323,7 @@ class WarthogEnv(gym.Env):
             # 
             # apply action
             # 
-            self.spacial_info = WarthogEnv.sim_warthog(
+            self.spacial_info = WarthogEnv.generate_next_spacial_info(
                 old_spacial_info=WarthogEnv.SpacialInformation(self.spacial_info),
                 velocity_action=velocity_action + velocity_noise,
                 spin_action=spin_action + spin_noise,
@@ -321,12 +357,12 @@ class WarthogEnv(gym.Env):
                 self.spacial_info.angle    + angle_noise   ,
                 self.spacial_info.velocity + velocity_noise,
                 self.spacial_info.spin     + spin_noise    ,
+                self.spacial_info.timestep                 ,
             ])
-            observation = self.ObservationClass( WarthogEnv.generate_observation(
+            observation = WarthogEnv.generate_observation(
                 remaining_waypoints=self.waypoints_list[self.closest_index:],
-                horizon=self.horizon,
                 current_spacial_info=spacial_info_with_noise,
-            ))
+            )
             # 
             # get the true closest waypoint (e.g. perfect sensors)
             #
@@ -396,11 +432,11 @@ class WarthogEnv(gym.Env):
             self.render()
         
         additional_info = dict(
+            action=action,
             spacial_info=self.spacial_info,
             spacial_info_with_noise=spacial_info_with_noise,
             current_waypoint_index=self.closest_index,
             remaining_waypoints=self.waypoints_list[self.closest_index:],
-            horizon=self.horizon,
             action_duration=self.action_duration,
         )
         
@@ -423,6 +459,7 @@ class WarthogEnv(gym.Env):
     def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
         self.total_episode_reward = 0
+        self.episode_timestep = 0
         
         index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
@@ -462,11 +499,10 @@ class WarthogEnv(gym.Env):
         self.closest_index += closest_relative_index
         self.prev_closest_index = self.closest_index
         
-        observation = self.ObservationClass( WarthogEnv.generate_observation(
+        observation = WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
-            horizon=self.horizon,
             current_spacial_info=self.spacial_info,
-        ))
+        )
         return observation
 
     def render(self, mode="human"):

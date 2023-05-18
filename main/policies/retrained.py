@@ -13,7 +13,7 @@ pi = torch.load(path_to.saved_policies+ "/manaul_ppo_10000000.pt")
 
 def policy(observation):
     with print.indent:
-        observation = torch.as_tensor(observation, dtype=torch.float32).to(device)
+        observation = torch.as_tensor(observation.to_numpy(), dtype=torch.float32).to(device)
         distribution = pi(observation)
         with DeterministicTorchRng(observation):
             action = distribution.sample()

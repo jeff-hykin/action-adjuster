@@ -7,15 +7,15 @@ import threading
 from multiprocessing import Manager
 
 import __dependencies__.blissful_basics as bb                                                   
-from __dependencies__.blissful_basics import to_pure, countdown, print, singleton, FS, stringify, LazyDict
+from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict
 from __dependencies__.elegant_events import Server
+from __dependencies__.trivial_torch_tools import to_tensor
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
 from icecream import ic                                                         # pip install icecream
-from trivial_torch_tools import to_tensor                                       # pip install trivial_torch_tools
 ic.configureOutput(includeContext=True)
 
-from config import config, path_to
+from config import config, path_to, debug
 from envs.warthog import WarthogEnv, WaypointEntry
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 from generic_tools.numpy import shift_towards
@@ -25,6 +25,7 @@ from generic_tools.universe.agent import Skeleton
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 mean_squared_error_core = torch.nn.MSELoss()
 mean_squared_error = lambda arg1, arg2: to_pure(mean_squared_error_core(to_tensor(arg1), to_tensor(arg2)))
+pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), **kwargs)
 
 # 
 # establish filepaths
@@ -38,12 +39,12 @@ perfect_answer = to_tensor([
     [ 0,     1,        config.simulator.spin_offset, ],
     [ 0,     0,                                   1, ],
 ]).numpy()
-perfect_transform = perfect_answer[0:2,:]
+perfect_transform_input = perfect_answer[0:2,:]
 
 # 
 # models
 # 
-generate_next_spacial_info = WarthogEnv.sim_warthog
+generate_next_spacial_info = WarthogEnv.generate_next_spacial_info
 generate_next_observation  = WarthogEnv.generate_observation
 shared_thread_data = None
 
@@ -61,7 +62,7 @@ class Transform:
             self._transform = to_tensor(value).numpy()
         
         if config.action_adjuster.always_perfect:
-            self._transform = perfect_transform
+            self._transform = perfect_transform_input
         
     def __deepcopy__(self, arg1):
         return Transform(to_tensor(self._transform).numpy())
@@ -114,7 +115,7 @@ class Transform:
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
 if config.action_adjuster.default_to_perfect:
-    Transform.inital = perfect_transform
+    Transform.inital = perfect_transform_input
 
 # TODO: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation([
@@ -165,10 +166,10 @@ class ActionAdjuster:
         self.buffer_for_input_data.append(dict(
             historic_transform=deepcopy(self.transform),
             observation=observation,
+            action=additional_info["action"],
             additional_info=[
                 additional_info["spacial_info_with_noise"],
                 additional_info["current_waypoint_index"],
-                additional_info["horizon"],
                 additional_info["action_duration"],
             ],
         ))
@@ -280,14 +281,12 @@ class ActionAdjusterSolver:
         
         # skip the first X entries, because there is no predicted value for the first entry (predictions need source data)
         real_spacial_values = self.actual_spacial_values[config.action_adjuster.future_projection_length:]
-        for each in self.actual_spacial_values:
-            print(f'''{each}''')
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
             spacial_projections = []
             predicted_spacial_values = []
             for each_input_data, real_spacial_value in zip(self.input_data, real_spacial_values):
-                spacial_expectation, observation_expectation = self.project(
+                action_expectation, spacial_expectation, observation_expectation = self.project(
                     transform=transform,
                     real_transformation=False,
                     policy=self.policy,
@@ -318,11 +317,48 @@ class ActionAdjusterSolver:
             return -sum(losses)
         
         # 
+        # debugging
+        #
+        perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
+            transform=Transform(perfect_transform_input),
+            real_transformation=False,
+            policy=self.policy,
+            **self.input_data[0],
+        )
+        null_action_expectation, null_spacial_expectation, null_observation_expectation = self.project(
+            transform=Transform(Transform.inital),
+            real_transformation=False,
+            policy=self.policy,
+            **self.input_data[0],
+        )
+        slice_size = 4
+        actual_actions        = [ each['action']      for each in  self.input_data[0:slice_size]] 
+        actual_spacial_values = self.actual_spacial_values[0:slice_size]
+        actual_observations   = [ each['observation'] for each in  self.input_data[0:slice_size]] 
+        def print_data(actions, spacial_values, observations):
+            with print.indent.block("spacial_values"):
+                for each in spacial_values:
+                    print(each)
+            with print.indent.block("actions"):
+                for each in actions:
+                    print(each)
+            with print.indent.block("observations"):
+                for each in observations:
+                    print(each)
+        with print.indent.block("actual"):
+            print_data(actual_actions, actual_spacial_values, actual_observations)
+        with print.indent.block("null"):
+            print_data(null_action_expectation, null_spacial_expectation, null_observation_expectation)
+        with print.indent.block("perfect"):
+            print_data(perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation)
+        exit()
+        
+        # 
         # overfitting protection (validate the canidate)
         # 
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             solutions = list(self.selected_solutions) + [ self.canidate_transform ]
-            perfect_score = objective_function(perfect_transform)
+            perfect_score = objective_function(perfect_transform_input)
             print("")
             print(f'''perfect objective value: {perfect_score}''')
             scores = tuple(
@@ -330,7 +366,7 @@ class ActionAdjusterSolver:
                     for each_transform in solutions
             )
             distances_from_perfect = tuple(
-                mean_squared_error(each_transform.as_numpy, perfect_transform)
+                mean_squared_error(each_transform.as_numpy, perfect_transform_input)
                     for each_transform in solutions
             )
             print("evaluating transforms:")
@@ -365,6 +401,7 @@ class ActionAdjusterSolver:
             timestep = self.timestep_of_shared_info
             # kill this process once the limit is reaced
             if timestep > config.simulator.max_episode_steps:
+                print("exiting process because timestep > config.simulator.max_episode_steps")
                 exit()
             
             self.local_buffer_for_records.append(dict(
@@ -407,67 +444,30 @@ class ActionAdjusterSolver:
                 self.stdev = self.stdev/10
     
     # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None):
-        current_spacial_info, current_waypoint_index, horizon, action_duration = additional_info
+    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None, action=None):
+        current_spacial_info, current_waypoint_index, action_duration = additional_info
         remaining_waypoints = self.waypoints_list[current_waypoint_index:]
-        observation_expectation = []
-        spacial_expectation = []
+        observation_expectation = [ observation ]
+        spacial_expectation = [ current_spacial_info ]
+        action_expectation = []
         with print.indent:
-            if _actual:
-                print(f'''_actual = {_actual}''')
-                # TODO: predicted with adjustment
-                # TODO: predicted without adjustement
-            for each in range(config.action_adjuster.future_projection_length):
-                print(f"projection_index no adjustment:{each}")
-                with print.indent:
-                    action = policy(observation)
-                    
-                    # undo the effects of the at-the-time transformation
-                    if historic_transform:
-                        action = historic_transform.modify_action(
-                            action=action,
-                            reverse_transformation=real_transformation, # fight-against the new transformation
-                        )
-                    
-                    print(f'''action before = {action}''')
-                    velocity_action, spin_action = action
-                    
-                    next_spacial_info = generate_next_spacial_info(
-                        old_spacial_info=current_spacial_info,
-                        velocity_action=velocity_action,
-                        spin_action=spin_action,
-                        action_duration=action_duration,
-                        debug=True,
-                    )
-                    print(f'''next_spacial_info = {next_spacial_info}''')
-                    next_observation = generate_next_observation(
-                        remaining_waypoints=remaining_waypoints,
-                        horizon=horizon,
-                        current_spacial_info=next_spacial_info,
-                    )
-                    
-                    observation          = next_observation
-                    current_spacial_info = next_spacial_info
-            
             for each in range(config.action_adjuster.future_projection_length):
                 print(f"projection_index:{each}")
                 with print.indent:
                     action = policy(observation)
                     
                     # undo the effects of the at-the-time transformation
-                    if historic_transform:
-                        action = historic_transform.modify_action(
-                            action=action,
-                            reverse_transformation=real_transformation, # fight-against the new transformation
-                        )
+                    # FIXME: comment back in after debugging
+                    # if historic_transform:
+                    #     action = historic_transform.modify_action(
+                    #         action=action,
+                    #         reverse_transformation=real_transformation, # fight-against the new transformation
+                    #     )
                     
-                    print(f'''action before = {action}''')
                     velocity_action, spin_action = transform.modify_action(
                         action=action,
                         reverse_transformation=(not real_transformation)
                     )
-                    print(f'''action after = {[velocity_action, spin_action]}''')
-                    
                     next_spacial_info = generate_next_spacial_info(
                         old_spacial_info=current_spacial_info,
                         velocity_action=velocity_action,
@@ -475,19 +475,19 @@ class ActionAdjusterSolver:
                         action_duration=action_duration,
                         debug=True,
                     )
-                    print(f'''next_spacial_info = {next_spacial_info}''')
                     next_observation = generate_next_observation(
                         remaining_waypoints=remaining_waypoints,
-                        horizon=horizon,
                         current_spacial_info=next_spacial_info,
                     )
+                    action_expectation.append((velocity_action, spin_action))
                     spacial_expectation.append(next_spacial_info)
                     observation_expectation.append(next_observation)
                     
+                    print(f'''next_spacial_info = {next_spacial_info}''')
                     observation          = next_observation
                     current_spacial_info = next_spacial_info
             
-        return spacial_expectation, observation_expectation
+        return action_expectation, spacial_expectation, observation_expectation
 
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None

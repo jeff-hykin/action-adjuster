@@ -1,4 +1,6 @@
 - figure out why the objective function isn't optimizing the reward
+    - attach a timestep value to every action (make an action class)
+    - attach a timestep value to every observation (make an observation class)
     - figure out why there's never any x,y loss
         - DONE: its because the prediction of x and y is based off previous velocity, but the other values are not
     - figure out why the prefect answer has a non-zero loss
