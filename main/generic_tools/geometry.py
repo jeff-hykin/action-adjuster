@@ -9,17 +9,17 @@ def get_angle_from_origin(x, y):
     return zero_to_2pi(theta)
 
 def zero_to_2pi(theta):
-    if theta < 0:
-        theta = 2 * math.pi + theta
-    elif theta > 2 * math.pi:
-        theta = theta - 2 * math.pi
+    while theta < 0:
+        theta = math.tau + theta
+    while theta > math.tau:
+        theta = theta - math.tau
     return theta
 
 def pi_to_pi(theta):
-    if theta < -math.pi:
-        theta = theta + 2 * math.pi
-    elif theta > math.pi:
-        theta = theta - 2 * math.pi
+    while theta < -math.pi:
+        theta = theta + math.tau
+    while theta > math.pi:
+        theta = theta - math.tau
     return theta
 
 def abs_angle_difference(radians1, radians2):
