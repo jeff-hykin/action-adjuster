@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/trivial-torch-tools.git
+	branch = master
+	commit = 1a72ff721bfa8b917a39332fb55cd635610e28ab
+	parent = d12af4487aeb8a80545dcfacfba1b61b5d689185
+	method = merge
+	cmdver = 0.4.5
