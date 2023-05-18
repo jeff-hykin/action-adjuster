@@ -280,6 +280,8 @@ class ActionAdjusterSolver:
         
         # skip the first X entries, because there is no predicted value for the first entry (predictions need source data)
         real_spacial_values = self.actual_spacial_values[config.action_adjuster.future_projection_length:]
+        for each in self.actual_spacial_values:
+            print(f'''{each}''')
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
             spacial_projections = []
@@ -413,6 +415,40 @@ class ActionAdjusterSolver:
         with print.indent:
             if _actual:
                 print(f'''_actual = {_actual}''')
+                # TODO: predicted with adjustment
+                # TODO: predicted without adjustement
+            for each in range(config.action_adjuster.future_projection_length):
+                print(f"projection_index no adjustment:{each}")
+                with print.indent:
+                    action = policy(observation)
+                    
+                    # undo the effects of the at-the-time transformation
+                    if historic_transform:
+                        action = historic_transform.modify_action(
+                            action=action,
+                            reverse_transformation=real_transformation, # fight-against the new transformation
+                        )
+                    
+                    print(f'''action before = {action}''')
+                    velocity_action, spin_action = action
+                    
+                    next_spacial_info = generate_next_spacial_info(
+                        old_spacial_info=current_spacial_info,
+                        velocity_action=velocity_action,
+                        spin_action=spin_action,
+                        action_duration=action_duration,
+                        debug=True,
+                    )
+                    print(f'''next_spacial_info = {next_spacial_info}''')
+                    next_observation = generate_next_observation(
+                        remaining_waypoints=remaining_waypoints,
+                        horizon=horizon,
+                        current_spacial_info=next_spacial_info,
+                    )
+                    
+                    observation          = next_observation
+                    current_spacial_info = next_spacial_info
+            
             for each in range(config.action_adjuster.future_projection_length):
                 print(f"projection_index:{each}")
                 with print.indent:
@@ -439,14 +475,6 @@ class ActionAdjusterSolver:
                         action_duration=action_duration,
                         debug=True,
                     )
-                    next_spacial_info_before = generate_next_spacial_info(
-                        old_spacial_info=current_spacial_info,
-                        velocity_action=action[0],
-                        spin_action=action[1],
-                        action_duration=action_duration,
-                        debug=True,
-                    )
-                    print(f'''next_spacial_info_before = {next_spacial_info_before}''')
                     print(f'''next_spacial_info = {next_spacial_info}''')
                     next_observation = generate_next_observation(
                         remaining_waypoints=remaining_waypoints,

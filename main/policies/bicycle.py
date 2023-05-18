@@ -11,7 +11,7 @@ agent = PPO.load(path_to.saved_policies+"/bicycle1")
 hidden_state = None
 def policy(observation):
     global hidden_state
-    action, hidden_state = agent.predict(observation, hidden_state)
+    action, hidden_state = agent.predict(observation, hidden_state, deterministic=True)
     
     # predict(
     #     observation: Union[numpy.ndarray, Dict[str, numpy.ndarray]],

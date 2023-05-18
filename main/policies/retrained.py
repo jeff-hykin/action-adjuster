@@ -16,5 +16,6 @@ def policy(observation):
         import json
         observation = torch.as_tensor(observation, dtype=torch.float32).to(device)
         distribution = pi(observation)
+        
         action = distribution.sample()
         return action.cpu().numpy()

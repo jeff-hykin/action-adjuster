@@ -173,6 +173,9 @@ class WarthogEnv(gym.Env):
                 print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin * action_duration})""")
                 print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle + old_spin * action_duration})""")
                 print(f"""new_spacial_info.angle    = {zero_to_2pi(old_angle + old_spin * action_duration)}""")
+                print()
+                print(f'''new_spacial_info.velocity = {velocity_action}''')
+                print(f'''new_spacial_info.spin = {spin_action}''')
                 
         
         new_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)

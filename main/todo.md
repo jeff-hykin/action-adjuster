@@ -2,6 +2,7 @@
     - figure out why there's never any x,y loss
         - DONE: its because the prediction of x and y is based off previous velocity, but the other values are not
     - figure out why the prefect answer has a non-zero loss
+        - one problem is the policy is non-deterministic
     - weird things:
         - the actual_location values has a weird teleportation issue
         - predicted x and y are basically always exactly accurate, but velocity and spin are not
