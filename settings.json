@@ -12,6 +12,9 @@
         "elegant_events": {
             "path": "__sources__/elegant_events/main/elegant_events"
         },
+        "super_hash": {
+            "path": "__sources__/super_hash/main/super_hash"
+        },
         "quik_config": {
             "path": "__sources__/quik_config/main/quik_config"
         }
