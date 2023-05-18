@@ -1,4 +1,6 @@
 - figure out why the objective function isn't optimizing the reward
+    - finish making policy actually deterministic
+    - then debug why perfect and null transforms have different spin (good) but same x,y (bad)
     - attach a timestep value to every action (make an action class)
     - attach a timestep value to every observation (make an observation class)
     - figure out why there's never any x,y loss

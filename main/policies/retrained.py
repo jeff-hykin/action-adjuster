@@ -11,11 +11,21 @@ from specific_tools.train_ppo import PolicyNetworkGauss, device
 
 pi = torch.load(path_to.saved_policies+ "/manaul_ppo_10000000.pt")
 
+record_of_outputs = {}
 def policy(observation):
+    from envs.warthog import WarthogEnv
     with print.indent:
+        original_observation = observation
+        key = repr(original_observation)
         observation = torch.as_tensor(observation.to_numpy(), dtype=torch.float32).to(device)
         distribution = pi(observation)
-        with DeterministicTorchRng(observation):
+        with DeterministicTorchRng(key):
             action = distribution.sample()
         
-        return action.cpu().numpy()
+        action = action.cpu().numpy()
+        
+        if key in record_of_outputs:
+            return record_of_outputs[key][0:2]
+        
+        record_of_outputs[key] = WarthogEnv.ReactionClass(action.tolist()+[original_observation.timestep])
+        return action

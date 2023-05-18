@@ -319,6 +319,7 @@ class ActionAdjusterSolver:
         # 
         # debugging
         #
+        pprint(self.input_data[0])
         perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
             transform=Transform(perfect_transform_input),
             real_transformation=False,
@@ -339,7 +340,7 @@ class ActionAdjusterSolver:
             with print.indent.block("spacial_values"):
                 for each in spacial_values:
                     print(each)
-            with print.indent.block("actions"):
+            with print.indent.block("reactions"):
                 for each in actions:
                     print(each)
             with print.indent.block("observations"):
@@ -351,6 +352,8 @@ class ActionAdjusterSolver:
             print_data(null_action_expectation, null_spacial_expectation, null_observation_expectation)
         with print.indent.block("perfect"):
             print_data(perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation)
+        from policies.retrained import record_of_outputs
+        pprint(record_of_outputs)
         exit()
         
         # 
@@ -444,10 +447,15 @@ class ActionAdjusterSolver:
                 self.stdev = self.stdev/10
     
     # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None, action=None):
+    def project(self, policy, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None, observation=None, action=None):
         current_spacial_info, current_waypoint_index, action_duration = additional_info
         remaining_waypoints = self.waypoints_list[current_waypoint_index:]
-        observation_expectation = [ observation ]
+        # the observation argument is intentionally thrown away because its the observation BEFORE the already-given action, and we want the observation AFTER
+        observation = generate_next_observation(
+            remaining_waypoints=remaining_waypoints,
+            current_spacial_info=current_spacial_info,
+        )
+        observation_expectation = [ observation  ]
         spacial_expectation = [ current_spacial_info ]
         action_expectation = []
         with print.indent:
@@ -479,7 +487,7 @@ class ActionAdjusterSolver:
                         remaining_waypoints=remaining_waypoints,
                         current_spacial_info=next_spacial_info,
                     )
-                    action_expectation.append((velocity_action, spin_action))
+                    action_expectation.append(WarthogEnv.ReactionClass([velocity_action, spin_action, observation.timestep]))
                     spacial_expectation.append(next_spacial_info)
                     observation_expectation.append(next_observation)
                     

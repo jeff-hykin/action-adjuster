@@ -35,7 +35,7 @@ class WarthogEnv(gym.Env):
     )
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", "timestep" ])
-    ActionClass = create_named_list_class([ "velocity", "spin", "timestep" ])
+    ReactionClass = create_named_list_class([ "velocity", "spin", "timestep" ])
     class ObservationClass:
         def __init__(self, values=None):
             self.timestep = None
@@ -75,7 +75,7 @@ class WarthogEnv(gym.Env):
             return numpy.array(as_list)
         
         def __repr__(self):
-            return f"""Observation(timestep={self.timestep}, velocity={f"{self.velocity:0.4f}".ljust(6,"0")}, spin={f"{self.spin:0.4f}".ljust(6,"0")}, waypoint_gaps=[len({len(self.waypoint_gaps)})])"""
+            return f"""Observation(timestep={self.timestep}, velocity={f"{self.velocity:0.7f}".ljust(9,"0")}, spin={f"{self.spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
     
     def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
         super(WarthogEnv, self).__init__()
@@ -432,7 +432,7 @@ class WarthogEnv(gym.Env):
             self.render()
         
         additional_info = dict(
-            action=action,
+            action=WarthogEnv.ReactionClass(list(action)+[observation.timestep-1]),
             spacial_info=self.spacial_info,
             spacial_info_with_noise=spacial_info_with_noise,
             current_waypoint_index=self.closest_index,
