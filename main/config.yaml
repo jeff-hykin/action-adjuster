@@ -47,8 +47,9 @@
                 disabled: False
                 default_to_perfect: False
                 always_perfect: False
+                use_transform: False # when true, this means it will modify the policies actions
                 update_rate: 1 # kinda similar to alpha/step-size
-                future_projection_length: 1 # timesteps
+                future_projection_length: 2 # timesteps
                 update_frequency: 20 # timesteps
                 max_history_size: 10000 # timesteps
                 processor_sleep_time: 1 # seconds

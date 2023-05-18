@@ -135,7 +135,7 @@ class ActionAdjuster:
         self.should_update = countdown(config.action_adjuster.update_frequency)
         self.recorder = recorder            
         self.timestep = 0                   
-        self.buffer_for_actual_spatial_values = []
+        self.buffer_for_actual_spacial_values = []
         self.buffer_for_input_data            = []
         self.incoming_records_to_log          = []
         
@@ -172,7 +172,7 @@ class ActionAdjuster:
                 additional_info["action_duration"],
             ],
         ))
-        self.buffer_for_actual_spatial_values.append(additional_info["spacial_info_with_noise"])
+        self.buffer_for_actual_spacial_values.append(additional_info["spacial_info_with_noise"])
         if self.should_update():
             self.send_data_to_solver()
             # run solver each update step
@@ -185,9 +185,9 @@ class ActionAdjuster:
     def send_data_to_solver(self):
         # append the new data
         with shared_thread_data.lock:
-            shared_thread_data["buffer_for_actual_spatial_values"] = shared_thread_data.get("buffer_for_actual_spatial_values", []) + self.buffer_for_actual_spatial_values
+            shared_thread_data["buffer_for_actual_spacial_values"] = shared_thread_data.get("buffer_for_actual_spacial_values", []) + self.buffer_for_actual_spacial_values
             shared_thread_data["buffer_for_input_data"]            = shared_thread_data.get("buffer_for_input_data",            []) + self.buffer_for_input_data
-        self.buffer_for_actual_spatial_values.clear()
+        self.buffer_for_actual_spacial_values.clear()
         self.buffer_for_input_data.clear()
         
     def receive_output_from_solver(self):
@@ -230,7 +230,7 @@ class ActionAdjusterSolver:
         self.original_policy = policy
         self.waypoints_list = waypoints_list
         self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
-        self.actual_spatial_values = []
+        self.actual_spacial_values = []
         self.input_data            = []
         self.transform             = Transform()
         self.canidate_transform    = Transform()
@@ -244,11 +244,11 @@ class ActionAdjusterSolver:
         with shared_thread_data.lock:
             self.timestep_of_shared_info = shared_thread_data.get("timestep", 0)
             self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
-            self.actual_spatial_values += shared_thread_data.get("buffer_for_actual_spatial_values", [])
+            self.actual_spacial_values += shared_thread_data.get("buffer_for_actual_spacial_values", [])
             shared_thread_data["buffer_for_input_data"] = []
-            shared_thread_data["buffer_for_actual_spatial_values"] = []
+            shared_thread_data["buffer_for_actual_spacial_values"] = []
         
-        if any(each.x == each.y == 0 for each in self.actual_spatial_values[1:]):
+        if any(each.x == each.y == 0 for each in self.actual_spacial_values[1:]):
             import code; code.interact(local={**globals(),**locals()})
         
         # if no new data
@@ -256,13 +256,13 @@ class ActionAdjusterSolver:
             sleep(1)
             return False
         
-        assert len(self.actual_spatial_values) == len(self.input_data)
+        assert len(self.actual_spacial_values) == len(self.input_data)
         # 
         # cap the history size
         # 
         if config.action_adjuster.max_history_size < math.inf:
-            if len(self.actual_spatial_values) > config.action_adjuster.max_history_size:
-                self.actual_spatial_values = self.actual_spatial_values[-config.action_adjuster.max_history_size:]
+            if len(self.actual_spacial_values) > config.action_adjuster.max_history_size:
+                self.actual_spacial_values = self.actual_spacial_values[-config.action_adjuster.max_history_size:]
                 self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
         
         return True
@@ -279,26 +279,29 @@ class ActionAdjusterSolver:
             return
         
         # skip the first X entries, because there is no predicted value for the first entry (predictions need source data)
-        real_spatial_values = self.actual_spatial_values[config.action_adjuster.future_projection_length:]
+        real_spacial_values = self.actual_spacial_values[config.action_adjuster.future_projection_length:]
         def objective_function(numpy_array):
             transform = Transform(numpy_array)
-            predicted_spatial_values = []
-            for each_input_data in self.input_data:
+            spacial_projections = []
+            predicted_spacial_values = []
+            for each_input_data, real_spacial_value in zip(self.input_data, real_spacial_values):
                 spacial_expectation, observation_expectation = self.project(
                     transform=transform,
                     real_transformation=False,
                     policy=self.policy,
+                    _actual=real_spacial_value,
                     **each_input_data,
                 )
-                predicted_spatial_values.append(spacial_expectation[-1]) 
+                spacial_projections.append(spacial_expectation)
+                predicted_spacial_values.append(spacial_expectation[-1]) 
             
             exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
             # loss function
             losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-            # Note: len(predicted_spatial_values) should == len(real_spatial_values) + future_projection_length
+            # Note: len(predicted_spacial_values) should == len(real_spacial_values) + future_projection_length
             # however, it will be automatically truncated because of the zip behavior
             with print.indent:
-                for each_actual, each_predicted in zip(real_spatial_values, predicted_spatial_values):
+                for each_actual, each_predicted in zip(real_spacial_values, predicted_spacial_values):
                     x1, y1, angle1, velocity1, spin1 = each_actual
                     x2, y2, angle2, velocity2, spin2 = each_predicted
                     iteration_total = 0
@@ -402,43 +405,60 @@ class ActionAdjusterSolver:
                 self.stdev = self.stdev/10
     
     # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None):
-        current_spatial_info, current_waypoint_index, horizon, action_duration = additional_info
+    def project(self, policy, observation, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None):
+        current_spacial_info, current_waypoint_index, horizon, action_duration = additional_info
         remaining_waypoints = self.waypoints_list[current_waypoint_index:]
         observation_expectation = []
         spacial_expectation = []
-        for each in range(config.action_adjuster.future_projection_length):
-            action = policy(observation)
+        with print.indent:
+            if _actual:
+                print(f'''_actual = {_actual}''')
+            for each in range(config.action_adjuster.future_projection_length):
+                print(f"projection_index:{each}")
+                with print.indent:
+                    action = policy(observation)
+                    
+                    # undo the effects of the at-the-time transformation
+                    if historic_transform:
+                        action = historic_transform.modify_action(
+                            action=action,
+                            reverse_transformation=real_transformation, # fight-against the new transformation
+                        )
+                    
+                    print(f'''action before = {action}''')
+                    velocity_action, spin_action = transform.modify_action(
+                        action=action,
+                        reverse_transformation=(not real_transformation)
+                    )
+                    print(f'''action after = {[velocity_action, spin_action]}''')
+                    
+                    next_spacial_info = generate_next_spacial_info(
+                        old_spacial_info=current_spacial_info,
+                        velocity_action=velocity_action,
+                        spin_action=spin_action,
+                        action_duration=action_duration,
+                        debug=True,
+                    )
+                    next_spacial_info_before = generate_next_spacial_info(
+                        old_spacial_info=current_spacial_info,
+                        velocity_action=action[0],
+                        spin_action=action[1],
+                        action_duration=action_duration,
+                        debug=True,
+                    )
+                    print(f'''next_spacial_info_before = {next_spacial_info_before}''')
+                    print(f'''next_spacial_info = {next_spacial_info}''')
+                    next_observation = generate_next_observation(
+                        remaining_waypoints=remaining_waypoints,
+                        horizon=horizon,
+                        current_spacial_info=next_spacial_info,
+                    )
+                    spacial_expectation.append(next_spacial_info)
+                    observation_expectation.append(next_observation)
+                    
+                    observation          = next_observation
+                    current_spacial_info = next_spacial_info
             
-            # undo the effects of the at-the-time transformation
-            if historic_transform:
-                action = historic_transform.modify_action(
-                    action=action,
-                    reverse_transformation=real_transformation, # fight-against the new transformation
-                )
-            
-            velocity_action, spin_action = transform.modify_action(
-                action=action,
-                reverse_transformation=(not real_transformation)
-            )
-            
-            next_spacial_info = generate_next_spacial_info(
-                old_spatial_info=current_spatial_info,
-                velocity_action=velocity_action,
-                spin_action=spin_action,
-                action_duration=action_duration,
-            )
-            next_observation = generate_next_observation(
-                remaining_waypoints=remaining_waypoints,
-                horizon=horizon,
-                current_spacial_info=next_spacial_info,
-            )
-            spacial_expectation.append(next_spacial_info)
-            observation_expectation.append(next_observation)
-            
-            observation          = next_observation
-            current_spacial_info = next_spacial_info
-        
         return spacial_expectation, observation_expectation
 
 class ActionAdjustedAgent(Skeleton):
@@ -470,9 +490,12 @@ class ActionAdjustedAgent(Skeleton):
         read: self.observation
         write: self.reaction = something
         """
-        self.timestep.reaction = self.action_adjuster.transform.modify_action(
-            self.policy(self.timestep.observation)
-        )
+        action = self.policy(self.timestep.observation)
+        if config.action_adjuster.use_transform:
+            action = self.action_adjuster.transform.modify_action(
+                action
+            )
+        self.timestep.reaction = action
     def when_timestep_ends(self):
         """
         read: self.timestep.reward

@@ -141,23 +141,49 @@ class WarthogEnv(gym.Env):
         self.ax.plot(x, y, "+r")
 
     @staticmethod
-    def sim_warthog(old_spatial_info, velocity_action, spin_action, action_duration):
+    def sim_warthog(old_spacial_info, velocity_action, spin_action, action_duration, debug=False):
+        '''
+            Inputs:
+                velocity_action: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
+                spin_action: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
+        '''
         velocity_action = np.clip(velocity_action,  0, 1) * config.vehicle.controller_max_velocity
         spin_action     = np.clip(spin_action,     -1, 1) * config.vehicle.controller_max_spin
         
-        old_velocity = old_spatial_info.velocity
-        old_spin     = old_spatial_info.spin
-        old_x        = old_spatial_info.x
-        old_y        = old_spatial_info.y
-        old_angle    = old_spatial_info.angle
+        old_velocity = old_spacial_info.velocity
+        old_spin     = old_spacial_info.spin
+        old_x        = old_spacial_info.x
+        old_y        = old_spacial_info.y
+        old_angle    = old_spacial_info.angle
         
-        new_spacial_info          = WarthogEnv.SpacialInformation(old_spatial_info)
+        if debug:
+            with print.indent:
+                print("""new_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle) * action_duration}""")
+                print()
+                print("""new_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle)} * {action_duration}""")
+                print(f"""new_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle) * action_duration}""")
+                print()
+                print("""new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)""")
+                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin}           * {action_duration})""")
+                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin * action_duration})""")
+                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle + old_spin * action_duration})""")
+                print(f"""new_spacial_info.angle    = {zero_to_2pi(old_angle + old_spin * action_duration)}""")
+                
+        
+        new_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)
         new_spacial_info.velocity = velocity_action
         new_spacial_info.spin     = spin_action
         new_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * action_duration
         new_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * action_duration
         new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)
-        
+        if debug:
+            with print.indent:
+                print(f'''new_spacial_info = {new_spacial_info}''')
         return new_spacial_info
     
     @staticmethod
@@ -259,7 +285,7 @@ class WarthogEnv(gym.Env):
             # apply action
             # 
             self.spacial_info = WarthogEnv.sim_warthog(
-                old_spatial_info=WarthogEnv.SpacialInformation(self.spacial_info),
+                old_spacial_info=WarthogEnv.SpacialInformation(self.spacial_info),
                 velocity_action=velocity_action + velocity_noise,
                 spin_action=spin_action + spin_noise,
                 action_duration=self.action_duration,
