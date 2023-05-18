@@ -9,6 +9,10 @@
         "rigorous_recorder": {
             "path": "__sources__/rigorous_recorder/main/rigorous_recorder"
         },
+        "trivial_torch_tools": {
+            "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
+            "path": "__sources__/trivial_torch_tools/main/trivial_torch_tools"
+        },
         "elegant_events": {
             "path": "__sources__/elegant_events/main/elegant_events"
         },
