@@ -230,7 +230,6 @@ class ActionAdjusterSolver:
     def __init__(self, policy, waypoints_list):
         self.original_policy = policy
         self.waypoints_list = waypoints_list
-        self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
         self.actual_spacial_values = []
         self.input_data            = []
         self.transform             = Transform()
@@ -239,6 +238,18 @@ class ActionAdjusterSolver:
         self.selected_solutions = set([ self.transform ])
         self.local_buffer_for_records = []  # only the processor thread should use this attribute
         self.timestep_of_shared_info = None # only the processor thread should use this attribute
+        
+        # this is just a means of making the policy pseudo-deterministic, not intentionally an optimization
+        # TODO: if anything this will act like a memory leak, so it needs to be capped. However, to not break things its cap size depends on how quickly the fit_points is called and how big the buffer is
+        #       which is why its not capped right now
+        policy_cache = {}
+        def pseudo_deterministic_policy(observation):
+            key = super_hash(observation)
+            return policy_cache.get(
+                key,
+                policy_cache.setdefault(key, policy(observation))
+            )
+        self.policy = pseudo_deterministic_policy
         
     def receive_data_from_main_thread(self):
         existing_data_count = len(self.input_data)
