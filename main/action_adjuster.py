@@ -229,6 +229,7 @@ class ActionAdjusterSolver:
 
     def __init__(self, policy, waypoints_list):
         self.original_policy = policy
+        self.policy = policy
         self.waypoints_list = waypoints_list
         self.actual_spacial_values = []
         self.input_data            = []
@@ -238,18 +239,6 @@ class ActionAdjusterSolver:
         self.selected_solutions = set([ self.transform ])
         self.local_buffer_for_records = []  # only the processor thread should use this attribute
         self.timestep_of_shared_info = None # only the processor thread should use this attribute
-        
-        # this is just a means of making the policy pseudo-deterministic, not intentionally an optimization
-        # TODO: if anything this will act like a memory leak, so it needs to be capped. However, to not break things its cap size depends on how quickly the fit_points is called and how big the buffer is
-        #       which is why its not capped right now
-        policy_cache = {}
-        def pseudo_deterministic_policy(observation):
-            key = super_hash(observation)
-            return policy_cache.get(
-                key,
-                policy_cache.setdefault(key, policy(observation))
-            )
-        self.policy = pseudo_deterministic_policy
         
     def receive_data_from_main_thread(self):
         existing_data_count = len(self.input_data)
@@ -314,8 +303,8 @@ class ActionAdjusterSolver:
             # however, it will be automatically truncated because of the zip behavior
             with print.indent:
                 for each_actual, each_predicted in zip(real_spacial_values, predicted_spacial_values):
-                    x1, y1, angle1, velocity1, spin1 = each_actual
-                    x2, y2, angle2, velocity2, spin2 = each_predicted
+                    x1, y1, angle1, velocity1, spin1, *_ = each_actual
+                    x2, y2, angle2, velocity2, spin2, *_ = each_predicted
                     iteration_total = 0
                     losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
                     losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
@@ -330,43 +319,40 @@ class ActionAdjusterSolver:
         # 
         # debugging
         #
-        pprint(self.input_data[0])
-        prefect_original_reactions, perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
-            transform=Transform(perfect_transform_input),
-            real_transformation=False,
-            policy=self.policy,
-            **self.input_data[0],
-        )
-        null_original_reactions, null_reaction_expectation, null_spacial_expectation, null_observation_expectation = self.project(
-            transform=Transform(Transform.inital),
-            real_transformation=False,
-            policy=self.policy,
-            **self.input_data[0],
-        )
-        slice_size = 4
-        actual_actions        = [ each['action']      for each in  self.input_data[0:slice_size]] 
-        actual_spacial_values = self.actual_spacial_values[0:slice_size]
-        actual_observations   = [ each['observation'] for each in  self.input_data[0:slice_size]] 
-        def print_data(original_reactions, actions, spacial_values, observations):
-            with print.indent.block("spacial_values"):
-                for each in spacial_values:
-                    print(each)
-            with print.indent.block("reactions"):
-                for each in actions:
-                    print(each)
-            with print.indent.block("original reactions"):
-                for each in original_reactions:
-                    print(each)
-            with print.indent.block("observations"):
-                for each in observations:
-                    print(each)
-        with print.indent.block("actual"):
-            print_data([], actual_actions, actual_spacial_values, actual_observations)
-        with print.indent.block("null"):
-            print_data(null_original_reactions, null_reaction_expectation, null_spacial_expectation, null_observation_expectation)
-        with print.indent.block("perfect"):
-            print_data(prefect_original_reactions, perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation)
-        exit()
+            # pprint(self.input_data[0])
+            # perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
+            #     transform=Transform(perfect_transform_input),
+            #     real_transformation=False,
+            #     policy=self.policy,
+            #     **self.input_data[0],
+            # )
+            # null_reaction_expectation, null_spacial_expectation, null_observation_expectation = self.project(
+            #     transform=Transform(Transform.inital),
+            #     real_transformation=False,
+            #     policy=self.policy,
+            #     **self.input_data[0],
+            # )
+            # slice_size = 4
+            # actual_reactions      = [ each['action']      for each in  self.input_data[0:slice_size]] 
+            # actual_spacial_values = self.actual_spacial_values[0:slice_size]
+            # actual_observations   = [ each['observation'] for each in  self.input_data[0:slice_size]] 
+            # def print_data(actions, spacial_values, observations):
+            #     with print.indent.block("spacial_values"):
+            #         for each in spacial_values:
+            #             print(each)
+            #     with print.indent.block("reactions"):
+            #         for each in actions:
+            #             print(each)
+            #     with print.indent.block("observations"):
+            #         for each in observations:
+            #             print(each)
+            # with print.indent.block("actual"):
+            #     print_data([], actual_reactions, actual_spacial_values, actual_observations)
+            # with print.indent.block("null"):
+            #     print_data(null_reaction_expectation, null_spacial_expectation, null_observation_expectation)
+            # with print.indent.block("perfect"):
+            #     print_data(perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation)
+            # exit()
         
         # 
         # overfitting protection (validate the canidate)
@@ -470,10 +456,8 @@ class ActionAdjusterSolver:
         observation_expectation = [ observation  ]
         spacial_expectation = [ current_spacial_info ]
         action_expectation = []
-        original_actions = []
         with print.indent:
             for each in range(config.action_adjuster.future_projection_length):
-                print(f"projection_index:{each}")
                 with print.indent:
                     action = policy(observation)
                     
@@ -494,22 +478,19 @@ class ActionAdjusterSolver:
                         velocity_action=velocity_action,
                         spin_action=spin_action,
                         action_duration=action_duration,
-                        debug=True,
                     )
                     next_observation = generate_next_observation(
                         remaining_waypoints=remaining_waypoints,
                         current_spacial_info=next_spacial_info,
                     )
-                    original_actions.append(WarthogEnv.ReactionClass([*action, observation.timestep]))
-                    action_expectation.append(WarthogEnv.ReactionClass([velocity_action, spin_action, observation.timestep]))
+                    action_expectation.append(WarthogEnv.ReactionClass([velocity_action, spin_action, observation]))
                     spacial_expectation.append(next_spacial_info)
                     observation_expectation.append(next_observation)
                     
-                    print(f'''next_spacial_info = {next_spacial_info}''')
                     observation          = next_observation
                     current_spacial_info = next_spacial_info
             
-        return original_actions, action_expectation, spacial_expectation, observation_expectation
+        return action_expectation, spacial_expectation, observation_expectation
 
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
@@ -534,7 +515,9 @@ class ActionAdjustedAgent(Skeleton):
     def when_mission_starts(self):
         pass
     def when_episode_starts(self):
-        pass
+        action1 = self.policy(self.next_timestep.observation)
+        action2 = self.policy(self.next_timestep.observation)
+        assert super_hash(action1) == super_hash(action2), "When using ActionAdjustedAgent, the policy needs to be deterministic, and the given policy seems to not be"
     def when_timestep_starts(self):
         """
         read: self.observation

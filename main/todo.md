@@ -1,8 +1,4 @@
 - figure out why the objective function isn't optimizing the reward
-    - why is the original reaction to observation timestep=1 different than the reaction inside of self.project()
-    - attach a timestep value to every action (make an action class)
-    - figure out why there's never any x,y loss
-        - DONE: its because the prediction of x and y is based off previous velocity, but the other values are not
     - figure out why the prefect answer has a non-zero loss
         - one problem is the policy is non-deterministic
 - zero-out the intial point

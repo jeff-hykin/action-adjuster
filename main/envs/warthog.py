@@ -37,7 +37,7 @@ class WarthogEnv(gym.Env):
     )
     
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", "timestep" ])
-    ReactionClass = create_named_list_class([ "velocity", "spin", "timestep" ])
+    ReactionClass = create_named_list_class([ "velocity", "spin", "observation" ])
     class ObservationClass:
         def __init__(self, values=None):
             self.timestep = None
@@ -120,6 +120,7 @@ class WarthogEnv(gym.Env):
         self.action_velocity        = 0
         self.prev_action_spin       = 0
         self.prev_action_velocity   = 0
+        self.prev_observation       = None
         self.is_episode_start       = 1
         self.trajectory_file        = None
         self.global_timestep        = 0
@@ -451,7 +452,7 @@ class WarthogEnv(gym.Env):
             self.render()
         
         additional_info = dict(
-            action=WarthogEnv.ReactionClass(list(action)+[observation.timestep-1]),
+            action=WarthogEnv.ReactionClass(list(action)+[self.prev_observation]),
             spacial_info=self.spacial_info,
             spacial_info_with_noise=spacial_info_with_noise,
             current_waypoint_index=self.closest_index,
@@ -473,6 +474,7 @@ class WarthogEnv(gym.Env):
             if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
                 done = True
         
+        self.prev_observation = observation
         return observation, self.reward, done, additional_info
 
     def reset(self, override_next_spacial_info=None):
@@ -518,11 +520,11 @@ class WarthogEnv(gym.Env):
         self.closest_index += closest_relative_index
         self.prev_closest_index = self.closest_index
         
-        observation = WarthogEnv.generate_observation(
+        self.prev_observation = WarthogEnv.generate_observation(
             remaining_waypoints=self.waypoints_list[self.closest_index:],
             current_spacial_info=self.spacial_info,
         )
-        return observation
+        return self.prev_observation
 
     def render(self, mode="human"):
         self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])

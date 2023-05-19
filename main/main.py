@@ -1,15 +1,17 @@
 from statistics import mean as average
 from random import random, sample, choices
 
-from __dependencies__.rigorous_recorder import RecordKeeper
-from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 import torch
 from stable_baselines3 import PPO
 
+from __dependencies__.rigorous_recorder import RecordKeeper
+from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
+
+from specific_tools.train_ppo import * # required because of pickle lookup
 from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, ActionAdjuster
 from config import config, path_to, selected_profiles
-from specific_tools.train_ppo import * # required because of pickle lookup
+from generic_tools.functions import cache_outputs
 from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
@@ -36,6 +38,12 @@ if config.policy.name == 'bicycle':
     from policies.bicycle import policy
 if config.policy.name == 'retrained':
     from policies.retrained import policy
+
+# this is just a means of making the policy pseudo-deterministic, not intentionally an optimization
+# TODO: if anything this will act like a memory leak, so it needs to be capped. However, to not break things its cap size depends on how quickly the fit_points is called and how big the buffer is
+#       which is why its not capped right now
+policy = cache_outputs(policy)
+
 
 # 
 # agent
