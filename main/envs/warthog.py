@@ -182,45 +182,52 @@ class WarthogEnv(gym.Env):
         velocity_action = np.clip(velocity_action,  0, 1) * config.vehicle.controller_max_velocity
         spin_action     = np.clip(spin_action,     -1, 1) * config.vehicle.controller_max_spin
         
-        old_velocity = old_spacial_info.velocity
-        old_spin     = old_spacial_info.spin
-        old_x        = old_spacial_info.x
-        old_y        = old_spacial_info.y
-        old_angle    = old_spacial_info.angle
+        next_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)
+        next_spacial_info.timestep = old_spacial_info.timestep + 1
         
-        if debug:
-            with print.indent:
-                print("""new_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle) * action_duration}""")
-                print()
-                print("""new_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle)} * {action_duration}""")
-                print(f"""new_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle) * action_duration}""")
-                print()
-                print("""new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)""")
-                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin}           * {action_duration})""")
-                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin * action_duration})""")
-                print(f"""new_spacial_info.angle    = zero_to_2pi({old_angle + old_spin * action_duration})""")
-                print(f"""new_spacial_info.angle    = {zero_to_2pi(old_angle + old_spin * action_duration)}""")
-                print()
-                print(f'''new_spacial_info.velocity = {velocity_action}''')
-                print(f'''new_spacial_info.spin = {spin_action}''')
+        effective_action_duration = action_duration/config.simulator.granularity_of_calculations
+        # granularity substeps, having at least 3 of these steps is important
+        for each in range(config.simulator.granularity_of_calculations):
+            old_velocity = old_spacial_info.velocity
+            old_spin     = old_spacial_info.spin
+            old_x        = old_spacial_info.x
+            old_y        = old_spacial_info.y
+            old_angle    = old_spacial_info.angle
+        
+            if debug:
+                with print.indent:
+                    print("""next_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle) * effective_action_duration}""")
+                    print()
+                    print("""next_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle) * effective_action_duration}""")
+                    print()
+                    print("""next_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * effective_action_duration)""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin}           * {effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin * effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle + old_spin * effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = {zero_to_2pi(old_angle + old_spin * effective_action_duration)}""")
+                    print()
+                    print(f'''next_spacial_info.velocity = {velocity_action}''')
+                    print(f'''next_spacial_info.spin = {spin_action}''')
                 
+            next_spacial_info.velocity = velocity_action
+            next_spacial_info.spin     = spin_action
+            next_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * effective_action_duration
+            next_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * effective_action_duration
+            next_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * effective_action_duration)
+            
+            # repeat the process
+            old_spacial_info = next_spacial_info
         
-        new_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)
-        new_spacial_info.velocity = velocity_action
-        new_spacial_info.spin     = spin_action
-        new_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * action_duration
-        new_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * action_duration
-        new_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * action_duration)
-        new_spacial_info.timestep = old_spacial_info.timestep + 1
         if debug:
             with print.indent:
-                print(f'''new_spacial_info = {new_spacial_info}''')
-        return new_spacial_info
+                print(f'''next_spacial_info = {next_spacial_info}''')
+        return next_spacial_info
     
     @staticmethod
     def get_closest(remaining_waypoints, x, y):

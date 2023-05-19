@@ -10,10 +10,9 @@ import __dependencies__.blissful_basics as bb
 from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict
 from __dependencies__.elegant_events import Server
 from __dependencies__.trivial_torch_tools import to_tensor
+from __dependencies__.super_hash import super_hash
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
-from icecream import ic                                                         # pip install icecream
-ic.configureOutput(includeContext=True)
 
 from config import config, path_to, debug
 from envs.warthog import WarthogEnv, WaypointEntry
@@ -363,8 +362,6 @@ class ActionAdjusterSolver:
             print_data(null_action_expectation, null_spacial_expectation, null_observation_expectation)
         with print.indent.block("perfect"):
             print_data(perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation)
-        from policies.retrained import record_of_outputs
-        pprint(record_of_outputs)
         exit()
         
         # 
