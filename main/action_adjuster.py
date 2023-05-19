@@ -6,13 +6,14 @@ import math
 import threading
 from multiprocessing import Manager
 
-import __dependencies__.blissful_basics as bb                                                   
+import torch                                                                    # pip install torch
+import numpy                                                                    # pip install numpy
+
+import __dependencies__.blissful_basics as bb
 from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict
 from __dependencies__.elegant_events import Server
 from __dependencies__.trivial_torch_tools import to_tensor
 from __dependencies__.super_hash import super_hash
-import torch                                                                    # pip install torch
-import numpy                                                                    # pip install numpy
 
 from config import config, path_to, debug
 from envs.warthog import WarthogEnv, WaypointEntry

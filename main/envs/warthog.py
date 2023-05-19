@@ -7,8 +7,10 @@ import matplotlib as mpl
 import numpy
 import numpy as np
 import gym
-import blissful_basics as bb
-from blissful_basics import Csv, create_named_list_class, FS, print, stringify
+
+import __dependencies__.blissful_basics as bb
+from __dependencies__.super_hash import super_hash
+from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
@@ -59,6 +61,9 @@ class WarthogEnv(gym.Env):
             else:
                 raise Exception(f'''ObservationClass() got non-iterable argument''')
         
+        def __iter__(self):
+            return iter(self.to_numpy())
+        
         def __json__(self):
             output = []
             for each_waypoint_gap in self.waypoint_gaps:
@@ -74,7 +79,14 @@ class WarthogEnv(gym.Env):
             as_list.pop(-1)
             return numpy.array(as_list)
         
+        def __hash__(self):
+            return super_hash(self.__repr__())
+        
         def __repr__(self):
+            """
+                Note:
+                    this function is used in the hash method, so the number of decimals printed does matter significantly for determining equality
+            """
             return f"""Observation(timestep={self.timestep}, velocity={f"{self.velocity:0.7f}".ljust(9,"0")}, spin={f"{self.spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
     
     def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
