@@ -331,13 +331,13 @@ class ActionAdjusterSolver:
         # debugging
         #
         pprint(self.input_data[0])
-        perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
+        prefect_original_reactions, perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
             transform=Transform(perfect_transform_input),
             real_transformation=False,
             policy=self.policy,
             **self.input_data[0],
         )
-        null_action_expectation, null_spacial_expectation, null_observation_expectation = self.project(
+        null_original_reactions, null_reaction_expectation, null_spacial_expectation, null_observation_expectation = self.project(
             transform=Transform(Transform.inital),
             real_transformation=False,
             policy=self.policy,
@@ -347,22 +347,25 @@ class ActionAdjusterSolver:
         actual_actions        = [ each['action']      for each in  self.input_data[0:slice_size]] 
         actual_spacial_values = self.actual_spacial_values[0:slice_size]
         actual_observations   = [ each['observation'] for each in  self.input_data[0:slice_size]] 
-        def print_data(actions, spacial_values, observations):
+        def print_data(original_reactions, actions, spacial_values, observations):
             with print.indent.block("spacial_values"):
                 for each in spacial_values:
                     print(each)
             with print.indent.block("reactions"):
                 for each in actions:
                     print(each)
+            with print.indent.block("original reactions"):
+                for each in original_reactions:
+                    print(each)
             with print.indent.block("observations"):
                 for each in observations:
                     print(each)
         with print.indent.block("actual"):
-            print_data(actual_actions, actual_spacial_values, actual_observations)
+            print_data([], actual_actions, actual_spacial_values, actual_observations)
         with print.indent.block("null"):
-            print_data(null_action_expectation, null_spacial_expectation, null_observation_expectation)
+            print_data(null_original_reactions, null_reaction_expectation, null_spacial_expectation, null_observation_expectation)
         with print.indent.block("perfect"):
-            print_data(perfect_action_expectation, perfect_spacial_expectation, perfect_observation_expectation)
+            print_data(prefect_original_reactions, perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation)
         exit()
         
         # 
@@ -467,6 +470,7 @@ class ActionAdjusterSolver:
         observation_expectation = [ observation  ]
         spacial_expectation = [ current_spacial_info ]
         action_expectation = []
+        original_actions = []
         with print.indent:
             for each in range(config.action_adjuster.future_projection_length):
                 print(f"projection_index:{each}")
@@ -496,6 +500,7 @@ class ActionAdjusterSolver:
                         remaining_waypoints=remaining_waypoints,
                         current_spacial_info=next_spacial_info,
                     )
+                    original_actions.append(WarthogEnv.ReactionClass([*action, observation.timestep]))
                     action_expectation.append(WarthogEnv.ReactionClass([velocity_action, spin_action, observation.timestep]))
                     spacial_expectation.append(next_spacial_info)
                     observation_expectation.append(next_observation)
@@ -504,7 +509,7 @@ class ActionAdjusterSolver:
                     observation          = next_observation
                     current_spacial_info = next_spacial_info
             
-        return action_expectation, spacial_expectation, observation_expectation
+        return original_actions, action_expectation, spacial_expectation, observation_expectation
 
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
