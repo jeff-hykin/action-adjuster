@@ -14,8 +14,6 @@ config            = info.config
 selected_profiles = list(info.selected_profiles)
 debug = LazyDict()
 
-print(f'''config = {config}''')
-
 config.output_folder = config.get("output_folder", path_to.default_output_folder)
 # stamp some things
 FS.copy(item="config.yaml", to=config.output_folder, new_name=None)
