@@ -312,8 +312,7 @@ class ActionAdjusterSolver:
                     losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
                     losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
             
-                print(f'''losses = {losses}''')
-            # print(f'''    {-loss}: {transform}''')
+                # print(f'''losses = {losses}''')
             return -sum(losses)
         
         # 

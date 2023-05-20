@@ -47,14 +47,14 @@
                 disabled: False
                 default_to_perfect: False
                 always_perfect: False
-                use_transform: False # when true, this means it will modify the policies actions
+                use_transform: True # when true, this means it will modify the policies actions
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 2 # timesteps
                 update_frequency: 20 # timesteps
                 max_history_size: 10000 # timesteps
                 processor_sleep_time: 1 # seconds
                 solver_max_iterations: 100
-                use_threading: False
+                use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
@@ -261,15 +261,18 @@
         NO_ADJUSTER:
             action_adjuster:
                 disabled: True
+                use_transform: False
                 
         NORMAL_ADJUSTER:
             action_adjuster:
                 disabled: False
                 default_to_perfect: False
                 always_perfect: False
+                use_transform: True
         
         PERFECT_ADJUSTER:
             action_adjuster:
                 disabled: False
                 default_to_perfect: True
                 always_perfect: True
+                use_transform: True
