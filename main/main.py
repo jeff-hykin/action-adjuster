@@ -1,3 +1,4 @@
+import os
 from statistics import mean as average
 from random import random, sample, choices
 
@@ -69,4 +70,8 @@ with print.indent:
             pass
         
         print("done")
-        exit() # exiting to kill other processes
+        import subprocess
+        # for some multi-threading reason this process doesn't close after exit
+        stdout = subprocess.check_output(['kill', '-9', f"{os.getpid()}"]).decode('utf-8')[0:-1]
+        print("called kill -9 on self, now exiting")
+        exit()
