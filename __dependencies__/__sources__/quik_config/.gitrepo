@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/quik_config_python.git
 	branch = master
-	commit = caa785c2474e42f807fa66db0c02a33ad3404782
-	parent = 3b46bd68be2754eed048169b17a0290e559a3a02
+	commit = bc7df9fd1e256734d5ec8f81ba537fdf480e5cb2
+	parent = 15ba78be9fc0a86fe67d341fa6c6762fce7bba8b
 	method = merge
 	cmdver = 0.4.5

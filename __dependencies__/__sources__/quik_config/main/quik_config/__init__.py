@@ -12,10 +12,18 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         Example Python:
             # basic call
             config, path_to, *_ = find_and_load("info.yaml", defaults_for_local_data=["DEV"])
+            
             # full call
             info = find_and_load("info.yaml", defaults_for_local_data=["DEV"], cd_to_filepath=True)
+            
             # parse args from sys.argv (everything after "--")
             info = find_and_load("info.yaml", parse_args=True)
+            
+            # parse args from a given list
+            info = find_and_load("info.yaml", args=[ "--profile", "DEV" ])
+            
+            # parse args from sys.argv
+            info = find_and_load("info.yaml", fully_parse_args=True)
         
         Returns:
             info.config         # the resulting dictionary for all the selected options
@@ -57,9 +65,6 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
                     
                     OPTION3: !load_yaml_file ./options/opt3.yaml
     """
-    if fully_parse_args:
-        parse_args = True
-    
     # 
     # load the yaml
     # 
@@ -170,20 +175,21 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
     # parse cli arguments
     #
     if True:
-        import sys
-        direct_args = args != None
-        looking_for_double_dash = parse_args and not direct_args
+        args_were_given = args != None
+        if not args_were_given:
+            args = []
+            # if allowed, get them from sys
+            if fully_parse_args or parse_args:
+                import sys
+                args = list(sys.argv)
+                args.pop(0) # remove the path of the python file
         
+        looking_for_double_dash = parse_args and not args_were_given and not fully_parse_args
+        
+        # for error messages:
         command_prefix = f'python {sys.argv[0]} '
         if looking_for_double_dash:
             command_prefix += "-- "
-        
-        if parse_args and args is None:
-            args = list(sys.argv)
-            args.pop(0) # remove the path of the python file
-        
-        if args is None:
-            args = []
         
         # 
         # remove up to the first "--" argument and only until the next "--" argument
@@ -579,7 +585,6 @@ def resolve_profiles(available_profiles, path):
                 
     return resolved_profiles
 
-import sys
 import os
 from os.path import isabs, isfile, isdir, join, dirname, basename, exists, splitext, relpath
 from os import remove, getcwd, makedirs, listdir, rename, rmdir, system
