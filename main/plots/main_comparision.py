@@ -16,19 +16,19 @@ experiment_name = "NOISE=NONE,ADVERSITY=STRONG"
 
 groups = dict(
     no_adjuster=dict(
-        folder_name_must_include="@NO_ADJUSTER",
+        folder_name_must_include="2.@NO_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
-        folder_name_must_include="@NORMAL_ADJUSTER",
+        folder_name_must_include="2.@NORMAL_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
-        folder_name_must_include="@PERFECT_ADJUSTER",
+        folder_name_must_include="2.@PERFECT_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],
@@ -76,7 +76,7 @@ def extract_curve_fit_as_lines(groups):
         lines.append(line_data)
     return lines, groups
 
-def graph_variance_median_mean(lines, groups, prefix=""):
+def graph_variance_median_mean(groups, prefix=""):
     graph_name = "variance"
     graph_groups(
         groups,
@@ -110,14 +110,12 @@ def graph_variance_median_mean(lines, groups, prefix=""):
 
 reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
 graph_variance_median_mean(
-    lines=reward_lines,
     groups=reward_groups,
     prefix="reward",
 )
 
 curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
 graph_variance_median_mean(
-    lines=curve_fit_lines,
     groups=curve_fit_groups,
     prefix="line_fit_score",
 )
