@@ -123,6 +123,10 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
                 y_axis_name="Displacement",
             )
     """
+    # print(title)
+    # with print.indent:
+    #     print(stringify(args))
+    
     import pandas as pd
     import plotly.express as px
     x_values = []

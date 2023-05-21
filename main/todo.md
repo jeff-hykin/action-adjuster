@@ -1,6 +1,6 @@
 - figure out why the objective function isn't optimizing the reward
     - figure out why the prefect answer has a non-zero loss
-        - one problem is the policy is non-deterministic
+        - figure out why the perfect policy has a high loss
 - zero-out the intial point
 - test how much it improves policy reward
     - perform tons of tests (30 runs each)

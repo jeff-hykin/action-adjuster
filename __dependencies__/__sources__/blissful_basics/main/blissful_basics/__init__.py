@@ -427,7 +427,7 @@ if True:
                     items = value.items()
                     output = "dict(\n"
                     for each_key, each_value in items:
-                        element_string = repr(each_key) + "=" + stringify(each_value)
+                        element_string = each_key + "=" + stringify(each_value)
                         length += len(element_string)+2
                         output += indent(element_string, by=4) + ", \n"
                     output += ")"
