@@ -12,24 +12,24 @@ from generic_tools.plotting import graph_lines, graph_groups, xd_theme
 
 # action_adjuster.max_history_size
 
-experiment_name = "NOISE=NONE,ADVERSITY=STRONG"
+experiment_name = "NOISE=NONE,ADVERSITY=WEAK"
 
 groups = dict(
     no_adjuster=dict(
-        folder_name_must_include="2.@NO_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
+        folder_name_must_include="3.@NO_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=WEAK" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
-        folder_name_must_include="2.@NORMAL_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
+        folder_name_must_include="3.@NORMAL_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=WEAK" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
-        folder_name_must_include="2.@PERFECT_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
+        folder_name_must_include="3.@PERFECT_ADJUSTER",
+        summary_filter=lambda data: "ADVERSITY=WEAK" in data["selected_profiles"] and "NOISE=NONE" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],
     ),
