@@ -10,8 +10,8 @@ for run_number in range(finished, number_of_data_points_per_scenario):
     processes = []
     for each_profile in [ "@NORMAL_ADJUSTER", "@NO_ADJUSTER", "@PERFECT_ADJUSTER", ]:
         run_number_string = f"{run_number}".rjust(3,' ')
-        output_folder = f"{path_to.records}/4.{each_profile}|noise=heavy|{run_number_string}.ignore"
-        profiles = [ each_profile, "@WARTHOG", "@NOISE=HEAVY", "@ADVERSITY=STRONG" ]
+        output_folder = f"{path_to.records}/5.{each_profile}|noise=medium|{run_number_string}.ignore"
+        profiles = [ each_profile, "@WARTHOG", "@NOISE=MEDIUM", "@ADVERSITY=STRONG" ]
         print(f"working on: {output_folder}")
         process = Popen([ sys.executable, path_to.main, *profiles, f"output_folder:{json.dumps(output_folder)}" ])
         processes.append(process)

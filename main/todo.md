@@ -1,7 +1,10 @@
 - figure out why the objective function isn't optimizing the reward
     - figure out why the prefect answer has a non-zero loss
         - figure out why the perfect policy has a high loss
+
 - zero-out the intial point
+- figure how much noise it can heandle and where
+- add a linear equation solver
 - test how much it improves policy reward
     - perform tons of tests (30 runs each)
         - DONE: compare NO_ADJUST, ADJUST, ORACLE with 10000 history size, heavy noise
