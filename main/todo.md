@@ -2,9 +2,12 @@
     - figure out why the prefect answer has a non-zero loss
         - figure out why the perfect policy has a high loss
 
+- figure how much noise it can handle and where
 - zero-out the intial point
-- figure how much noise it can heandle and where
-- add a linear equation solver
+- optimization could help performance, options are:
+    - add gradient decent tracking
+    - vectorize/optimize the objective function
+    - find/make a better implementation of cmaes
 - test how much it improves policy reward
     - perform tons of tests (30 runs each)
         - DONE: compare NO_ADJUST, ADJUST, ORACLE with 10000 history size, heavy noise
@@ -23,15 +26,11 @@
     - case where the perfect transformation shifts over time
     - case with no noise
     
-- use websockets instead of file-passing for async update
-
-    
 - evaluate the difficulty of comparing to the meta learning paper
 - look up Trim control (for aircraft)
 - add lookbehind limiter, or maybe log
 - record noise performance
 - add sliding test
-- try sqrt instead of squaring loss
 
 - finish removing magic numbers
 - add new logic for "max_velocity_reset_number"
