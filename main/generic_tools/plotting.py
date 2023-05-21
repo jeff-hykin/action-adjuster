@@ -1,4 +1,4 @@
-from blissful_basics import wrap_around_get, stringify, FS
+from __dependencies__.blissful_basics import wrap_around_get, stringify, FS, print
 
 class Colors:
     def __init__(self, color_mapping):
@@ -47,6 +47,61 @@ xd_theme = Colors({
     "soft_red":         '#f07178',
 })
 default_theme = xd_theme
+
+def points_to_function(x_values, y_values, are_sorted=False):
+    number_of_values = len(x_values)
+    if number_of_values != len(y_values):
+        raise ValueError("x_values and y_values must have the same length")
+    if number_of_values == 0:
+        raise ValueError("called points_to_function() but provided an empty list of points")
+    # horizontal line
+    if number_of_values == 1:
+        return lambda x_value: y_values[0]
+    
+    if not are_sorted:
+        # sort to make sure x values are least to greatest
+        x_values, y_values = zip(
+            *sorted(
+                zip(x_values, y_values),
+                key=lambda each: each[0],
+            )
+        )
+    
+    minimum_x = x_values[0]
+    maximum_x = x_values[-2] # not the true max, but, because of indexing, the 2nd-maximum
+    def inner_function(x):
+        if x >= maximum_x:
+            # needs -2 because below will do x_values[x_index+1]
+            x_index = number_of_values-2
+        elif x <= minimum_x:
+            x_index = 0
+        else:
+            # binary search for x
+            low = 0
+            high = number_of_values - 1
+
+            while low < high:
+                mid = (low + high) // 2
+
+                if x_values[mid] < x:
+                    low = mid + 1
+                else:
+                    high = mid
+
+            if low > 0 and x < x_values[low - 1]:
+                low -= 1
+            
+            x_index = low
+        
+        # Perform linear interpolation / extrapolation
+        x0, x1 = x_values[x_index], x_values[x_index+1]
+        y0, y1 = y_values[x_index], y_values[x_index+1]
+        slope = (y1 - y0) / (x1 - x0)
+        y = y0 + slope * (x - x0)
+
+        return y
+    
+    return inner_function
 
 def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
     """
@@ -109,57 +164,14 @@ def graph_groups(
     # group average
     # 
     if callable(group_averaging_function):
-        def points_to_function(x_values, y_values, method="linear"):
-            values = list(zip(x_values, y_values))
-            values.sort(reverse=False, key=lambda each: each[0])
-            def shift_towards(*, new_value, old_value, proportion):
-                if proportion == 1:
-                    return new_value
-                if proportion == 0:
-                    return old_value
-                
-                difference = new_value - old_value
-                amount = difference * proportion
-                return old_value+amount
-            
-            def new_function(x_input):
-                prev_x, prev_y = values[0]
-                if x_input <= prev_x: # x_input is outside of the bounds
-                    return prev_y 
-                max_x, max_y = values[-1]
-                if x_input >= max_x: # x_input is outside of the bounds
-                    return max_y
-                
-                for each_x, each_y in values:
-                    # they must not be equal, so skip
-                    if each_x == prev_x:
-                        continue
-                    
-                    if each_x == x_input:
-                        return each_y
-                    elif each_x > x_input > prev_x:
-                        the_range = each_x - prev_x
-                        relative_amount = x_input - prev_x
-                        proportion = relative_amount/the_range
-                        return shift_towards(new_value=each_x, old_value=prev_x, proportion=proportion)
-                    
-                    prev_x = each_x
-                    prev_y = each_y
-                
-                # if its a vertical line or only has one point, this line will run
-                return prev_y
-                        
-            return new_function
-                
-        
         new_lines = []
         for group_index, (group_name, each_group) in enumerate(groups.items()):
             lines = each_group["lines"]
             
             functions = [
                 points_to_function(
-                    # sort (x_vals, y_vals) sorted by x
-                    *zip(*sorted(zip(each["x_values"], each["y_values"]), key=lambda each: each[0]))
+                    each["x_values"],
+                    each["y_values"],
                 )
                     for each in lines
             ]
