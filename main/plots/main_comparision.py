@@ -38,9 +38,6 @@ groups = dict(
 def load_group_data(groups):
     for group_name, group_info in groups.items():
         for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
-            if " 22" in file_name:
-                print(f'''skipping:{file_name}''')
-                continue
             data["parent_data_snapshot"].setdefault("selected_profiles", []) # some datasets were made before this was a saved attribute
             if group_info["summary_filter"](data["parent_data_snapshot"]):
                 yield (group_name, group_info, file_name, data)
