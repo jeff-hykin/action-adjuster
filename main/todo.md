@@ -1,6 +1,6 @@
-- figure out why the objective function isn't optimizing the reward
+- figure out how the Experimental approach is outperforming the optimal when noise is added
     - figure out why the prefect answer has a non-zero loss
-        - figure out why the perfect policy has a high loss
+        - map the design
 
 - figure how much noise it can handle and where
 - zero-out the intial point
