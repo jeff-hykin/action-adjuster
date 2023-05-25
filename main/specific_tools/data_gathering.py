@@ -11,6 +11,7 @@ path_cache = {}
 @cache(watch_filepaths=lambda path, *args, **kwargs: [ FS.make_absolute_path(path) ])
 def load_recorder(path, quiet=False):
     path = FS.make_absolute_path(path)
+    data = None
     if not path_cache.get(path, None):
         output = None
         if FS.is_file(path):
