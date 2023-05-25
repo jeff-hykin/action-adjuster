@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/trivial-torch-tools.git
 	branch = master
-	commit = 1a72ff721bfa8b917a39332fb55cd635610e28ab
-	parent = d12af4487aeb8a80545dcfacfba1b61b5d689185
+	commit = d4861c707e8e4b812c831acfed98fe4a777fcb2e
+	parent = b35e16971a967f78ca272ee0cd92f0ca429380e3
 	method = merge
-	cmdver = 0.4.5
+	cmdver = 0.4.1

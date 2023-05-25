@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = git@github.com:jeff-hykin/super_hash.git
+	remote = git@github.com:jeff-hykin/super_hash
 	branch = master
-	commit = 2a652d8b248bc47ca656fa74a601a279117b6e96
-	parent = b3b33a3db5a451c16e9d1497359c952a5f2f493d
+	commit = 1fc4f99c279612e472f7e24a360d8411667fb991
+	parent = d2983f9622bbab84e2c0cccdf358b9d76b6e4951
 	method = merge
 	cmdver = 0.4.1
