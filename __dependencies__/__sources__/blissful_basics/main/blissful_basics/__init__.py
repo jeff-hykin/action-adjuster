@@ -1010,6 +1010,9 @@ if True:
     # 
     # print that can be indented or temporarily disabled
     # 
+    
+    # FIXME: if there are multiple blissful basics in play, we need to keep their indent count centralized
+    #        basically print needs a setter/getter that modifies a global indent value
     real_print = print
     def print(*args, to_string=False, disable=False, **kwargs): # print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
         prev_end = print.prev_end
