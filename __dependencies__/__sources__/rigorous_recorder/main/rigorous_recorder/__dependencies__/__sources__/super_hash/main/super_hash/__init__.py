@@ -1,7 +1,9 @@
 import collections
 from hashlib import md5 
 import pickle
+import dis
 
+LOAD_GLOBAL_CODE = 116
 code = type(compile('1','','single'))
 
 def consistent_hash(value):
@@ -12,14 +14,22 @@ def consistent_hash(value):
         return md5(("@"+value).encode('utf-8')).hexdigest()
     
     if isinstance(value, (bool, int, float, type(None))):
-        return md5(str(value).encode('utf-8')).hexdigest()
+        return md5(("#"+str(value)).encode('utf-8')).hexdigest()
         
     else:
         return md5(pickle.dumps(value, protocol=4)).hexdigest()
 
+def shallow_instruction_hash(value):
+    instructions = value if type(value) == tuple else dis.get_instructions(value)
+    to_hash = tuple(str((each.opcode, each.argval)) for each in instructions) + (getattr(value, "__name__", ""), )
+    hash_str = str(' '.join(to_hash).encode('utf-8'))
+    return consistent_hash(hash_str)
+
 import os
 file_doesnt_exist_key = "pGVQDVYZAVeUb9oOPvWn3QbHmnpw/MGu43pI8a+Gss+QKgnbo36NfRGmMtY0PXyBCg0MyG91Ey5aEQbZxzRp5sxQ"
 file_exists_key       = "xeWLFUZaurvdgqQA524lqQZ6BOSv+OBpQUmsSV4AmbRQG31JuMkhCZNz+XVN1HoU9wU3gezpusflZkd3kdKRwYBw"
+using_id_based        = "xeWLFUZaurvdgqQA524lqQZ6BOSv+OBpQUmsSV4AmbRQG31JuMkhCZNz+XVN1HoU9wU3gezpusflZkd3kdKRwYBw"
+hash_salt             = md5(("|"+str(-24979514859357)).encode('utf-8')).hexdigest()
 def hash_file(filepath=None, *, file=None, _block_read_size=1024):
     if filepath:
         if os.path.isdir(filepath):
@@ -61,13 +71,7 @@ class helpers:
         else:
             return True
     
-    @staticmethod        
-    def shallow_instruction_hash(value):
-        import dis
-        instructions = dis.get_instructions(value)
-        to_hash = [str((each.opcode, each.argval)) for each in instructions]
-        hash_str = str(' '.join(to_hash).encode('utf-8')) + str(value.__name__ if hasattr(value, "__name__") else "")
-        return consistent_hash(hash_str)
+    shallow_instruction_hash = shallow_instruction_hash
     
     @staticmethod
     def source_hash(value):
@@ -77,59 +81,60 @@ class helpers:
     
 class function_hashers:
     @staticmethod
-    def smart(value):
+    def smart(value, debug=False):
         # if defined in a proper module
         try:
-            return deep(value)
+            return function_hashers.deep(value)
         except Exception as error:
+            if debug: print("couldn't do deep", error)
             pass
         
         # if user defined
         try:
-            return shallow(value)
+            return function_hashers.shallow(value)
         except Exception as error:
+            if debug: print("couldn't do shallow", error)
             pass
         
         # if file defined, but actually a class
         try:
             return helpers.source_hash(value)
         except Exception as error:
+            if debug: print("couldn't do source_hash", error)
             pass
         
         # if has documentation (e.g. builtin)
         if type(value.__doc__) == str and len(value.__doc__) > 0 and type(value.__name__) == str:
+            if debug: print("couldn't do __doc__ hash")
             return consistent_hash(f'{hash_salt}{value.__doc__}{value.__name__}')
         
         # if all this fails, use the object id
         return id(value)
     
-    @staticmethod
-    def shallow(value):
-        return helpers.shallow_instruction_hash(value)
+    shallow = shallow_instruction_hash
     
     # from https://github.com/andrewgazelka/smart-cache/blob/master/smart_cache/__init__.py
     @staticmethod
     def instructions_to_hash(instructions):
-        to_hash = [str((each.opcode, super_hash(each.argval))) for each in instructions]
+        to_hash = tuple(str((each.opcode, super_hash(each.argval))) for each in instructions)
         hash_str = ' '.join(to_hash).encode('utf-8')
         return consistent_hash(hash_str)
     
     @staticmethod
     def get_referenced_function_names(instructions):
-        return [ins.argval for ins in instructions if ins.opcode == 116]
+        return tuple(ins.argval for ins in instructions if ins.opcode == LOAD_GLOBAL_CODE)
     
     @staticmethod
     def deep(input_func):
         import inspect
-        import dis
         module = inspect.getmodule(input_func)
         closed_set = set()
         instruction_hashes = [] if not hasattr(input_func, "__name__") else [ input_func.__name__ ]
         frontier = set()
         
-        base_instructions = list(dis.get_instructions(input_func))
-        child_names = get_referenced_function_names(base_instructions)
-        instruction_hashes.append(str(instructions_to_hash(base_instructions)))
+        base_instructions = tuple(dis.get_instructions(input_func))
+        child_names = function_hashers.get_referenced_function_names(base_instructions)
+        instruction_hashes.append(function_hashers.instructions_to_hash(base_instructions))
         for name in child_names:
             frontier.add(name)
         
@@ -143,7 +148,7 @@ class function_hashers:
                 instructions = dis.get_instructions(function_reference)
             except TypeError as error:
                 continue
-            instruction_hashes.append(str(instructions_to_hash(instructions)))
+            instruction_hashes.append(function_hashers.instructions_to_hash(instructions))
             child_names = get_referenced_function_names(instructions)
             for child_name in child_names:
                 if child_name not in closed_set:
@@ -207,9 +212,7 @@ def super_hash(value, *, __already_seen__=None):
     
     if type(value) == code:
         try:
-            import dis
-            instructions = dis.get_instructions(value)
-            return consistent_hash(str([str((each.opcode, super_hash(each.argval))) for each in instructions]))
+            return shallow_instruction_hash(value)
         except Exception as error:
             return consistent_hash(code.co_code)
     # 
@@ -223,13 +226,15 @@ def super_hash(value, *, __already_seen__=None):
     # 
     # generic fallback methods
     # 
-    hash_salt = -24979514859357
     value_id = id(value)
     if helpers.is_iterable(value):
         if value_id in already_seen:
             # seen but not yet computed
             if already_seen[value_id] is None:
-                return hash_salt
+                # FIXME: this is a problem when dealing with sets or lists, as two already-seen items in two different orders will result in the same parent hash
+                #        however this problem is equivlent (technially "bijective") to the problem of hashing an unlabelled graph
+                #        at the theory level, there is no proven method for hashing an unlabelled graph, although there are some not-proven-incorrect methods
+                return hash_salt # hash of something that is pending
             else:
                 return already_seen[value_id]
         else:

@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/rigorous_recorder.git
 	branch = master
-	commit = e18a1ac73f454038bfaae6d21b750bfaa4f697a2
-	parent = 84c77e50ea3f39279e24c42b5454bfcc05c2d884
+	commit = da0f98f2eaa6d1628b19acf715b564dd2470ba43
+	parent = 686776262cd416a6d5862ee6aeae35ab1950e28f
 	method = merge
-	cmdver = 0.4.5
+	cmdver = 0.4.1

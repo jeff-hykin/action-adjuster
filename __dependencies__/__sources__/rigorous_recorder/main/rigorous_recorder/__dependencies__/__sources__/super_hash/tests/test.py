@@ -12,9 +12,11 @@ def thing():
 def static_nice_function():
     pass
     
-function_hashers.smart(static_nice_function)
-function_hashers.smart(thing)
-function_hashers.smart(THingy)
+print(function_hashers.smart(static_nice_function,debug=True))
+print(function_hashers.smart(thing,debug=True))
+print(function_hashers.smart(THingy,debug=True))
+print(function_hashers.shallow(static_nice_function))
+print(function_hashers.shallow(thing))
 
 # from super_hash import super_hash as hash
 value = {
