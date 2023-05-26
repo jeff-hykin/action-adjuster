@@ -148,10 +148,10 @@ class WarthogEnv(gym.Env):
         self.episode_steps          = 0
         self.total_episode_reward   = 0
         self.reward                 = 0
-        self.action_spin            = 0
-        self.action_velocity        = 0
-        self.prev_action_spin       = 0
-        self.prev_action_velocity   = 0
+        self.relative_spin            = 0
+        self.relative_velocity        = 0
+        self.prev_relative_spin       = 0
+        self.prev_relative_velocity   = 0
         self.prev_observation       = None
         self.is_episode_start       = 1
         self.trajectory_file        = None
@@ -201,8 +201,16 @@ class WarthogEnv(gym.Env):
         
         self.reset()
     
+    def __del__(self):
+        if self.trajectory_file:
+            self.trajectory_file.close()
+            
     @staticmethod
     def generate_observation(remaining_waypoints, current_spacial_info):
+        """
+            Note:
+                This function should be fully deterministic.
+        """
         original_velocity = current_spacial_info.velocity
         original_spin     = current_spacial_info.spin
         
@@ -238,31 +246,17 @@ class WarthogEnv(gym.Env):
         observation = WarthogEnv.ObservationClass(observation+[current_spacial_info.timestep])
         return observation
     
-    @property
-    def number_of_waypoints(self):
-        return len(self.waypoints_list)
-    
-    def __del__(self):
-        if self.trajectory_file:
-            self.trajectory_file.close()
-
-    def plot_waypoints(self):
-        x = []
-        y = []
-        for each_waypoint in self.waypoints_list:
-            x.append(each_waypoint.x)
-            y.append(each_waypoint.y)
-        self.ax.plot(x, y, "+r")
-
     @staticmethod
-    def generate_next_spacial_info(old_spacial_info, velocity_action, spin_action, action_duration, debug=False):
+    def generate_next_spacial_info(old_spacial_info, relative_velocity, relative_action, action_duration, debug=False):
         '''
+            Note:
+                This function should also be fully deterministic
             Inputs:
-                velocity_action: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
-                spin_action: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
+                relative_velocity: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
+                relative_action: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
         '''
-        velocity_action = np.clip(velocity_action,  0, 1) * config.vehicle.controller_max_velocity
-        spin_action     = np.clip(spin_action,     -1, 1) * config.vehicle.controller_max_spin
+        absolute_velocity = np.clip(relative_velocity,  0, 1) * config.vehicle.controller_max_velocity
+        absolute_spin     = np.clip(relative_action,   -1, 1) * config.vehicle.controller_max_spin
         
         next_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)
         next_spacial_info.timestep = old_spacial_info.timestep + 1
@@ -270,38 +264,38 @@ class WarthogEnv(gym.Env):
         effective_action_duration = action_duration/config.simulator.granularity_of_calculations
         # granularity substeps, having at least 3 of these steps is important
         for each in range(config.simulator.granularity_of_calculations):
-            old_velocity = old_spacial_info.velocity
-            old_spin     = old_spacial_info.spin
-            old_x        = old_spacial_info.x
-            old_y        = old_spacial_info.y
-            old_angle    = old_spacial_info.angle
+            old_absolute_velocity = old_spacial_info.velocity
+            old_absolute_spin     = old_spacial_info.spin
+            old_x                 = old_spacial_info.x
+            old_y                 = old_spacial_info.y
+            old_angle             = old_spacial_info.angle
         
             if debug:
                 with print.indent:
-                    print("""next_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.x        = {old_x} + {old_velocity * math.cos(old_angle) * effective_action_duration}""")
+                    print("""next_spacial_info.x        = {old_x} + {old_absolute_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_absolute_velocity} * {math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_absolute_velocity * math.cos(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.x        = {old_x} + {old_absolute_velocity * math.cos(old_angle) * effective_action_duration}""")
                     print()
-                    print("""next_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle)} * {effective_action_duration}""")
-                    print(f"""next_spacial_info.y        = {old_y} + {old_velocity * math.sin(old_angle) * effective_action_duration}""")
+                    print("""next_spacial_info.y        = {old_y} + {old_absolute_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_absolute_velocity} * {math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_absolute_velocity * math.sin(old_angle)} * {effective_action_duration}""")
+                    print(f"""next_spacial_info.y        = {old_y} + {old_absolute_velocity * math.sin(old_angle) * effective_action_duration}""")
                     print()
-                    print("""next_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * effective_action_duration)""")
-                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin}           * {effective_action_duration})""")
-                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_spin * effective_action_duration})""")
-                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle + old_spin * effective_action_duration})""")
-                    print(f"""next_spacial_info.angle    = {zero_to_2pi(old_angle + old_spin * effective_action_duration)}""")
+                    print("""next_spacial_info.angle    = zero_to_2pi(old_angle + old_absolute_spin           * effective_action_duration)""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_absolute_spin}           * {effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle} + {old_absolute_spin * effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = zero_to_2pi({old_angle + old_absolute_spin * effective_action_duration})""")
+                    print(f"""next_spacial_info.angle    = {zero_to_2pi(old_angle + old_absolute_spin * effective_action_duration)}""")
                     print()
-                    print(f'''next_spacial_info.velocity = {velocity_action}''')
-                    print(f'''next_spacial_info.spin = {spin_action}''')
+                    print(f'''next_spacial_info.velocity = {absolute_velocity}''')
+                    print(f'''next_spacial_info.spin = {absolute_spin}''')
                 
-            next_spacial_info.velocity = velocity_action
-            next_spacial_info.spin     = spin_action
-            next_spacial_info.x        = old_x + old_velocity * math.cos(old_angle) * effective_action_duration
-            next_spacial_info.y        = old_y + old_velocity * math.sin(old_angle) * effective_action_duration
-            next_spacial_info.angle    = zero_to_2pi(old_angle + old_spin           * effective_action_duration)
+            next_spacial_info.velocity = absolute_velocity
+            next_spacial_info.spin     = absolute_spin
+            next_spacial_info.x        = old_x + old_absolute_velocity * math.cos(old_angle) * effective_action_duration
+            next_spacial_info.y        = old_y + old_absolute_velocity * math.sin(old_angle) * effective_action_duration
+            next_spacial_info.angle    = zero_to_2pi(old_angle + old_absolute_spin           * effective_action_duration)
             
             # repeat the process
             old_spacial_info = next_spacial_info
@@ -313,6 +307,10 @@ class WarthogEnv(gym.Env):
     
     @staticmethod
     def get_closest(remaining_waypoints, x, y):
+        """
+            Note:
+                A helper for .generate_next_observation() and .reset()
+        """
         closest_index = 0
         closest_distance = math.inf
         for index, waypoint in enumerate(remaining_waypoints):
@@ -323,23 +321,33 @@ class WarthogEnv(gym.Env):
             else:
                 break
         return closest_index, closest_distance
-
     
+    @property
+    def number_of_waypoints(self):
+        return len(self.waypoints_list)
+    
+    def plot_waypoints(self):
+        x = []
+        y = []
+        for each_waypoint in self.waypoints_list:
+            x.append(each_waypoint.x)
+            y.append(each_waypoint.y)
+        self.ax.plot(x, y, "+r")
 
     def step(self, action, override_next_spacial_info=None):
         """
             Note:
-                
+                this is where all the noise (action noise, observation noise) is added
         """
-        self.prev_action_spin     = self.action_spin
-        self.prev_action_velocity = self.action_velocity
-        self.action_velocity, self.action_spin = action
+        self.prev_relative_spin     = self.relative_spin
+        self.prev_relative_velocity = self.relative_velocity
+        self.relative_velocity, self.relative_spin = action
         
         # 
         # logging and counter-increments
         # 
         if self.save_data and self.trajectory_file is not None:
-            self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_velocity}, {self.action_spin}, {self.is_episode_start}\n")
+            self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.relative_velocity}, {self.relative_spin}, {self.is_episode_start}\n")
         self.global_timestep += 1
         self.episode_timestep += 1
         self.episode_steps = self.episode_steps + 1
@@ -352,8 +360,8 @@ class WarthogEnv(gym.Env):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = override_next_spacial_info
         else:
-            velocity_action = self.action_velocity
-            spin_action     = self.action_spin
+            velocity_action = self.relative_velocity
+            spin_action     = self.relative_spin
             
             # 
             # ADVERSITY
@@ -383,8 +391,8 @@ class WarthogEnv(gym.Env):
             # 
             self.spacial_info = WarthogEnv.generate_next_spacial_info(
                 old_spacial_info=WarthogEnv.SpacialInformation(self.spacial_info),
-                velocity_action=velocity_action + velocity_noise,
-                spin_action=spin_action + spin_noise,
+                relative_velocity=velocity_action + velocity_noise,
+                relative_spin=spin_action + spin_noise,
                 action_duration=self.action_duration,
             )
         
@@ -460,11 +468,11 @@ class WarthogEnv(gym.Env):
             running_reward = crosstrack_reward * velocity_reward * angle_reward
             
             # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
-            running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(self.action_velocity - self.prev_action_velocity)
-            running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(self.action_spin - self.prev_action_spin)
+            running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(self.relative_velocity - self.prev_relative_velocity)
+            running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(self.relative_spin - self.prev_relative_spin)
             # direct energy consumption
-            running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(self.action_velocity)
-            running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(self.action_spin)
+            running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(self.relative_velocity)
+            running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(self.relative_spin)
             
             self.reward = running_reward
             
@@ -579,7 +587,7 @@ class WarthogEnv(gym.Env):
             facecolor="blue",
         )
         self.text.remove()
-        omega_reward = -2 * math.fabs(self.action_spin)
+        omega_reward = -2 * math.fabs(self.relative_spin)
         self.text = self.ax.text(
             self.spacial_info.x + 1,
             self.spacial_info.y + 2,

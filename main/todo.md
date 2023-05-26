@@ -1,4 +1,6 @@
 - figure out how the Experimental approach is outperforming the optimal when noise is added
+    - check the velocity/spin units (they get scaled)
+    - check if the prev_relative_velocity is effected by performing more granular updates
     - figure out why the prefect answer has a non-zero loss
         - map the design
 
