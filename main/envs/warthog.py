@@ -18,8 +18,6 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
-WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
-
 class WarthogEnv(gym.Env):
     random_start_position_offset = config.simulator.random_start_position_offset
     random_start_angle_offset    = config.simulator.random_start_angle_offset
@@ -36,8 +34,42 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
+    # 
+    # support classes (mostly wrappers around lists to make debugging easier)
+    # 
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", "timestep" ])
     ReactionClass = create_named_list_class([ "velocity", "spin", "observation" ])
+    WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
+    class Waypoint(numpy.ndarray):
+        keys = [ "x", "y", "angle", "velocity" ]
+        
+        def __new__(cls, data):
+            # note: https://stackoverflow.com/questions/7342637/how-to-subclass-a-subclass-of-numpy-ndarray?rq=4
+            return numpy.asarray(data).view(cls)
+            
+        @property
+        def x(self): return self[0]
+        @x.setter
+        def x(self, value): self[0] = value
+        
+        @property
+        def y(self): return self[1]
+        @y.setter
+        def y(self, value): self[1] = value
+        
+        @property
+        def angle(self): return self[2]
+        @angle.setter
+        def angle(self, value): self[2] = value
+        
+        @property
+        def velocity(self): return self[3]
+        @velocity.setter
+        def velocity(self, value): self[3] = value
+        
+        def __repr__(self):
+            return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''
+
     class ObservationClass:
         def __init__(self, values=None):
             self.timestep = None
@@ -51,10 +83,10 @@ class WarthogEnv(gym.Env):
                 self.velocity = values.pop(-1)
                 while len(values) > 0:
                     waypoint_gap = []
-                    for index in range(len(WaypointGap.names_to_index)):
+                    for index in range(len(WarthogEnv.WaypointGap.names_to_index)):
                         waypoint_gap.append(values.pop(-1))
                     self.waypoint_gaps.append(
-                        WaypointGap(
+                        WarthogEnv.WaypointGap(
                             reversed(waypoint_gap)
                         )
                     )
@@ -169,6 +201,43 @@ class WarthogEnv(gym.Env):
         
         self.reset()
     
+    @staticmethod
+    def generate_observation(remaining_waypoints, current_spacial_info):
+        original_velocity = current_spacial_info.velocity
+        original_spin     = current_spacial_info.spin
+        
+        observation = []
+        closest_index, closest_distance = WarthogEnv.get_closest(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
+        for horizon_index in range(0, config.simulator.horizon):
+            waypoint_index = horizon_index + closest_index
+            if waypoint_index < len(remaining_waypoints):
+                waypoint = remaining_waypoints[waypoint_index]
+                
+                x_diff = waypoint.x - current_spacial_info.x
+                y_diff = waypoint.y - current_spacial_info.y
+                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+                current_angle       = zero_to_2pi(current_spacial_info.angle)
+                
+                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
+                gap_of_velocity                    = waypoint.velocity - original_velocity
+                
+                observation.append(gap_of_distance)
+                observation.append(gap_of_angle_directly_towards_next)
+                observation.append(gap_of_desired_angle_at_next)
+                observation.append(gap_of_velocity)
+            else:
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
+        
+        observation.append(original_velocity)
+        observation.append(original_spin)
+        observation = WarthogEnv.ObservationClass(observation+[current_spacial_info.timestep])
+        return observation
+    
     @property
     def number_of_waypoints(self):
         return len(self.waypoints_list)
@@ -255,45 +324,13 @@ class WarthogEnv(gym.Env):
                 break
         return closest_index, closest_distance
 
-    @staticmethod
-    def generate_observation(remaining_waypoints, current_spacial_info):
-        original_velocity = current_spacial_info.velocity
-        original_spin     = current_spacial_info.spin
-        
-        observation = []
-        closest_index, closest_distance = WarthogEnv.get_closest(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
-        for horizon_index in range(0, config.simulator.horizon):
-            waypoint_index = horizon_index + closest_index
-            if waypoint_index < len(remaining_waypoints):
-                waypoint = remaining_waypoints[waypoint_index]
-                
-                x_diff = waypoint.x - current_spacial_info.x
-                y_diff = waypoint.y - current_spacial_info.y
-                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
-                current_angle       = zero_to_2pi(current_spacial_info.angle)
-                
-                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
-                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
-                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
-                gap_of_velocity                    = waypoint.velocity - original_velocity
-                
-                observation.append(gap_of_distance)
-                observation.append(gap_of_angle_directly_towards_next)
-                observation.append(gap_of_desired_angle_at_next)
-                observation.append(gap_of_velocity)
-            else:
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
-        
-        observation.append(original_velocity)
-        observation.append(original_spin)
-        observation = WarthogEnv.ObservationClass(observation+[current_spacial_info.timestep])
-        return observation
-
+    
 
     def step(self, action, override_next_spacial_info=None):
+        """
+            Note:
+                
+        """
         self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
         self.action_velocity, self.action_spin = action
         
@@ -355,7 +392,7 @@ class WarthogEnv(gym.Env):
         # 
         if True:
             # 
-            # add positional noise
+            # add spacial noise
             # 
             x_noise        = 0
             y_noise        = 0
@@ -562,13 +599,12 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.flush_events()
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
-
     def _read_waypoint_file_path(self, filename):
         comments, column_names, rows = Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True)
         for row in rows:
             self.desired_velocities.append(row.velocity)
             self.waypoints_list.append(
-                Waypoint([row.x, row.y, row.angle, row.velocity])
+                WarthogEnv.Waypoint([row.x, row.y, row.angle, row.velocity])
             )
         
         index = 0
@@ -584,36 +620,3 @@ class WarthogEnv(gym.Env):
         assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
         final_waypoint = self.waypoints_list[index + 1]
         final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
-
-
-def Waypoint(a_list):
-    waypoint_entry = WaypointEntry(len(a_list))
-    for index, each in enumerate(a_list):
-        waypoint_entry[index] = each
-    return waypoint_entry
-
-class WaypointEntry(numpy.ndarray):
-    keys = [ "x", "y", "angle", "velocity" ]
-    
-    @property
-    def x(self): return self[0]
-    @x.setter
-    def x(self, value): self[0] = value
-    
-    @property
-    def y(self): return self[1]
-    @y.setter
-    def y(self, value): self[1] = value
-    
-    @property
-    def angle(self): return self[2]
-    @angle.setter
-    def angle(self, value): self[2] = value
-    
-    @property
-    def velocity(self): return self[3]
-    @velocity.setter
-    def velocity(self, value): self[3] = value
-    
-    def __repr__(self):
-        return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''

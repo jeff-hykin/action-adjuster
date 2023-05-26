@@ -16,7 +16,7 @@ from __dependencies__.trivial_torch_tools import to_tensor
 from __dependencies__.super_hash import super_hash
 
 from config import config, path_to, debug
-from envs.warthog import WarthogEnv, WaypointEntry
+from envs.warthog import WarthogEnv
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 from generic_tools.numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
