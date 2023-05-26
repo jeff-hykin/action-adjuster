@@ -331,7 +331,8 @@ class WarthogEnv(gym.Env):
             Note:
                 
         """
-        self.prev_action_spin, self.prev_action_velocity = self.action_velocity, self.action_spin
+        self.prev_action_spin     = self.action_spin
+        self.prev_action_velocity = self.action_velocity
         self.action_velocity, self.action_spin = action
         
         # 
