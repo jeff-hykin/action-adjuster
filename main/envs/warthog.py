@@ -38,7 +38,7 @@ class WarthogEnv(gym.Env):
     # support classes (mostly wrappers around lists to make debugging easier)
     # 
     SpacialInformation = create_named_list_class([ "x", "y", "angle", "velocity", "spin", "timestep" ])
-    ReactionClass = create_named_list_class([ "velocity", "spin", "observation" ])
+    ReactionClass = create_named_list_class([ "relative_velocity", "relative_spin", "observation" ])
     WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
     class Waypoint(numpy.ndarray):
         keys = [ "x", "y", "angle", "velocity" ]
@@ -74,13 +74,13 @@ class WarthogEnv(gym.Env):
         def __init__(self, values=None):
             self.timestep = None
             self.spin     = None
-            self.velocity = None
+            self.absolute_velocity = None
             self.waypoint_gaps = []
             if bb.is_iterable(values):
                 values = list(values)
                 self.timestep = values.pop(-1)
                 self.spin     = values.pop(-1)
-                self.velocity = values.pop(-1)
+                self.absolute_velocity = values.pop(-1)
                 while len(values) > 0:
                     waypoint_gap = []
                     for index in range(len(WarthogEnv.WaypointGap.names_to_index)):
@@ -101,7 +101,7 @@ class WarthogEnv(gym.Env):
             for each_waypoint_gap in self.waypoint_gaps:
                 for each_value in each_waypoint_gap:
                     output.append(each_value)
-            output.append(self.velocity)
+            output.append(self.absolute_velocity)
             output.append(self.spin)
             output.append(self.timestep)
             return output
@@ -119,7 +119,7 @@ class WarthogEnv(gym.Env):
                 Note:
                     this function is used in the hash method, so the number of decimals printed does matter significantly for determining equality
             """
-            return f"""Observation(timestep={self.timestep}, velocity={f"{self.velocity:0.7f}".ljust(9,"0")}, spin={f"{self.spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
+            return f"""Observation(timestep={self.timestep}, absolute_velocity={f"{self.absolute_velocity:0.7f}".ljust(9,"0")}, absolute_spin={f"{self.spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
     
     def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
         super(WarthogEnv, self).__init__()
@@ -322,22 +322,15 @@ class WarthogEnv(gym.Env):
                 break
         return closest_index, closest_distance
     
-    @property
-    def number_of_waypoints(self):
-        return len(self.waypoints_list)
-    
-    def plot_waypoints(self):
-        x = []
-        y = []
-        for each_waypoint in self.waypoints_list:
-            x.append(each_waypoint.x)
-            y.append(each_waypoint.y)
-        self.ax.plot(x, y, "+r")
-
     def step(self, action, override_next_spacial_info=None):
         """
             Note:
-                this is where all the noise (action noise, observation noise) is added
+                this is where all the noise (action noise, observation noise) is added.
+                Note: noise is added before the values are scaled, which might amplify noise.
+                
+                `override_next_spacial_info` is currently only used with ROS runtime. This
+                allows for most of the code to stay as-is while throwing away simulated data
+                in favor of real-world data.
         """
         self.prev_relative_spin     = self.relative_spin
         self.prev_relative_velocity = self.relative_velocity
@@ -360,15 +353,15 @@ class WarthogEnv(gym.Env):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = override_next_spacial_info
         else:
-            velocity_action = self.relative_velocity
-            spin_action     = self.relative_spin
+            relative_velocity_action = self.relative_velocity
+            relative_spin_action     = self.relative_spin
             
             # 
             # ADVERSITY
             # 
             # for now, just additive adversity
-            velocity_action += config.simulator.velocity_offset
-            spin_action     += config.simulator.spin_offset
+            relative_velocity_action += config.simulator.velocity_offset
+            relative_spin_action     += config.simulator.spin_offset
         
             # 
             # add noise
@@ -377,22 +370,22 @@ class WarthogEnv(gym.Env):
             spin_noise     = 0
             if config.simulator.use_gaussian_action_noise:
                 import random
-                velocity_noise = velocity_action - random.normalvariate(mu=velocity_action, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
-                spin_noise     = spin_action     - random.normalvariate(mu=spin_action    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
+                velocity_noise = relative_velocity_action - random.normalvariate(mu=relative_velocity_action, sigma=config.simulator.gaussian_action_noise.relative_velocity_action.standard_deviation, )
+                spin_noise     = relative_spin_action     - random.normalvariate(mu=relative_spin_action    , sigma=config.simulator.gaussian_action_noise.relative_spin_action.standard_deviation    , )
             
             # 
             # action delay
             # 
-            self.action_buffer.append((velocity_action, spin_action))
-            velocity_action, spin_action = self.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
+            self.action_buffer.append((relative_velocity_action, relative_spin_action))
+            relative_velocity_action, relative_spin_action = self.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
                 
             # 
             # apply action
             # 
             self.spacial_info = WarthogEnv.generate_next_spacial_info(
                 old_spacial_info=WarthogEnv.SpacialInformation(self.spacial_info),
-                relative_velocity=velocity_action + velocity_noise,
-                relative_spin=spin_action + spin_noise,
+                relative_velocity=relative_velocity_action + velocity_noise,
+                relative_spin=relative_spin_action + spin_noise,
                 action_duration=self.action_duration,
             )
         
@@ -607,6 +600,18 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
+    
+    @property
+    def number_of_waypoints(self):
+        return len(self.waypoints_list)
+    
+    def plot_waypoints(self):
+        x = []
+        y = []
+        for each_waypoint in self.waypoints_list:
+            x.append(each_waypoint.x)
+            y.append(each_waypoint.y)
+        self.ax.plot(x, y, "+r")
 
     def _read_waypoint_file_path(self, filename):
         comments, column_names, rows = Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True)

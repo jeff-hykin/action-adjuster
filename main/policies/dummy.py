@@ -6,6 +6,6 @@ from statistics import mean as average
 from random import random, sample, choices
 
 def policy(observation):
-    velocity_action = config.dummy_policy.velocity
-    spin_action     = config.dummy_policy.spin
+    velocity_action = config.dummy_policy.relative_velocity
+    spin_action     = config.dummy_policy.relative_spin
     return velocity_action, spin_action
