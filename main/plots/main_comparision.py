@@ -16,19 +16,19 @@ experiment_name = "NOISE=MEDIUM,ADVERSITY=STRONG"
 
 groups = dict(
     no_adjuster=dict(
-        folder_name_must_include="5.@NO_ADJUSTER",
+        folder_name_must_include="6.@NO_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
-        folder_name_must_include="5.@NORMAL_ADJUSTER",
+        folder_name_must_include="6.@NORMAL_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
-        folder_name_must_include="5.@PERFECT_ADJUSTER",
+        folder_name_must_include="6.@PERFECT_ADJUSTER",
         summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],

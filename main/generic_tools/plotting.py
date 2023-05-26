@@ -143,6 +143,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
     }
     df = pd.DataFrame(data)
     fig = px.line(df, x=x_axis_name, y=y_axis_name, color="Name", title=title)
+    print(f'''fig.data = {fig.data}''')
     for line_index, line_info in enumerate(args):
         if line_info.get("color", None):
             fig.data[line_index].line.color = line_info["color"]
