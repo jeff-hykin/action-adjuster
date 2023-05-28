@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/cool_cache.git
 	branch = master
-	commit = 2948acaf6ff3f48f396bbdf9dec0f5ec6c422f3b
-	parent = ff402c0babee1b09c1b2208aff8adedd93132e58
+	commit = 476c18b0c02ee7a1291e3f4edfc9340bd5b3ac23
+	parent = 8b3f92de2fbacf5731369379a999a15e7f6c084f
 	method = merge
 	cmdver = 0.4.1

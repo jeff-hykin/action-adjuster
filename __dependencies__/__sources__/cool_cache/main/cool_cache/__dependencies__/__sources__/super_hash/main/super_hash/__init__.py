@@ -149,7 +149,7 @@ class function_hashers:
             except TypeError as error:
                 continue
             instruction_hashes.append(function_hashers.instructions_to_hash(instructions))
-            child_names = get_referenced_function_names(instructions)
+            child_names = function_hashers.get_referenced_function_names(instructions)
             for child_name in child_names:
                 if child_name not in closed_set:
                     frontier.add(child_name)
