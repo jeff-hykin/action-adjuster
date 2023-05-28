@@ -3,6 +3,8 @@
     - check if the prev_relative_velocity is effected by performing more granular updates
     - figure out why the prefect answer has a non-zero loss
         - map the design
+- check if 0.1 loss with noise
+- try using 0.001 for action duration
 
 - figure how much noise it can handle and where
 - zero-out the intial point

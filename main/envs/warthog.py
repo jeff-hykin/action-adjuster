@@ -70,17 +70,17 @@ class WarthogEnv(gym.Env):
         def __repr__(self):
             return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''
 
-    class ObservationClass:
+    class Observation:
         def __init__(self, values=None):
             self.timestep = None
-            self.spin     = None
             self.absolute_velocity = None
+            self.spin     = None
             self.waypoint_gaps = []
             if bb.is_iterable(values):
                 values = list(values)
                 self.timestep = values.pop(-1)
-                self.spin     = values.pop(-1)
                 self.absolute_velocity = values.pop(-1)
+                self.spin     = values.pop(-1)
                 while len(values) > 0:
                     waypoint_gap = []
                     for index in range(len(WarthogEnv.WaypointGap.names_to_index)):
@@ -91,7 +91,7 @@ class WarthogEnv(gym.Env):
                         )
                     )
             else:
-                raise Exception(f'''ObservationClass() got non-iterable argument''')
+                raise Exception(f'''Observation() got non-iterable argument''')
         
         def __iter__(self):
             return iter(self.to_numpy())
@@ -243,20 +243,20 @@ class WarthogEnv(gym.Env):
         
         observation.append(original_velocity)
         observation.append(original_spin)
-        observation = WarthogEnv.ObservationClass(observation+[current_spacial_info.timestep])
+        observation = WarthogEnv.Observation(observation+[current_spacial_info.timestep])
         return observation
     
     @staticmethod
-    def generate_next_spacial_info(old_spacial_info, relative_velocity, relative_action, action_duration, debug=False):
+    def generate_next_spacial_info(old_spacial_info, relative_velocity, relative_spin, action_duration, debug=False):
         '''
             Note:
                 This function should also be fully deterministic
             Inputs:
                 relative_velocity: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
-                relative_action: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
+                relative_spin: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
         '''
         absolute_velocity = np.clip(relative_velocity,  0, 1) * config.vehicle.controller_max_velocity
-        absolute_spin     = np.clip(relative_action,   -1, 1) * config.vehicle.controller_max_spin
+        absolute_spin     = np.clip(relative_spin,   -1, 1) * config.vehicle.controller_max_spin
         
         next_spacial_info          = WarthogEnv.SpacialInformation(old_spacial_info)
         next_spacial_info.timestep = old_spacial_info.timestep + 1
