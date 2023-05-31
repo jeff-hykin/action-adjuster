@@ -63,7 +63,7 @@
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
                 max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
-                max_expected_angle_error:       1.047 # radians (1.047 = 60 degrees)
+                max_expected_angle_error:       1.047 # scaled by the vehicle's controller max angle, after scaling the units are radians
                 velocity_jerk_cost_coefficient: 1
                 spin_jerk_cost_coefficient:     0.5
                 direct_velocity_cost:           0 # no penalty for going fast
