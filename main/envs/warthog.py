@@ -322,6 +322,39 @@ class WarthogEnv(gym.Env):
                 break
         return closest_index, closest_distance
     
+    @staticmethod
+    def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint,):
+        x_diff     = closest_waypoint.x - spacial_info.x
+        y_diff     = closest_waypoint.y - spacial_info.y
+        angle_diff = get_angle_from_origin(x_diff, y_diff)
+        yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
+
+        velocity_error   = closest_waypoint.velocity - spacial_info.velocity
+        crosstrack_error = closest_distance * math.sin(yaw_error)
+        phi_error        = pi_to_pi(closest_waypoint.angle - spacial_info.angle)
+
+
+        max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
+        max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
+        max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
+
+        # base rewards
+        crosstrack_reward = max_expected_crosstrack_error - math.fabs(crosstrack_error)
+        velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
+        angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
+
+        # combine
+        running_reward = crosstrack_reward * velocity_reward * angle_reward
+
+        # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
+        running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(relative_velocity - prev_relative_velocity)
+        running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(relative_spin - prev_relative_spin)
+        # direct energy consumption
+        running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(relative_velocity)
+        running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
+
+        return running_reward, velocity_error, crosstrack_error, phi_error
+    
     def step(self, action, override_next_spacial_info=None):
         """
             Note:
@@ -438,36 +471,15 @@ class WarthogEnv(gym.Env):
         # Reward Calculation (uses noiseless data as input)
         # 
         if True:
-            x_diff     = closest_waypoint.x - self.spacial_info.x
-            y_diff     = closest_waypoint.y - self.spacial_info.y
-            angle_diff = get_angle_from_origin(x_diff, y_diff)
-            yaw_error  = pi_to_pi(angle_diff - self.spacial_info.angle)
-            
-            self.velocity_error   = closest_waypoint.velocity - self.spacial_info.velocity
-            self.crosstrack_error = self.closest_distance * math.sin(yaw_error)
-            self.phi_error        = pi_to_pi(closest_waypoint.angle - self.spacial_info.angle)
-            
-            
-            max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
-            max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
-            max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
-            
-            # base rewards
-            crosstrack_reward = max_expected_crosstrack_error - math.fabs(self.crosstrack_error)
-            velocity_reward   = max_expected_velocity_error   - math.fabs(self.velocity_error)
-            angle_reward      = max_expected_angle_error      - math.fabs(self.phi_error)
-            
-            # combine
-            running_reward = crosstrack_reward * velocity_reward * angle_reward
-            
-            # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
-            running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(self.relative_velocity - self.prev_relative_velocity)
-            running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(self.relative_spin - self.prev_relative_spin)
-            # direct energy consumption
-            running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(self.relative_velocity)
-            running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(self.relative_spin)
-            
-            self.reward = running_reward
+            self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = original_reward_function(
+                spacial_info=self.spacial_info,
+                closest_distance=self.closest_distance,
+                relative_velocity=self.relative_velocity,
+                prev_relative_velocity=self.prev_relative_velocity,
+                relative_spin=self.relative_spin,
+                prev_relative_spin=self.prev_relative_spin,
+                closest_waypoint=closest_waypoint,
+            )
             
             # 
             # velocity caps
