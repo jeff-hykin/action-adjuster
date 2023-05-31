@@ -471,7 +471,7 @@ class WarthogEnv(gym.Env):
         # Reward Calculation (uses noiseless data as input)
         # 
         if True:
-            self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = original_reward_function(
+            self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.original_reward_function(
                 spacial_info=self.spacial_info,
                 closest_distance=self.closest_distance,
                 relative_velocity=self.relative_velocity,
