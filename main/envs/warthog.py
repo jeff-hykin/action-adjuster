@@ -15,6 +15,7 @@ from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, p
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
+bb.Warnings.disable()
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
@@ -361,17 +362,17 @@ class WarthogEnv(gym.Env):
         running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
         
         if config.reward_parameters.velocity_caps_enabled:
-        abs_velocity_error = math.fabs(velocity_error)
-        for min_waypoint_speed, max_error_allowed in config.reward_parameters.velocity_caps.items():
-            # convert %'s to vehicle-specific values
-            min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
-            max_error_allowed  = float(max_error_allowed.replace( "%", ""))/100 * config.vehicle.controller_max_velocity
-            # if rule-is-active
-            if closest_waypoint.velocity >= min_waypoint_speed: # old code: self.waypoints_list[k][3] >= 2.5
-                # if rule is broken, no reward
-                if abs_velocity_error > max_error_allowed: # old code: math.fabs(self.vel_error) > 1.5
-                    running_reward = 0
-                    break
+            abs_velocity_error = math.fabs(velocity_error)
+            for min_waypoint_speed, max_error_allowed in config.reward_parameters.velocity_caps.items():
+                # convert %'s to vehicle-specific values
+                min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
+                max_error_allowed  = float(max_error_allowed.replace( "%", ""))/100 * config.vehicle.controller_max_velocity
+                # if rule-is-active
+                if closest_waypoint.velocity >= min_waypoint_speed: # old code: self.waypoints_list[k][3] >= 2.5
+                    # if rule is broken, no reward
+                    if abs_velocity_error > max_error_allowed: # old code: math.fabs(self.vel_error) > 1.5
+                        running_reward = 0
+                        break
         
         return running_reward, velocity_error, crosstrack_error, phi_error
     
@@ -402,7 +403,7 @@ class WarthogEnv(gym.Env):
         velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
         angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
         
-        advanced_reward = one_to crosstrack_reward * velocity_reward * angle_reward
+        advanced_reward = crosstrack_reward * velocity_reward * angle_reward
 
         # combine (only use advanced reward when close to point; e.g. proportionally scale advanced reward with closeness)
         running_reward += one_to_zero_distance_penalty * advanced_reward
@@ -464,8 +465,8 @@ class WarthogEnv(gym.Env):
             spin_noise     = 0
             if config.simulator.use_gaussian_action_noise:
                 import random
-                velocity_noise = relative_velocity_action - random.normalvariate(mu=relative_velocity_action, sigma=config.simulator.gaussian_action_noise.relative_velocity_action.standard_deviation, )
-                spin_noise     = relative_spin_action     - random.normalvariate(mu=relative_spin_action    , sigma=config.simulator.gaussian_action_noise.relative_spin_action.standard_deviation    , )
+                velocity_noise = relative_velocity_action - random.normalvariate(mu=relative_velocity_action, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+                spin_noise     = relative_spin_action     - random.normalvariate(mu=relative_spin_action    , sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
             
             # 
             # action delay
