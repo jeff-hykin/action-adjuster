@@ -128,7 +128,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
     #     print(stringify(args))
     
     if len(args) == 0:
-        raise Exception(f'''graph_lines(title={title}, x_axis_name={x_axis_name}, y_axis_name={y_axis_name}) was called without any normal args (e.g. no lines/line-data given)''')
+        raise Exception(f'''\n\ngraph_lines(\n    title={title},\n    x_axis_name={x_axis_name},\n    y_axis_name={y_axis_name}\n)\nwas called without any normal args (e.g. no lines/line-data given)''')
     
     import pandas as pd
     import plotly.express as px
