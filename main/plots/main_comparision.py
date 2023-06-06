@@ -16,20 +16,20 @@ experiment_name = "NOISE=MEDIUM,ADVERSITY=STRONG"
 
 groups = dict(
     no_adjuster=dict(
-        folder_name_must_include="6.@NO_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
+        folder_name_must_include="7.@NO_ADJUSTER",
+        summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
-        folder_name_must_include="6.@NORMAL_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
+        folder_name_must_include="7.@NORMAL_ADJUSTER",
+        summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
-        folder_name_must_include="6.@PERFECT_ADJUSTER",
-        summary_filter=lambda data: "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
+        folder_name_must_include="7.@PERFECT_ADJUSTER",
+        summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],
     ),

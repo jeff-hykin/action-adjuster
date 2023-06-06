@@ -474,8 +474,8 @@ class ActionAdjusterSolver:
                     )
                     next_spacial_info = generate_next_spacial_info(
                         old_spacial_info=current_spacial_info,
-                        velocity_action=velocity_action,
-                        spin_action=spin_action,
+                        relative_velocity=velocity_action,
+                        relative_spin=spin_action,
                         action_duration=action_duration,
                     )
                     next_observation = generate_next_observation(
