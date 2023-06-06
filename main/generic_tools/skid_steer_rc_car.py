@@ -212,6 +212,11 @@ class RcCarMotors:
             each.ChangeFrequency(self._frequency)
 
 car = RcCarMotors(
+    front_right_wheel_direction_pin=36, # GPIO16
+    front_right_wheel_speed_pin=32,     # GPIO12
+    front_left_wheel_direction_pin=40,  # GPIO21
+    front_left_wheel_speed_pin=38,      # GPIO20 
+    
     back_right_wheel_direction_pin=31, # GPIO6
     back_right_wheel_speed_pin=33,     # GPIO13
     back_left_wheel_direction_pin=35,  # GPIO19
