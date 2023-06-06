@@ -68,6 +68,15 @@ class RcCarMotors:
         self.back_right_wheel_direction_pin  = back_right_wheel_direction_pin
         self._frequency = frequency # at least I think this is frequency, help(GPIO.PWM) isn't very helpful
         
+        # sanity check on arguments
+        for each_name, each_speed_pin, each_direction_pin in [
+            ("front_left_wheel", self.front_left_wheel_speed_pin,  self.front_left_wheel_direction_pin ),
+            ("front_right_wheel", self.front_right_wheel_speed_pin, self.front_right_wheel_direction_pin),
+            ("back_left_wheel", self.back_left_wheel_speed_pin,   self.back_left_wheel_direction_pin  ),
+            ("back_right_wheel", self.back_right_wheel_speed_pin,  self.back_right_wheel_direction_pin ),
+        ]:
+            assert (each_speed_pin != None) == (each_direction_pin != None), f"When creating a {self.__class__.__name__}(), looks like for {each_name}, you provided either a speed pin or a direction pin, but didn't provide both (and I need both)"
+        
         import RPi.GPIO as GPIO
         self.GPIO = GPIO
         GPIO.setmode(GPIO.BOARD)
@@ -115,7 +124,7 @@ class RcCarMotors:
     # 
     # wheels
     # 
-    def _velocity_to_direction_and_speed(self, velocity):
+    def _velocity_to_pinout_direction_and_speed(self, velocity):
         direction = self.GPIO.HIGH if velocity >= 0 else self.GPIO.LOW
         speed = abs(round(velocity))
         return direction, speed
@@ -131,7 +140,9 @@ class RcCarMotors:
                 -100 being backwards at max velocity
         """
         self._front_left_wheel_velocity = value
-        direction, speed = self._velocity_to_direction_and_speed(value)
+        if self.front_left_wheel_direction_pin == None:
+            return
+        direction, speed = self._velocity_to_pinout_direction_and_speed(value)
         self.GPIO.output(self.front_left_wheel_direction_pin, direction)
         self.front_left_wheel_pwm.ChangeDutyCycle(speed)
     
@@ -146,7 +157,9 @@ class RcCarMotors:
                 -100 being backwards at max velocity
         """
         self._front_right_wheel_velocity = value
-        direction, speed = self._velocity_to_direction_and_speed(value)
+        if self.front_right_wheel_direction_pin == None:
+            return
+        direction, speed = self._velocity_to_pinout_direction_and_speed(value)
         self.GPIO.output(self.front_right_wheel_direction_pin, direction)
         self.front_right_wheel_pwm.ChangeDutyCycle(speed)
     
@@ -161,7 +174,9 @@ class RcCarMotors:
                 -100 being backwards at max velocity
         """
         self._back_left_wheel_velocity = value
-        direction, speed = self._velocity_to_direction_and_speed(value)
+        if self.back_left_wheel_direction_pin == None:
+            return
+        direction, speed = self._velocity_to_pinout_direction_and_speed(value)
         self.GPIO.output(self.back_left_wheel_direction_pin, direction)
         self.back_left_wheel_pwm.ChangeDutyCycle(speed)
     
@@ -176,7 +191,9 @@ class RcCarMotors:
                 -100 being backwards at max velocity
         """
         self._back_right_wheel_velocity = value
-        direction, speed = self._velocity_to_direction_and_speed(value)
+        if self.back_right_wheel_direction_pin == None:
+            return
+        direction, speed = self._velocity_to_pinout_direction_and_speed(value)
         self.GPIO.output(self.back_right_wheel_direction_pin, direction)
         self.back_right_wheel_pwm.ChangeDutyCycle(speed)
         
