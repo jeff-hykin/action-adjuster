@@ -53,7 +53,7 @@ parent_data_snapshot: {
                 ]
             },
             "horizon": 10,
-            "max_episode_steps": 700,
+            "max_number_of_timesteps_per_episode": 700,
             "number_of_trajectories": 100,
             "action_duration": 0.06,
             "allow_cut_short_episode": false,

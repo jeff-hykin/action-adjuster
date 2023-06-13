@@ -50,7 +50,7 @@
                     high: 1000
                     shape: [ 42 ]
                 horizon: 10 # number of waypoints in the observation
-                max_episode_steps: 700
+                max_number_of_timesteps_per_episode: 700
                 number_of_trajectories: 100
                 action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
                 allow_cut_short_episode: False
