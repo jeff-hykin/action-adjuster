@@ -1,3 +1,7 @@
+- done:
+    - fixed off by one problems in projection
+    - fixed reward function using non-mutated action
+
 - figure out how the Experimental approach is outperforming the optimal when noise is added
     - check the velocity/spin units (they get scaled)
     - check if the prev_relative_velocity is effected by performing more granular updates

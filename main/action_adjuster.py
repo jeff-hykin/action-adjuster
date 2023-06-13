@@ -4,16 +4,17 @@ from time import sleep
 import json
 import math
 import threading
-from multiprocessing import Manager
+from collections import namedtuple
 
 import torch                                                                    # pip install torch
 import numpy                                                                    # pip install numpy
 
 import __dependencies__.blissful_basics as bb
-from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict
+from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class
 from __dependencies__.elegant_events import Server
 from __dependencies__.trivial_torch_tools import to_tensor
 from __dependencies__.super_hash import super_hash
+from __dependencies__.rigorous_recorder import RecordKeeper
 
 from config import config, path_to, debug
 from envs.warthog import WarthogEnv
@@ -44,9 +45,15 @@ perfect_transform_input = perfect_answer[0:2,:]
 # 
 # models
 # 
-generate_next_spacial_info = WarthogEnv.generate_next_spacial_info
-generate_next_observation  = WarthogEnv.generate_observation
-shared_thread_data = None
+shared_thread_data = {}
+    # ^ will contain
+        # "timestep": an int that is always the number of the latest timestep
+        # "transform_json"
+        # "timestep_data"
+        # "records_to_log"
+
+time_slowdown = 0.5 # the bigger this is, the more iterations the solver will complete before the episode is over
+                    # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 
 class Transform:
     inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
@@ -118,183 +125,130 @@ if config.action_adjuster.default_to_perfect:
     Transform.inital = perfect_transform_input
 
 # TODO: replace this with a normalization method
-spacial_coefficients = WarthogEnv.SpacialInformation([
+spacial_coefficients = WarthogEnv.SpacialInformation(
     100, # x
     100, # y
     1, # angle
     0.3, # velocity # arbitraryly picked value 
     0.3, # spin # arbitraryly picked value 
-])
+    0,
+)
+
 # this class does a little data organization, then sends data to the solver, and receives answers from the solver
 class ActionAdjuster:
     self = None
     def __init__(self, policy, waypoints_list, recorder=None):
         ActionAdjuster.self = self
-        self.original_policy = policy
-        self.policy = lambda *args, **kwargs: self.original_policy(*args, **kwargs)
+        self.waypoints_list = waypoints_list
+        self.policy = policy
         self.transform = Transform()
-        self.should_update = countdown(config.action_adjuster.update_frequency)
-        self.recorder = recorder            
-        self.timestep = 0                   
-        self.buffer_for_actual_spacial_values = []
-        self.buffer_for_input_data            = []
-        self.incoming_records_to_log          = []
-        
-        if self.recorder == None:
-            from __dependencies__.rigorous_recorder import RecordKeeper
-            self.recorder = RecordKeeper()
-        
+        self.canidate_transform    = Transform()
+        self.should_update_solution = countdown(config.action_adjuster.update_frequency)
+        self.actual_spacial_values = []
+        self.stdev = 0.01 # for cmaes
+        self.selected_solutions = set([ self.transform ])
+        self.recorder = recorder if recorder != None else RecordKeeper()
         self.recorder.live_write_to(recorder_path, as_yaml=True)
-        
-        if not config.action_adjuster.use_threading:
-            self.solver = ActionAdjusterSolver(ActionAdjuster.self.policy, waypoints_list)
-        else:
-            self.processor_thread = threading.Thread(
-                target=ActionAdjusterSolver.solver_loop,
-                args=(shared_thread_data, waypoints_list)
-            )
-            self.processor_thread.start()
+        shared_thread_data["timestep"] = 0
+        shared_thread_data["timestep_data"] = []
+        shared_thread_data["records_to_log"] = []
+        self.incoming_records_to_log = []
+        if config.action_adjuster.use_threading:
+            # start the thread
+            threading.Thread(target=ActionAdjusterSolver.solver_loop).start()
     
-    def add_data(self, observation, additional_info):
-        with shared_thread_data.lock:
-            shared_thread_data["timestep"] = self.timestep
-            sleep(0.5)
+    def add_data(self, timestep):
+        shared_thread_data["timestep"] = timestep.index
+        self.recorder.add(timestep=shared_thread_data["timestep"])
+        additional_info = timestep.hidden_info
+        shared_thread_data["timestep_data"].append(
+            # fill in the timestep index and the historic_transform, but otherwise preserve data
+            WarthogEnv.AdditionalInfo(
+                timestep_index=timestep.index,
+                action_duration=additional_info.action_duration,
+                spacial_info=additional_info.spacial_info,
+                spacial_info_with_noise=additional_info.spacial_info_with_noise,
+                observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
+                original_reaction=additional_info.original_reaction,
+                historic_transform=deepcopy(self.transform),
+                mutated_reaction=additional_info.mutated_reaction,
+                next_spacial_info=additional_info.next_spacial_info,
+                next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
+                next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,
+                next_closest_index=additional_info.next_closest_index,
+                reward=additional_info.reward,
+            )
+        )
+        if config.action_adjuster.use_threading:
+            sleep(time_slowdown)
         
-        self.timestep += 1
-        self.recorder.add(timestep=self.timestep)
-        
-        self.buffer_for_input_data.append(dict(
-            historic_transform=deepcopy(self.transform),
-            observation=observation,
-            action=additional_info["action"],
-            additional_info=[
-                additional_info["spacial_info_with_noise"],
-                additional_info["current_waypoint_index"],
-                additional_info["action_duration"],
-            ],
-        ))
-        self.buffer_for_actual_spacial_values.append(additional_info["spacial_info_with_noise"])
-        if self.should_update():
-            self.send_data_to_solver()
-            # run solver each update step
+        if self.should_update_solution():
+            # if not multithreading: run solver manually
             if not config.action_adjuster.use_threading:
-                if self.solver.receive_data_from_main_thread():
-                    self.solver.fit_points()
-                    self.solver.send_data_to_main_thread()
-            self.receive_output_from_solver()
-    
-    def send_data_to_solver(self):
-        # append the new data
-        with shared_thread_data.lock:
-            shared_thread_data["buffer_for_actual_spacial_values"] = shared_thread_data.get("buffer_for_actual_spacial_values", []) + self.buffer_for_actual_spacial_values
-            shared_thread_data["buffer_for_input_data"]            = shared_thread_data.get("buffer_for_input_data",            []) + self.buffer_for_input_data
-        self.buffer_for_actual_spacial_values.clear()
-        self.buffer_for_input_data.clear()
-        
-    def receive_output_from_solver(self):
-        with shared_thread_data.lock:
-            self.incoming_records_to_log += shared_thread_data.get("records_to_log", [])
-            shared_thread_data["records_to_log"] = []
-            self.transform = Transform.from_json(
-                json.loads(shared_thread_data.get("transform_json", json.dumps(self.transform)))
-            )
+                self.fit_points()
+            
+            # pull in any records that need logging
+            self.incoming_records_to_log += shared_thread_data["records_to_log"]
+            shared_thread_data["records_to_log"].clear()
+            
+            # pull in a new solution
+            new_solution = shared_thread_data.get("transform_json", None)
+            if new_solution:
+                self.transform = Transform.from_json(
+                    json.loads(
+                        new_solution
+                    )
+                )
     
     def write_pending_records(self):
         for each in self.incoming_records_to_log:
             self.recorder.commit(additional_info=each)
         self.incoming_records_to_log.clear()
-        
-    
-class ActionAdjusterSolver:
-    @staticmethod
-    def solver_loop(shared_thread_data, waypoints_list):
-        action_adjuster_processor = None
-        while threading.main_thread().is_alive():
-            # 
-            # init
-            # 
-            if not action_adjuster_processor:
-                if ActionAdjuster.self:
-                    action_adjuster_processor = ActionAdjusterSolver(ActionAdjuster.self.policy, waypoints_list)
-                    continue
-                sleep(1)
-                continue
-            
-            # 
-            # actual main loop
-            # 
-            if not action_adjuster_processor.receive_data_from_main_thread(): continue
-            action_adjuster_processor.fit_points()
-            action_adjuster_processor.send_data_to_main_thread()
 
-    def __init__(self, policy, waypoints_list):
-        self.original_policy = policy
-        self.policy = policy
-        self.waypoints_list = waypoints_list
-        self.actual_spacial_values = []
-        self.input_data            = []
-        self.transform             = Transform()
-        self.canidate_transform    = Transform()
-        self.stdev = 0.01
-        self.selected_solutions = set([ self.transform ])
-        self.local_buffer_for_records = []  # only the processor thread should use this attribute
-        self.timestep_of_shared_info = None # only the processor thread should use this attribute
-        
-    def receive_data_from_main_thread(self):
-        existing_data_count = len(self.input_data)
-        with shared_thread_data.lock:
-            self.timestep_of_shared_info = shared_thread_data.get("timestep", 0)
-            self.input_data            += shared_thread_data.get("buffer_for_input_data",            [])
-            self.actual_spacial_values += shared_thread_data.get("buffer_for_actual_spacial_values", [])
-            shared_thread_data["buffer_for_input_data"] = []
-            shared_thread_data["buffer_for_actual_spacial_values"] = []
-        
-        if any(each.x == each.y == 0 for each in self.actual_spacial_values[1:]):
-            import code; code.interact(local={**globals(),**locals()})
-        
-        # if no new data
-        if existing_data_count == len(self.input_data): 
-            sleep(1)
-            return False
-        
-        assert len(self.actual_spacial_values) == len(self.input_data)
-        # 
-        # cap the history size
-        # 
-        if config.action_adjuster.max_history_size < math.inf:
-            if len(self.actual_spacial_values) > config.action_adjuster.max_history_size:
-                self.actual_spacial_values = self.actual_spacial_values[-config.action_adjuster.max_history_size:]
-                self.input_data            = self.input_data[-config.action_adjuster.max_history_size:]
-        
-        return True
-        
-    def send_data_to_main_thread(self):
-        with shared_thread_data.lock:
-            shared_thread_data["records_to_log"] = shared_thread_data.get("records_to_log", []) + self.local_buffer_for_records
-            shared_thread_data["transform_json"] = json.dumps(self.transform)
-        self.local_buffer_for_records.clear()
-        
     def fit_points(self):
+        start_timestep = shared_thread_data["timestep"]
+        timestep_data = shared_thread_data["timestep_data"]
         # no data
-        if len(self.input_data) == 0:
-            return
+        if len(timestep_data) == 0:
+            return 
         
-        # skip the first X entries, because there is no predicted value for the first entry (predictions need source data)
-        real_spacial_values = self.actual_spacial_values[config.action_adjuster.future_projection_length:]
+        # create inputs and predictions
+        correct_answers_for_predictions = timestep_data[config.action_adjuster.future_projection_length:]
+        inputs_for_predictions          = timestep_data[:-config.action_adjuster.future_projection_length]
+        assert len(correct_answers_for_predictions) == len(inputs_for_predictions), "probably an off-by-one error, every prediction should have an input"
+        
         def objective_function(numpy_array):
-            transform = Transform(numpy_array)
-            spacial_projections = []
-            predicted_spacial_values = []
-            for each_input_data, real_spacial_value in zip(self.input_data, real_spacial_values):
+            hypothetical_transform = Transform(numpy_array)
+            next_spacial_projections = []
+            predicted_next_spacial_values = []
+            correct_next_spacial_predictions = tuple(each.next_spacial_info for each in correct_answers_for_predictions)
+            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, original_reaction, historic_transform, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
+                # each_additional_info_object.timestep_index
+                # each_additional_info_object.spacial_info
+                # each_additional_info_object.spacial_info_with_noise
+                # each_additional_info_object.observation_from_spacial_info_with_noise
+                # each_additional_info_object.original_reaction
+                # each_additional_info_object.historic_transform
+                # each_additional_info_object.mutated_reaction
+                # each_additional_info_object.next_spacial_info
+                # each_additional_info_object.next_spacial_info_spacial_info_with_noise
+                # each_additional_info_object.next_observation_from_spacial_info_with_noise
+                # each_additional_info_object.reward
                 action_expectation, spacial_expectation, observation_expectation = self.project(
-                    transform=transform,
-                    real_transformation=False,
                     policy=self.policy,
-                    _actual=real_spacial_value,
-                    **each_input_data,
+                    transform=hypothetical_transform,
+                    is_real_transformation=False,
+                    historic_transform=historic_transform,
+                    next_spacial_info=next_spacial_info,
+                    next_observation_from_spacial_info_with_noise=next_observation_from_spacial_info_with_noise,
+                    next_closest_index=next_closest_index,
+                    action_duration=action_duration,
                 )
-                spacial_projections.append(spacial_expectation)
-                predicted_spacial_values.append(spacial_expectation[-1]) 
+                next_spacial_projections.append(spacial_expectation)
+                predicted_next_spacial_values.append(spacial_expectation[-1]) 
+            
+            assert len(spacial_expectation) == config.action_adjuster.future_projection_length, "If this is off by one, probably edit the self.project() function"
+            
             
             exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
             # loss function
@@ -302,10 +256,9 @@ class ActionAdjusterSolver:
             # Note: len(predicted_spacial_values) should == len(real_spacial_values) + future_projection_length
             # however, it will be automatically truncated because of the zip behavior
             with print.indent:
-                for each_actual, each_predicted in zip(real_spacial_values, predicted_spacial_values):
+                for each_actual, each_predicted in zip(correct_next_spacial_predictions, predicted_next_spacial_values):
                     x1, y1, angle1, velocity1, spin1, *_ = each_actual
                     x2, y2, angle2, velocity2, spin2, *_ = each_predicted
-                    iteration_total = 0
                     losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
                     losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
                     losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
@@ -321,13 +274,13 @@ class ActionAdjusterSolver:
             # pprint(self.input_data[0])
             # perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
             #     transform=Transform(perfect_transform_input),
-            #     real_transformation=False,
+            #     is_real_transformation=False,
             #     policy=self.policy,
             #     **self.input_data[0],
             # )
             # null_reaction_expectation, null_spacial_expectation, null_observation_expectation = self.project(
             #     transform=Transform(Transform.inital),
-            #     real_transformation=False,
+            #     is_real_transformation=False,
             #     policy=self.policy,
             #     **self.input_data[0],
             # )
@@ -398,15 +351,15 @@ class ActionAdjusterSolver:
         # 
         if True:
             score_before = objective_function(self.transform.as_numpy)
-            timestep = self.timestep_of_shared_info
             # kill this process once the limit is reaced
-            if timestep > config.simulator.max_episode_steps:
-                print("exiting process because timestep > config.simulator.max_episode_steps")
+            if shared_thread_data["timestep"] > config.simulator.max_number_of_timesteps_per_episode:
+                print("exiting process because timestep > config.simulator.max_number_of_timesteps_per_episode")
                 exit()
             
-            self.local_buffer_for_records.append(dict(
+            # dont log directly from this thread, send it to the main thread so theres not a race condition on the output file
+            shared_thread_data["records_to_log"].append(dict(
                 timestep=shared_thread_data["timestep"], # the timestep the computation was finished
-                timestep_started=timestep, # the timestep of the data that was used for the calculation
+                timestep_started=start_timestep, # the active timestep when the fit_points was called
                 line_fit_score=score_before,
                 is_active_transform=True,
             ))
@@ -433,7 +386,7 @@ class ActionAdjusterSolver:
                     proportion=config.action_adjuster.update_rate,
                 )
             )
-            self.local_buffer_for_records.append(dict(canidate_transform=self.canidate_transform))
+            shared_thread_data["records_to_log"].append(dict(canidate_transform=self.canidate_transform))
             
             score_after = objective_function(self.canidate_transform.as_numpy)
             print(f'''new canidate transform = {self.canidate_transform}''')
@@ -443,18 +396,22 @@ class ActionAdjusterSolver:
             if score_after < score_before:
                 self.stdev = self.stdev/10
     
-    # returns twos list, one of projected spacial_info's one of projected observations
-    def project(self, policy, additional_info, transform=None, real_transformation=True, historic_transform=None, _actual=None, observation=None, action=None):
-        current_spacial_info, current_waypoint_index, action_duration = additional_info
-        remaining_waypoints = self.waypoints_list[current_waypoint_index:]
-        # the observation argument is intentionally thrown away because its the observation BEFORE the already-given action, and we want the observation AFTER
-        observation = generate_next_observation(
-            remaining_waypoints=remaining_waypoints,
-            current_spacial_info=current_spacial_info,
-        )
-        observation_expectation = [ observation  ]
-        spacial_expectation = [ current_spacial_info ]
-        action_expectation = []
+    def project(
+        self,
+        policy,
+        transform,
+        historic_transform,
+        is_real_transformation,
+        next_spacial_info, # whatever action was last executed, this should be the resulting next spacial info
+        next_observation_from_spacial_info_with_noise, # whatever action was last executed, this should be the resulting next observation
+        next_closest_index,
+        action_duration,
+    ):
+        action_expectation      = [ ]
+        next_observation_expectation = [ ]
+        next_spacial_expectation     = [ ]
+        current_spacial_info = next_spacial_info
+        observation          = next_observation_from_spacial_info_with_noise
         with print.indent:
             for each in range(config.action_adjuster.future_projection_length):
                 with print.indent:
@@ -465,32 +422,44 @@ class ActionAdjusterSolver:
                     # if historic_transform:
                     #     action = historic_transform.modify_action(
                     #         action=action,
-                    #         reverse_transformation=real_transformation, # fight-against the new transformation
+                    #         reverse_transformation=is_real_transformation, # fight-against the new transformation
                     #     )
                     
-                    velocity_action, spin_action = transform.modify_action(
+                    # this part is trying to guess/recreate the advesarial part of the .step() function
+                    relative_velocity_action, relative_spin_action = transform.modify_action(
                         action=action,
-                        reverse_transformation=(not real_transformation)
+                        reverse_transformation=(not is_real_transformation)
                     )
-                    next_spacial_info = generate_next_spacial_info(
+                    next_spacial_info = WarthogEnv.generate_next_spacial_info(
                         old_spacial_info=current_spacial_info,
-                        relative_velocity=velocity_action,
-                        relative_spin=spin_action,
+                        relative_velocity=relative_velocity_action,
+                        relative_spin=relative_spin_action,
                         action_duration=action_duration,
                     )
-                    next_observation = generate_next_observation(
-                        remaining_waypoints=remaining_waypoints,
+                    closest_relative_index, _ = WarthogEnv.get_closest(
+                        remaining_waypoints=self.waypoints_list[next_closest_index:],
+                        x=next_spacial_info.x,
+                        y=next_spacial_info.y,
+                    )
+                    next_closest_index += closest_relative_index
+                    next_observation = WarthogEnv.generate_observation(
+                        remaining_waypoints=self.waypoints_list[next_closest_index:],
                         current_spacial_info=next_spacial_info,
                     )
-                    action_expectation.append(WarthogEnv.ReactionClass([velocity_action, spin_action, observation]))
-                    spacial_expectation.append(next_spacial_info)
-                    observation_expectation.append(next_observation)
+                    action_expectation.append(WarthogEnv.ReactionClass([relative_velocity_action, relative_spin_action, observation]))
+                    next_spacial_expectation.append(next_spacial_info)
+                    next_observation_expectation.append(next_observation)
                     
                     observation          = next_observation
                     current_spacial_info = next_spacial_info
             
-        return action_expectation, spacial_expectation, observation_expectation
+        return action_expectation, next_spacial_expectation, next_observation_expectation
 
+def thread_solver_loop():
+    while threading.main_thread().is_alive():
+        if ActionAdjuster.self:
+            action_adjuster_processor.fit_points()
+    
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
     timestep          = None
@@ -539,21 +508,8 @@ class ActionAdjustedAgent(Skeleton):
         self.recorder.commit()
         self.action_adjuster.write_pending_records()
         self.recorder.add(timestep=self.timestep.index) # encase there's another commit during the same timestep
-        self.action_adjuster.add_data(self.timestep.observation, self.timestep.hidden_info)
+        self.action_adjuster.add_data(self.timestep)
     def when_episode_ends(self):
         pass
     def when_mission_ends(self):
         pass
-
-
-@bb.run_in_main
-def _():
-    global shared_thread_data
-    if config.action_adjuster.use_threading:
-        shared_thread_data = Manager().dict()
-        shared_thread_data.lock = threading.Lock()
-    else:
-        shared_thread_data = LazyDict()
-        shared_thread_data.lock = threading.Lock()
-
-bb.run_main_hooks_if_needed(__name__)

@@ -103,7 +103,7 @@ class RosRuntime:
         # temp_x   = odom_msg.pose.pose.orientation.w
         # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
         
-        new_spacial_info = self.env.SpacialInformation([ x, y, angle, velocity, spin ])
+        new_spacial_info = self.env.SpacialInformation( x, y, angle, velocity, spin, math.inf )
         
         env   = self.env
         agent = self.agent
