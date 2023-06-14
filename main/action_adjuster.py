@@ -4,6 +4,7 @@ from time import sleep
 import json
 import math
 import threading
+from multiprocessing import Manager
 from collections import namedtuple
 
 import torch                                                                    # pip install torch
@@ -22,6 +23,18 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 from generic_tools.numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
+
+# replace pickle with dill for multiprocessing
+import dill, multiprocessing
+dill.Pickler.dumps, dill.Pickler.loads   = dill.dumps, dill.loads
+multiprocessing.reduction.ForkingPickler = dill.Pickler
+multiprocessing.reduction.dump           = dill.dump
+try: multiprocessing.queues._ForkingPickler   = dill.Pickler
+except Exception as error: pass
+try: multiprocessing.reduction.ForkingPickler = dill.Pickler
+except Exception as error: pass
+try: multiprocessing.connection._ForkingPickler = dill.Pickler
+except Exception as error: pass
 
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 mean_squared_error_core = torch.nn.MSELoss()
@@ -45,7 +58,7 @@ perfect_transform_input = perfect_answer[0:2,:]
 # 
 # models
 # 
-shared_thread_data = {}
+shared_thread_data = None
     # ^ will contain
         # "timestep": an int that is always the number of the latest timestep
         # "transform_json"
@@ -155,50 +168,53 @@ class ActionAdjuster:
         self.incoming_records_to_log = []
         if config.action_adjuster.use_threading:
             # start the thread
-            threading.Thread(target=ActionAdjusterSolver.solver_loop).start()
+            threading.Thread(target=thread_solver_loop).start()
     
     def add_data(self, timestep):
-        shared_thread_data["timestep"] = timestep.index
-        self.recorder.add(timestep=shared_thread_data["timestep"])
-        additional_info = timestep.hidden_info
-        shared_thread_data["timestep_data"].append(
-            # fill in the timestep index and the historic_transform, but otherwise preserve data
-            WarthogEnv.AdditionalInfo(
-                timestep_index=timestep.index,
-                action_duration=additional_info.action_duration,
-                spacial_info=additional_info.spacial_info,
-                spacial_info_with_noise=additional_info.spacial_info_with_noise,
-                observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
-                original_reaction=additional_info.original_reaction,
-                historic_transform=deepcopy(self.transform),
-                mutated_reaction=additional_info.mutated_reaction,
-                next_spacial_info=additional_info.next_spacial_info,
-                next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
-                next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,
-                next_closest_index=additional_info.next_closest_index,
-                reward=additional_info.reward,
-            )
-        )
+        with print.indent:
+            shared_thread_data["timestep"] = timestep.index
+            self.recorder.add(timestep=shared_thread_data["timestep"])
+            additional_info = timestep.hidden_info
+            shared_thread_data["timestep_data"] = shared_thread_data["timestep_data"] + [
+                # fill in the timestep index and the historic_transform, but otherwise preserve data
+                WarthogEnv.AdditionalInfo(
+                    timestep_index=timestep.index,
+                    action_duration=additional_info.action_duration,
+                    spacial_info=additional_info.spacial_info,
+                    spacial_info_with_noise=additional_info.spacial_info_with_noise,
+                    observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
+                    original_reaction=additional_info.original_reaction,
+                    historic_transform=deepcopy(self.transform),
+                    mutated_reaction=additional_info.mutated_reaction,
+                    next_spacial_info=additional_info.next_spacial_info,
+                    next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
+                    next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,
+                    next_closest_index=additional_info.next_closest_index,
+                    reward=additional_info.reward,
+                )
+            ]
         if config.action_adjuster.use_threading:
             sleep(time_slowdown)
         
         if self.should_update_solution():
+            print(f'''main thread:len(shared_thread_data["timestep_data"]) = {len(shared_thread_data["timestep_data"])}''')
             # if not multithreading: run solver manually
             if not config.action_adjuster.use_threading:
                 self.fit_points()
             
             # pull in any records that need logging
-            self.incoming_records_to_log += shared_thread_data["records_to_log"]
-            shared_thread_data["records_to_log"].clear()
+            with print.indent: 
+                self.incoming_records_to_log += shared_thread_data["records_to_log"]
+                shared_thread_data["records_to_log"] = []
             
-            # pull in a new solution
-            new_solution = shared_thread_data.get("transform_json", None)
-            if new_solution:
-                self.transform = Transform.from_json(
-                    json.loads(
-                        new_solution
+                # pull in a new solution
+                new_solution = shared_thread_data.get("transform_json", None)
+                if new_solution:
+                    self.transform = Transform.from_json(
+                        json.loads(
+                            new_solution
+                        )
                     )
-                )
     
     def write_pending_records(self):
         for each in self.incoming_records_to_log:
@@ -206,11 +222,14 @@ class ActionAdjuster:
         self.incoming_records_to_log.clear()
 
     def fit_points(self):
-        start_timestep = shared_thread_data["timestep"]
-        timestep_data = shared_thread_data["timestep_data"]
-        # no data
-        if len(timestep_data) == 0:
-            return 
+        with print.indent: 
+            start_timestep = shared_thread_data["timestep"]
+            timestep_data = shared_thread_data["timestep_data"]
+        # not enough data
+        if len(timestep_data) < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
+            print("not enough data for fit_points() just yet")
+            sleep(1)
+            return
         
         # create inputs and predictions
         correct_answers_for_predictions = timestep_data[config.action_adjuster.future_projection_length:]
@@ -222,6 +241,7 @@ class ActionAdjuster:
             next_spacial_projections = []
             predicted_next_spacial_values = []
             correct_next_spacial_predictions = tuple(each.next_spacial_info for each in correct_answers_for_predictions)
+            spacial_expectation = None
             for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, original_reaction, historic_transform, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
                 # each_additional_info_object.timestep_index
                 # each_additional_info_object.spacial_info
@@ -352,17 +372,18 @@ class ActionAdjuster:
         if True:
             score_before = objective_function(self.transform.as_numpy)
             # kill this process once the limit is reaced
-            if shared_thread_data["timestep"] > config.simulator.max_number_of_timesteps_per_episode:
-                print("exiting process because timestep > config.simulator.max_number_of_timesteps_per_episode")
-                exit()
-            
-            # dont log directly from this thread, send it to the main thread so theres not a race condition on the output file
-            shared_thread_data["records_to_log"].append(dict(
-                timestep=shared_thread_data["timestep"], # the timestep the computation was finished
-                timestep_started=start_timestep, # the active timestep when the fit_points was called
-                line_fit_score=score_before,
-                is_active_transform=True,
-            ))
+            with print.indent: 
+                if shared_thread_data["timestep"] > config.simulator.max_number_of_timesteps_per_episode:
+                    print("exiting process because timestep > config.simulator.max_number_of_timesteps_per_episode")
+                    exit()
+                
+                # dont log directly from this thread, send it to the main thread so theres not a race condition on the output file
+                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(
+                    timestep=shared_thread_data["timestep"], # the timestep the computation was finished
+                    timestep_started=start_timestep, # the active timestep when the fit_points was called
+                    line_fit_score=score_before,
+                    is_active_transform=True,
+                )]
         
         # 
         # generate new canidate
@@ -386,7 +407,8 @@ class ActionAdjuster:
                     proportion=config.action_adjuster.update_rate,
                 )
             )
-            shared_thread_data["records_to_log"].append(dict(canidate_transform=self.canidate_transform))
+            with print.indent: 
+                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(canidate_transform=self.canidate_transform)]
             
             score_after = objective_function(self.canidate_transform.as_numpy)
             print(f'''new canidate transform = {self.canidate_transform}''')
@@ -458,7 +480,7 @@ class ActionAdjuster:
 def thread_solver_loop():
     while threading.main_thread().is_alive():
         if ActionAdjuster.self:
-            action_adjuster_processor.fit_points()
+            ActionAdjuster.self.fit_points()
     
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
@@ -513,3 +535,11 @@ class ActionAdjustedAgent(Skeleton):
         pass
     def when_mission_ends(self):
         pass
+
+
+@bb.run_in_main
+def _():
+    global shared_thread_data
+    shared_thread_data = Manager().dict() if config.action_adjuster.use_threading else {}
+        
+bb.run_main_hooks_if_needed(__name__)
