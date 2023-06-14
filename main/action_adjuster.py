@@ -7,8 +7,8 @@ import threading
 from multiprocessing import Manager
 from collections import namedtuple
 
-import torch                                                                    # pip install torch
-import numpy                                                                    # pip install numpy
+import torch
+import numpy
 
 import __dependencies__.blissful_basics as bb
 from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class
@@ -68,8 +68,22 @@ shared_thread_data = None
 time_slowdown = 0.5 # the bigger this is, the more iterations the solver will complete before the episode is over
                     # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 
+# TODO: replace this with a normalization method
+spacial_coefficients = WarthogEnv.SpacialInformation(
+    x=100, 
+    y=100, 
+    angle=1, 
+    velocity=0.3, 
+    spin=0.3, 
+    timestep=0 
+)
+
+inital_transform = numpy.eye(config.simulator.action_length+1)[0:2,:] 
+if config.action_adjuster.default_to_perfect:
+    inital_transform = perfect_transform_input
+
 class Transform:
-    inital = numpy.eye(config.simulator.action_length+1)[0:2,:]
+    inital = inital_transform
     
     # think of this as a "from numpy array" method
     def __init__(self, value=None):
@@ -136,93 +150,25 @@ class Transform:
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
-if config.action_adjuster.default_to_perfect:
-    Transform.inital = perfect_transform_input
-
-# TODO: replace this with a normalization method
-spacial_coefficients = WarthogEnv.SpacialInformation(
-    100, # x
-    100, # y
-    1, # angle
-    0.3, # velocity # arbitraryly picked value 
-    0.3, # spin # arbitraryly picked value 
-    0,
-)
-
 # this class does a little data organization, then sends data to the solver, and receives answers from the solver
-class ActionAdjuster:
+class Solver:
     self = None
-    def __init__(self, policy, waypoints_list, recorder=None):
-        ActionAdjuster.self = self
-        self.waypoints_list = waypoints_list
-        self.policy = policy
-        self.transform = Transform()
-        self.canidate_transform    = Transform()
-        self.should_update_solution = countdown(config.action_adjuster.update_frequency)
-        self.actual_spacial_values = []
+    def __init__(self, policy, waypoints_list):
+        Solver.self = self
         self.stdev = 0.01 # for cmaes
+        self.canidate_transform = Transform()
+        self.transform          = Transform()
         self.selected_solutions = set([ self.transform ])
-        self.recorder = recorder if recorder != None else RecordKeeper()
-        self.recorder.live_write_to(recorder_path, as_yaml=True)
-        shared_thread_data["timestep"] = 0
-        shared_thread_data["timestep_data"] = []
-        shared_thread_data["records_to_log"] = []
-        self.incoming_records_to_log = []
-        if config.action_adjuster.use_threading:
-            # start the thread
-            threading.Thread(target=thread_solver_loop).start()
+        self.waypoints_list     = waypoints_list
+        self.policy             = policy
     
-    def add_data(self, timestep):
-        with print.indent:
-            shared_thread_data["timestep"] = timestep.index
-            self.recorder.add(timestep=shared_thread_data["timestep"])
-            additional_info = timestep.hidden_info
-            shared_thread_data["timestep_data"] = shared_thread_data["timestep_data"] + [
-                # fill in the timestep index and the historic_transform, but otherwise preserve data
-                WarthogEnv.AdditionalInfo(
-                    timestep_index=timestep.index,
-                    action_duration=additional_info.action_duration,
-                    spacial_info=additional_info.spacial_info,
-                    spacial_info_with_noise=additional_info.spacial_info_with_noise,
-                    observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
-                    original_reaction=additional_info.original_reaction,
-                    historic_transform=deepcopy(self.transform),
-                    mutated_reaction=additional_info.mutated_reaction,
-                    next_spacial_info=additional_info.next_spacial_info,
-                    next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
-                    next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,
-                    next_closest_index=additional_info.next_closest_index,
-                    reward=additional_info.reward,
-                )
-            ]
-        if config.action_adjuster.use_threading:
-            sleep(time_slowdown)
-        
-        if self.should_update_solution():
-            print(f'''main thread:len(shared_thread_data["timestep_data"]) = {len(shared_thread_data["timestep_data"])}''')
-            # if not multithreading: run solver manually
-            if not config.action_adjuster.use_threading:
-                self.fit_points()
-            
-            # pull in any records that need logging
-            with print.indent: 
-                self.incoming_records_to_log += shared_thread_data["records_to_log"]
-                shared_thread_data["records_to_log"] = []
-            
-                # pull in a new solution
-                new_solution = shared_thread_data.get("transform_json", None)
-                if new_solution:
-                    self.transform = Transform.from_json(
-                        json.loads(
-                            new_solution
-                        )
-                    )
+    # this function is only called if multithreading is enabled
+    @staticmethod
+    def thread_solver_loop():
+        while threading.main_thread().is_alive():
+            if Solver.self:
+                Solver.self.fit_points()
     
-    def write_pending_records(self):
-        for each in self.incoming_records_to_log:
-            self.recorder.commit(additional_info=each)
-        self.incoming_records_to_log.clear()
-
     def fit_points(self):
         with print.indent: 
             start_timestep = shared_thread_data["timestep"]
@@ -287,46 +233,7 @@ class ActionAdjuster:
                     losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
                     losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
             
-                # print(f'''losses = {losses}''')
             return -sum(losses)
-        
-        # 
-        # debugging
-        #
-            # pprint(self.input_data[0])
-            # perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation = self.project(
-            #     transform=Transform(perfect_transform_input),
-            #     is_real_transformation=False,
-            #     policy=self.policy,
-            #     **self.input_data[0],
-            # )
-            # null_reaction_expectation, null_spacial_expectation, null_observation_expectation = self.project(
-            #     transform=Transform(Transform.inital),
-            #     is_real_transformation=False,
-            #     policy=self.policy,
-            #     **self.input_data[0],
-            # )
-            # slice_size = 4
-            # actual_reactions      = [ each['action']      for each in  self.input_data[0:slice_size]] 
-            # actual_spacial_values = self.actual_spacial_values[0:slice_size]
-            # actual_observations   = [ each['observation'] for each in  self.input_data[0:slice_size]] 
-            # def print_data(actions, spacial_values, observations):
-            #     with print.indent.block("spacial_values"):
-            #         for each in spacial_values:
-            #             print(each)
-            #     with print.indent.block("reactions"):
-            #         for each in actions:
-            #             print(each)
-            #     with print.indent.block("observations"):
-            #         for each in observations:
-            #             print(each)
-            # with print.indent.block("actual"):
-            #     print_data([], actual_reactions, actual_spacial_values, actual_observations)
-            # with print.indent.block("null"):
-            #     print_data(null_reaction_expectation, null_spacial_expectation, null_observation_expectation)
-            # with print.indent.block("perfect"):
-            #     print_data(perfect_reaction_expectation, perfect_spacial_expectation, perfect_observation_expectation)
-            # exit()
         
         # 
         # overfitting protection (validate the canidate)
@@ -479,10 +386,6 @@ class ActionAdjuster:
             
         return action_expectation, next_spacial_expectation, next_observation_expectation
 
-def thread_solver_loop():
-    while threading.main_thread().is_alive():
-        if ActionAdjuster.self:
-            ActionAdjuster.self.fit_points()
     
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
@@ -496,13 +399,28 @@ class ActionAdjustedAgent(Skeleton):
     # self.timestep.hidden_info
     # self.timestep.reaction
     
-    def __init__(self, observation_space, reaction_space, policy, recorder, waypoints_list, **config):
+    def __init__(self, observation_space, reaction_space, policy, waypoints_list, recorder=None, **options):
         self.observation_space  = observation_space
         self.reaction_space     = reaction_space
         self.accumulated_reward = 0
         self.policy   = policy
-        self.recorder = recorder
-        self.action_adjuster = ActionAdjuster(policy=policy, recorder=recorder, waypoints_list=waypoints_list)
+        self.recorder = recorder if recorder != None else RecordKeeper()
+        
+        self.transform = Transform()
+        self.should_update_solution = countdown(config.action_adjuster.update_frequency)
+        self.recorder = recorder if recorder != None else RecordKeeper()
+        self.recorder.live_write_to(recorder_path, as_yaml=True)
+        
+        shared_thread_data["timestep"] = 0
+        shared_thread_data["timestep_data"] = []
+        shared_thread_data["records_to_log"] = []
+        self.records_from_the_solver_thread = []
+        # create the solver
+        self.solver = Solver(policy=policy, waypoints_list=waypoints_list)
+        
+        if config.action_adjuster.use_threading:
+            # start the thread
+            threading.Thread(target=Solver.thread_solver_loop).start()
 
     def when_mission_starts(self):
         pass
@@ -515,30 +433,91 @@ class ActionAdjustedAgent(Skeleton):
         read: self.observation
         write: self.reaction = something
         """
-        action = self.policy(self.timestep.observation)
+        vanilla_action = self.policy(self.timestep.observation)
+        adjusted_action = vanilla_action
         if config.action_adjuster.use_transform:
-            action = self.action_adjuster.transform.adjust_action(
-                action
+            adjusted_action = self.transform.adjust_action(
+                adjusted_action
             )
-        self.timestep.reaction = action
+        self.timestep.reaction = adjusted_action
     def when_timestep_ends(self):
         """
         read: self.timestep.reward
         """
+        # 
+        # logging / record-keeping
+        # 
         self.accumulated_reward += self.timestep.reward
         self.recorder.add(timestep=self.timestep.index)
         self.recorder.add(accumulated_reward=self.accumulated_reward)
         self.recorder.add(reward=self.timestep.reward)
         self.recorder.commit()
-        self.action_adjuster.write_pending_records()
+        for each in self.records_from_the_solver_thread:
+            self.recorder.commit(additional_info=each)
+        self.records_from_the_solver_thread.clear()
         self.recorder.add(timestep=self.timestep.index) # encase there's another commit during the same timestep
-        self.action_adjuster.add_data(self.timestep)
+        
+        # 
+        # give data to solver thread
+        # 
+        timestep = self.timestep
+        with print.indent:
+            shared_thread_data["timestep"] = timestep.index
+            self.recorder.add(timestep=shared_thread_data["timestep"])
+            additional_info = timestep.hidden_info
+            shared_thread_data["timestep_data"] = shared_thread_data["timestep_data"] + [
+                # fill in the timestep index and the historic_transform, but otherwise preserve data
+                WarthogEnv.AdditionalInfo(
+                    timestep_index=timestep.index,
+                    action_duration=additional_info.action_duration,
+                    spacial_info=additional_info.spacial_info,
+                    spacial_info_with_noise=additional_info.spacial_info_with_noise,
+                    observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
+                    original_reaction=additional_info.original_reaction,
+                    historic_transform=deepcopy(self.transform),
+                    mutated_reaction=additional_info.mutated_reaction,
+                    next_spacial_info=additional_info.next_spacial_info,
+                    next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
+                    next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,
+                    next_closest_index=additional_info.next_closest_index,
+                    reward=additional_info.reward,
+                )
+            ]
+        
+        
+        if config.action_adjuster.use_threading:
+            sleep(time_slowdown)
+        
+        # 
+        # receive data from solver thread
+        # 
+        if self.should_update_solution():
+            print(f'''main thread:len(shared_thread_data["timestep_data"]) = {len(shared_thread_data["timestep_data"])}''')
+            # if not multithreading: run solver manually
+            if not config.action_adjuster.use_threading:
+                self.solver.fit_points()
+            
+            # pull in any records that need logging
+            with print.indent: 
+                self.records_from_the_solver_thread += shared_thread_data["records_to_log"]
+                shared_thread_data["records_to_log"] = []
+            
+                # pull in a new solution
+                new_solution = shared_thread_data.get("transform_json", None)
+                if new_solution:
+                    self.transform = Transform.from_json(
+                        json.loads(
+                            new_solution
+                        )
+                    )
     def when_episode_ends(self):
         pass
     def when_mission_ends(self):
         pass
 
 
+# this little thing is because python multithreading is stupid and needs to have Manager() created in the main file
+# this is just a hacky way around that
 @bb.run_in_main
 def _():
     global shared_thread_data

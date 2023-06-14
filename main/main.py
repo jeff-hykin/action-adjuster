@@ -10,7 +10,7 @@ from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks
 
 from specific_tools.train_ppo import * # required because of pickle lookup
 from envs.warthog import WarthogEnv
-from action_adjuster import ActionAdjustedAgent, ActionAdjuster
+from action_adjuster import ActionAdjustedAgent
 from config import config, path_to, selected_profiles
 from generic_tools.functions import cache_outputs
 from generic_tools.universe.agent import Skeleton
