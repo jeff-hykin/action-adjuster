@@ -105,7 +105,7 @@ class Transform:
     def as_numpy(self):
         return self._transform
     
-    def modify_action(self, action, reverse_transformation=False):
+    def adjust_action(self, action, mimic_adversity=False):
         # the full transform needs to be 3x3 with a constant bottom-row of 0,0,1
         transform = numpy.vstack([
             self._transform[0],
@@ -115,13 +115,15 @@ class Transform:
         
         # the curve-fitter is finding the transform that would make the observed-trajectory match the model-predicted trajectory
         # (e.g. what transform is the world doing to our actions; once we know that we can compensate with and equal-and-opposite transformation)
-        if reverse_transformation:
+        # for an optimal transform, adjust_action(action, mimic_adversity=True) == env.step(action).mutated_action
+        if mimic_adversity:
             *result, constant = numpy.inner(
                 to_tensor([*action, 1]).numpy(),
                 transform,
             )
             return to_tensor(result).numpy()
         # the real transformation needs to compensate (inverse of curve-fitter transform)
+        # e.g. env.step(adjust_action(action)).mutated_action == action
         else:
             inverse_transform = numpy.linalg.inv( to_tensor(transform).numpy() )
             *result, constant = numpy.inner(
@@ -442,15 +444,15 @@ class ActionAdjuster:
                     # undo the effects of the at-the-time transformation
                     # FIXME: comment back in after debugging
                     # if historic_transform:
-                    #     action = historic_transform.modify_action(
+                    #     action = historic_transform.adjust_action(
                     #         action=action,
-                    #         reverse_transformation=is_real_transformation, # fight-against the new transformation
+                    #         mimic_adversity=is_real_transformation, # fight-against the new transformation
                     #     )
                     
                     # this part is trying to guess/recreate the advesarial part of the .step() function
-                    relative_velocity_action, relative_spin_action = transform.modify_action(
+                    relative_velocity_action, relative_spin_action = transform.adjust_action(
                         action=action,
-                        reverse_transformation=(not is_real_transformation)
+                        mimic_adversity=(not is_real_transformation)
                     )
                     next_spacial_info = WarthogEnv.generate_next_spacial_info(
                         old_spacial_info=current_spacial_info,
@@ -515,7 +517,7 @@ class ActionAdjustedAgent(Skeleton):
         """
         action = self.policy(self.timestep.observation)
         if config.action_adjuster.use_transform:
-            action = self.action_adjuster.transform.modify_action(
+            action = self.action_adjuster.transform.adjust_action(
                 action
             )
         self.timestep.reaction = action
