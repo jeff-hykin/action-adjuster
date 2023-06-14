@@ -200,9 +200,9 @@ class Solver:
                     policy=self.policy,
                     transform=hypothetical_transform,
                     historic_transform=historic_transform,
-                    next_spacial_info=next_spacial_info,
-                    next_observation_from_spacial_info_with_noise=next_observation_from_spacial_info_with_noise,
-                    next_closest_index=next_closest_index,
+                    spacial_info_after_most_recent_action=next_spacial_info,
+                    observation_from_spacial_info_with_noise_after_most_recent_action=next_observation_from_spacial_info_with_noise,
+                    closest_index_after_most_recent_action=next_closest_index,
                     action_duration=action_duration,
                 )
                 next_spacial_projections.append(spacial_expectation)
@@ -324,16 +324,17 @@ class Solver:
         policy,
         transform,
         historic_transform,
-        next_spacial_info, # whatever action was last executed, this should be the resulting next spacial info
-        next_observation_from_spacial_info_with_noise, # whatever action was last executed, this should be the resulting next observation
-        next_closest_index,
+        spacial_info_after_most_recent_action, # whatever action was last executed, this should be the resulting next spacial info
+        observation_from_spacial_info_with_noise_after_most_recent_action, # whatever action was last executed, this should be the resulting next observation
+        closest_index_after_most_recent_action,
         action_duration,
     ):
         action_expectation      = [ ]
         next_observation_expectation = [ ]
         next_spacial_expectation     = [ ]
-        current_spacial_info = next_spacial_info
-        observation          = next_observation_from_spacial_info_with_noise
+        current_spacial_info   = spacial_info_after_most_recent_action
+        observation            = observation_from_spacial_info_with_noise_after_most_recent_action
+        closest_waypoint_index = closest_index_after_most_recent_action
         with print.indent:
             for each in range(config.action_adjuster.future_projection_length):
                 with print.indent:
@@ -362,13 +363,13 @@ class Solver:
                         action_duration=action_duration,
                     )
                     closest_relative_index, _ = WarthogEnv.get_closest(
-                        remaining_waypoints=self.waypoints_list[next_closest_index:],
+                        remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
                         x=next_spacial_info.x,
                         y=next_spacial_info.y,
                     )
-                    next_closest_index += closest_relative_index
+                    closest_waypoint_index += closest_relative_index
                     next_observation = WarthogEnv.generate_observation(
-                        remaining_waypoints=self.waypoints_list[next_closest_index:],
+                        remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
                         current_spacial_info=next_spacial_info,
                     )
                     action_expectation.append(WarthogEnv.ReactionClass([relative_velocity_action, relative_spin_action, observation]))
