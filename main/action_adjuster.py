@@ -199,7 +199,6 @@ class Solver:
                 action_expectation, spacial_expectation, observation_expectation = self.project(
                     policy=self.policy,
                     transform=hypothetical_transform,
-                    is_real_transformation=False,
                     historic_transform=historic_transform,
                     next_spacial_info=next_spacial_info,
                     next_observation_from_spacial_info_with_noise=next_observation_from_spacial_info_with_noise,
@@ -325,7 +324,6 @@ class Solver:
         policy,
         transform,
         historic_transform,
-        is_real_transformation,
         next_spacial_info, # whatever action was last executed, this should be the resulting next spacial info
         next_observation_from_spacial_info_with_noise, # whatever action was last executed, this should be the resulting next observation
         next_closest_index,
@@ -355,7 +353,7 @@ class Solver:
                     # this part is trying to guess/recreate the advesarial part of the .step() function
                     relative_velocity_action, relative_spin_action = transform.adjust_action(
                         action=action,
-                        mimic_adversity=(not is_real_transformation)
+                        mimic_adversity=False, # we want to undo the adversity when projecting into the future
                     )
                     next_spacial_info = WarthogEnv.generate_next_spacial_info(
                         old_spacial_info=current_spacial_info,
