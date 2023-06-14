@@ -42,31 +42,17 @@ mean_squared_error = lambda arg1, arg2: to_pure(mean_squared_error_core(to_tenso
 pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), **kwargs)
 
 # 
-# establish filepaths
+# simple vars
 # 
-process_id = random() # needed so that two of these can run in parallel
-recorder_path       = f"{config.output_folder}/recorder.yaml" 
-
-# for testing, setup the perfect adjuster as comparison
-perfect_answer = to_tensor([
-    [ 1,     0,    config.simulator.velocity_offset, ],
-    [ 0,     1,        config.simulator.spin_offset, ],
-    [ 0,     0,                                   1, ],
-]).numpy()
-perfect_transform_input = perfect_answer[0:2,:]
-
-# 
-# models
-# 
+recorder_path = f"{config.output_folder}/recorder.yaml" 
+time_slowdown = 0.5 # the bigger this is, the more iterations the solver will complete before the episode is over
+                    # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 shared_thread_data = None
     # ^ will contain
         # "timestep": an int that is always the number of the latest timestep
         # "transform_json"
         # "timestep_data"
         # "records_to_log"
-
-time_slowdown = 0.5 # the bigger this is, the more iterations the solver will complete before the episode is over
-                    # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 
 # TODO: replace this with a normalization method
 spacial_coefficients = WarthogEnv.SpacialInformation(
@@ -77,6 +63,14 @@ spacial_coefficients = WarthogEnv.SpacialInformation(
     spin=0.3, 
     timestep=0 
 )
+
+# for testing, setup the perfect adjuster as comparison
+perfect_answer = to_tensor([
+    [ 1,     0,    config.simulator.velocity_offset, ],
+    [ 0,     1,        config.simulator.spin_offset, ],
+    [ 0,     0,                                   1, ],
+]).numpy()
+perfect_transform_input = perfect_answer[0:2,:]
 
 inital_transform = numpy.eye(config.simulator.action_length+1)[0:2,:] 
 if config.action_adjuster.default_to_perfect:
@@ -347,13 +341,16 @@ class Solver:
                 with print.indent:
                     action = policy(observation)
                     
-                    # undo the effects of the at-the-time transformation
-                    # FIXME: comment back in after debugging
-                    # if historic_transform:
-                    #     action = historic_transform.adjust_action(
-                    #         action=action,
-                    #         mimic_adversity=is_real_transformation, # fight-against the new transformation
-                    #     )
+                    # action + nothing            = predicted_observation -1.0
+                    # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
+                    # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
+                    #                                                               is only there because the historic transform was doing part of the work
+                    # so we need to do action - historic_transform + best transform
+                    if historic_transform:
+                        action = historic_transform.adjust_action(
+                            action=action,
+                            mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
+                        )
                     
                     # this part is trying to guess/recreate the advesarial part of the .step() function
                     relative_velocity_action, relative_spin_action = transform.adjust_action(
