@@ -385,8 +385,8 @@ class WarthogEnv(gym.Env):
         velocity_error   = closest_waypoint.velocity - spacial_info.velocity
         crosstrack_error = closest_distance * math.sin(yaw_error)
         phi_error        = pi_to_pi(closest_waypoint.angle - spacial_info.angle)
-
-
+        
+        
         max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
         max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
         max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
@@ -419,39 +419,46 @@ class WarthogEnv(gym.Env):
                         running_reward = 0
                         break
         
-        # bonus for completing waypoints
-        running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
-        
         return running_reward, velocity_error, crosstrack_error, phi_error
+    
+    @staticmethod
+    def almost_original_reward_function(*, **kwargs):
+        closest_relative_index = kwargs["closest_relative_index"]
+        running_reward, *other = WarthogEnv.original_reward_function(**kwargs)
+        running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
+        return running_reward, *other
     
     @staticmethod
     def reward_function2(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index):
         running_reward = 0
         
-        x_diff     = closest_waypoint.x - spacial_info.x
-        y_diff     = closest_waypoint.y - spacial_info.y
-        distance   = math.sqrt(x_diff**2 + y_diff**2)
-        angle_diff = get_angle_from_origin(x_diff, y_diff)
-        yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
+        # everything in this if block is the same as the original implementation
+        if True:
+            x_diff     = closest_waypoint.x - spacial_info.x
+            y_diff     = closest_waypoint.y - spacial_info.y
+            angle_diff = get_angle_from_origin(x_diff, y_diff)
+            yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
 
-        velocity_error   = closest_waypoint.velocity - spacial_info.velocity
-        crosstrack_error = closest_distance * math.sin(yaw_error)
-        phi_error        = pi_to_pi(closest_waypoint.angle - spacial_info.angle)
-        
-        # distance penalty
-        one_to_zero_distance_penalty = (1 - scaled_sigmoid(distance))
-        running_reward += config.reward_parameters.distance_scale * one_to_zero_distance_penalty
-        
-        max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
-        max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
-        max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
+            velocity_error   = closest_waypoint.velocity - spacial_info.velocity
+            crosstrack_error = closest_distance * math.sin(yaw_error)
+            phi_error        = pi_to_pi(closest_waypoint.angle - spacial_info.angle)
+            
+            
+            max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
+            max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
+            max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
 
-        # base rewards
-        crosstrack_reward = max_expected_crosstrack_error - math.fabs(crosstrack_error)
-        velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
-        angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
+            # base rewards
+            crosstrack_reward = max_expected_crosstrack_error - math.fabs(crosstrack_error)
+            velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
+            angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
         
         advanced_reward = crosstrack_reward * velocity_reward * angle_reward
+        
+        # distance penalty
+        distance   = math.sqrt(x_diff**2 + y_diff**2)
+        one_to_zero_distance_penalty = (1 - scaled_sigmoid(distance))
+        running_reward += config.reward_parameters.distance_scale * one_to_zero_distance_penalty
 
         # combine (only use advanced reward when close to point; e.g. proportionally scale advanced reward with closeness)
         running_reward += one_to_zero_distance_penalty * advanced_reward
@@ -566,7 +573,7 @@ class WarthogEnv(gym.Env):
         # 
         # Reward Calculation
         # 
-        self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.original_reward_function(
+        self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.almost_original_reward_function(
             spacial_info=self.spacial_info,
             closest_distance=self.closest_distance,
             relative_velocity=self.mutated_relative_velocity,
