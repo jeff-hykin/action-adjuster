@@ -70,9 +70,10 @@
                 direct_spin_cost:               1 # no scaling of spin cost relative to combination
                 
                 # for reward_function2
-                distance_scale: 100 # base distance is 0 to 1 (is 1 when directly on point, 0 when infinitely far away) then that is scaled by this value
+                distance_scale: 20  # base distance is 0 to 1 (is 1 when directly on point, 0 when infinitely far away) then that is scaled by this value
                                     # this number is important relative to the size of the reward from crosstrack/velocity
-                                    # bigger=distance is more important
+                                    # bigger=distance is more important than crosstrack or angle
+                completed_waypoint_bonus: 5 # this value is added for every completed waypoint (e.g. progress along the path is good; not just being close to the same point over and over)
                 
                 velocity_caps_enabled: true
                 velocity_caps:

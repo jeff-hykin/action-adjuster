@@ -376,7 +376,7 @@ class WarthogEnv(gym.Env):
         return closest_index, closest_distance
     
     @staticmethod
-    def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint,):
+    def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index,):
         x_diff     = closest_waypoint.x - spacial_info.x
         y_diff     = closest_waypoint.y - spacial_info.y
         angle_diff = get_angle_from_origin(x_diff, y_diff)
@@ -419,10 +419,13 @@ class WarthogEnv(gym.Env):
                         running_reward = 0
                         break
         
+        # bonus for completing waypoints
+        running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
+        
         return running_reward, velocity_error, crosstrack_error, phi_error
     
     @staticmethod
-    def reward_function2(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint,):
+    def reward_function2(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index):
         running_reward = 0
         
         x_diff     = closest_waypoint.x - spacial_info.x
@@ -459,6 +462,9 @@ class WarthogEnv(gym.Env):
         # direct energy consumption
         running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(relative_velocity)
         running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
+        
+        # bonus for completing waypoints
+        running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
         
         return running_reward, velocity_error, crosstrack_error, phi_error
     
@@ -560,7 +566,7 @@ class WarthogEnv(gym.Env):
         # 
         # Reward Calculation
         # 
-        self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.reward_function2(
+        self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.original_reward_function(
             spacial_info=self.spacial_info,
             closest_distance=self.closest_distance,
             relative_velocity=self.mutated_relative_velocity,
@@ -568,6 +574,7 @@ class WarthogEnv(gym.Env):
             relative_spin=self.mutated_relative_spin,
             prev_relative_spin=self.prev_mutated_relative_spin,
             closest_waypoint=oracle_closest_waypoint,
+            closest_relative_index=closest_relative_index,
         )
         
         # 
