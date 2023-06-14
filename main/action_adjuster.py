@@ -156,11 +156,11 @@ class Solver:
     def __init__(self, policy, waypoints_list):
         Solver.self = self
         self.stdev = 0.01 # for cmaes
-        self.canidate_transform = Transform()
-        self.transform          = Transform()
-        self.selected_solutions = set([ self.transform ])
-        self.waypoints_list     = waypoints_list
-        self.policy             = policy
+        self.unconfirmed_transform      = Transform()
+        self.latest_confirmed_transform = Transform()
+        self.selected_solutions         = set([ self.latest_confirmed_transform ])
+        self.waypoints_list             = waypoints_list
+        self.policy                     = policy
     
     # this function is only called if multithreading is enabled
     @staticmethod
@@ -239,7 +239,7 @@ class Solver:
         # overfitting protection (validate the canidate)
         # 
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
-            solutions = list(self.selected_solutions) + [ self.canidate_transform ]
+            solutions = list(self.selected_solutions) + [ self.unconfirmed_transform ]
             perfect_score = objective_function(perfect_transform_input)
             print("")
             print(f'''perfect objective value: {perfect_score}''')
@@ -259,27 +259,27 @@ class Solver:
                 args=solutions,
                 values=scores,
             )
-            new_data_invalidated_recent_best = self.canidate_transform not in best_with_new_data
+            new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
             # basically overfitting detection
             # reduce stdev, and don't use the canidate
             if new_data_invalidated_recent_best:
                 self.stdev = self.stdev/2
                 # choose the long-term best as the starting point
-                self.transform = best_with_new_data[0]
+                self.latest_confirmed_transform = best_with_new_data[0]
             else:
-                print(f'''canidate passed inspection: {self.canidate_transform}''')
-                print(f'''prev transform            : {self.transform}''')
-                print(f'''canidate score: {objective_function(self.canidate_transform.as_numpy)}''')
-                print(f'''prev score    : {objective_function(self.transform.as_numpy)}''')
-                self.selected_solutions.add(self.canidate_transform)
+                print(f'''canidate passed inspection: {self.unconfirmed_transform}''')
+                print(f'''prev transform            : {self.latest_confirmed_transform}''')
+                print(f'''canidate score: {objective_function(self.unconfirmed_transform.as_numpy)}''')
+                print(f'''prev score    : {objective_function(self.latest_confirmed_transform.as_numpy)}''')
+                self.selected_solutions.add(self.unconfirmed_transform)
                 # use the canidate transform as the base for finding new answers
-                self.transform = self.canidate_transform
+                self.latest_confirmed_transform = self.unconfirmed_transform
         
         # 
         # record data
         # 
         if True:
-            score_before = objective_function(self.transform.as_numpy)
+            score_before = objective_function(self.latest_confirmed_transform.as_numpy)
             # kill this process once the limit is reaced
             with print.indent: 
                 if shared_thread_data["timestep"] > config.simulator.max_number_of_timesteps_per_episode:
@@ -291,7 +291,6 @@ class Solver:
                     timestep=shared_thread_data["timestep"], # the timestep the computation was finished
                     timestep_started=start_timestep, # the active timestep when the fit_points was called
                     line_fit_score=score_before,
-                    is_active_transform=True,
                 )]
         
         # 
@@ -302,25 +301,25 @@ class Solver:
             best_new_transform = Transform(
                 guess_to_maximize(
                     objective_function,
-                    initial_guess=self.transform.as_numpy,
+                    initial_guess=self.latest_confirmed_transform.as_numpy,
                     stdev=self.stdev,
                     max_iterations=config.action_adjuster.solver_max_iterations,
                 )
             )
             
             # canidate is the incremental shift towards next_best
-            self.canidate_transform = Transform(
+            self.unconfirmed_transform = Transform(
                 shift_towards(
                     new_value=best_new_transform.as_numpy,
-                    old_value=self.transform.as_numpy,
+                    old_value=self.latest_confirmed_transform.as_numpy,
                     proportion=config.action_adjuster.update_rate,
                 )
             )
             with print.indent: 
-                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(canidate_transform=self.canidate_transform)]
+                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(canidate_transform=self.unconfirmed_transform)]
             
-            score_after = objective_function(self.canidate_transform.as_numpy)
-            print(f'''new canidate transform = {self.canidate_transform}''')
+            score_after = objective_function(self.unconfirmed_transform.as_numpy)
+            print(f'''new canidate transform = {self.unconfirmed_transform}''')
             print(f'''score_before   = {score_before}''')
             print(f'''canidate score = {score_after}''')
             # if no improvement at all, then shrink the stdev
@@ -406,7 +405,7 @@ class ActionAdjustedAgent(Skeleton):
         self.policy   = policy
         self.recorder = recorder if recorder != None else RecordKeeper()
         
-        self.transform = Transform()
+        self.active_transform = Transform()
         self.should_update_solution = countdown(config.action_adjuster.update_frequency)
         self.recorder = recorder if recorder != None else RecordKeeper()
         self.recorder.live_write_to(recorder_path, as_yaml=True)
@@ -424,10 +423,12 @@ class ActionAdjustedAgent(Skeleton):
 
     def when_mission_starts(self):
         pass
+    
     def when_episode_starts(self):
         action1 = self.policy(self.next_timestep.observation)
         action2 = self.policy(self.next_timestep.observation)
         assert super_hash(action1) == super_hash(action2), "When using ActionAdjustedAgent, the policy needs to be deterministic, and the given policy seems to not be"
+    
     def when_timestep_starts(self):
         """
         read: self.observation
@@ -436,10 +437,11 @@ class ActionAdjustedAgent(Skeleton):
         vanilla_action = self.policy(self.timestep.observation)
         adjusted_action = vanilla_action
         if config.action_adjuster.use_transform:
-            adjusted_action = self.transform.adjust_action(
+            adjusted_action = self.active_transform.adjust_action(
                 adjusted_action
             )
         self.timestep.reaction = adjusted_action
+    
     def when_timestep_ends(self):
         """
         read: self.timestep.reward
@@ -474,7 +476,7 @@ class ActionAdjustedAgent(Skeleton):
                     spacial_info_with_noise=additional_info.spacial_info_with_noise,
                     observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
                     original_reaction=additional_info.original_reaction,
-                    historic_transform=deepcopy(self.transform),
+                    historic_transform=deepcopy(self.active_transform),
                     mutated_reaction=additional_info.mutated_reaction,
                     next_spacial_info=additional_info.next_spacial_info,
                     next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
@@ -505,13 +507,14 @@ class ActionAdjustedAgent(Skeleton):
                 # pull in a new solution
                 new_solution = shared_thread_data.get("transform_json", None)
                 if new_solution:
-                    self.transform = Transform.from_json(
+                    self.active_transform = Transform.from_json(
                         json.loads(
                             new_solution
                         )
                     )
     def when_episode_ends(self):
         pass
+    
     def when_mission_ends(self):
         pass
 
