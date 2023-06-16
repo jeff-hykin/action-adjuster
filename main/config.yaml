@@ -50,7 +50,7 @@
                 use_transform: True # when true, this means it will modify the policies actions
                 update_rate: 0.5 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
-                update_frequency: 10 # timesteps
+                update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
                 max_history_size: 400 # timesteps
                 processor_sleep_time: 1 # seconds
                 solver_max_iterations: 100

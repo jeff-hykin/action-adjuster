@@ -242,7 +242,7 @@ class ActionAdjuster:
             predicted_next_spacial_values = []
             correct_next_spacial_predictions = tuple(each.next_spacial_info for each in correct_answers_for_predictions)
             spacial_expectation = None
-            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, original_reaction, historic_transform, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
+            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
                 # each_additional_info_object.timestep_index
                 # each_additional_info_object.spacial_info
                 # each_additional_info_object.spacial_info_with_noise

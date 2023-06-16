@@ -146,8 +146,8 @@ class WarthogEnv(gym.Env):
             "spacial_info",
             "spacial_info_with_noise",
             "observation_from_spacial_info_with_noise",
-            "original_reaction",
             "historic_transform",
+            "original_reaction",
             "mutated_reaction",
             "next_spacial_info",
             "next_spacial_info_spacial_info_with_noise",
@@ -422,7 +422,7 @@ class WarthogEnv(gym.Env):
         return running_reward, velocity_error, crosstrack_error, phi_error
     
     @staticmethod
-    def almost_original_reward_function(*, **kwargs):
+    def almost_original_reward_function(**kwargs):
         closest_relative_index = kwargs["closest_relative_index"]
         running_reward, *other = WarthogEnv.original_reward_function(**kwargs)
         running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
@@ -622,8 +622,8 @@ class WarthogEnv(gym.Env):
             spacial_info=self.prev_spacial_info,
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
             observation_from_spacial_info_with_noise=self.prev_observation,
-            original_reaction=WarthogEnv.ReactionClass([ self.original_relative_velocity, self.original_relative_spin, self.prev_observation ]),
             historic_transform=Unknown,
+            original_reaction=WarthogEnv.ReactionClass([ self.original_relative_velocity, self.original_relative_spin, self.prev_observation ]),
             mutated_reaction=WarthogEnv.ReactionClass([ self.mutated_relative_velocity, self.mutated_relative_spin, self.prev_observation ]),
             next_spacial_info=self.spacial_info,
             next_spacial_info_spacial_info_with_noise=self.spacial_info_with_noise,
