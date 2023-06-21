@@ -13,22 +13,22 @@ from generic_tools.plotting import graph_lines, graph_groups, xd_theme
 # action_adjuster.max_history_size
 
 experiment_name = "NOISE=MEDIUM,ADVERSITY=STRONG"
-
+experiment_number = 10
 groups = dict(
     no_adjuster=dict(
-        folder_name_must_include="7.@NO_ADJUSTER",
+        folder_name_must_include=f"{experiment_number}.@NO_ADJUSTER",
         summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.red,
         lines=[],
     ),
     normal_adjuster=dict(
-        folder_name_must_include="7.@NORMAL_ADJUSTER",
+        folder_name_must_include=f"{experiment_number}.@NORMAL_ADJUSTER",
         summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.blue,
         lines=[],
     ),
     perfect_adjuster=dict(
-        folder_name_must_include="7.@PERFECT_ADJUSTER",
+        folder_name_must_include=f"{experiment_number}.@PERFECT_ADJUSTER",
         summary_filter=lambda data: True, # "ADVERSITY=STRONG" in data["selected_profiles"] and "NOISE=MEDIUM" in data["selected_profiles"],
         color=xd_theme.green,
         lines=[],
