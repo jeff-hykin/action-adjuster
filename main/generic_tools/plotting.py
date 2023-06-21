@@ -96,6 +96,9 @@ def points_to_function(x_values, y_values, are_sorted=False):
         # Perform linear interpolation / extrapolation
         x0, x1 = x_values[x_index], x_values[x_index+1]
         y0, y1 = y_values[x_index], y_values[x_index+1]
+        # verticle line
+        if (x1 - x0) == 0:
+            return y1
         slope = (y1 - y0) / (x1 - x0)
         y = y0 + slope * (x - x0)
 
