@@ -5,8 +5,8 @@ from random import random, sample, choices
 import torch
 from stable_baselines3 import PPO
 
-from __dependencies__.rigorous_recorder import RecordKeeper
-from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
+from rigorous_recorder import RecordKeeper
+from blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 
 from specific_tools.train_ppo import * # required because of pickle lookup
 from envs.warthog import WarthogEnv

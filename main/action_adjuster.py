@@ -10,12 +10,12 @@ from collections import namedtuple
 import torch
 import numpy
 
-import __dependencies__.blissful_basics as bb
-from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class
-from __dependencies__.elegant_events import Server
-from __dependencies__.trivial_torch_tools import to_tensor
-from __dependencies__.super_hash import super_hash
-from __dependencies__.rigorous_recorder import RecordKeeper
+import blissful_basics as bb
+from blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class
+from elegant_events import Server
+from trivial_torch_tools import to_tensor
+from super_hash import super_hash
+from rigorous_recorder import RecordKeeper
 
 from config import config, path_to, debug
 from envs.warthog import WarthogEnv

@@ -7,7 +7,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from pyquaternion import Quaternion as qut
 import message_filters
-from __dependencies__.blissful_basics import print, LazyDict, stringify
+from blissful_basics import print, LazyDict, stringify
 
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     import torch
     from rigorous_recorder import RecordKeeper
     from stable_baselines3 import PPO
-    from __dependencies__.blissful_basics import FS, print, LazyDict
+    from blissful_basics import FS, print, LazyDict
 
     from envs.warthog import WarthogEnv
     from config import config, path_to

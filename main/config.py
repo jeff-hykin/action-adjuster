@@ -1,5 +1,5 @@
-from __dependencies__.quik_config import find_and_load
-from __dependencies__.blissful_basics import FS, LazyDict
+from quik_config import find_and_load
+from blissful_basics import FS, LazyDict
 
 info = find_and_load(
     "main/config.yaml",

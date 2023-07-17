@@ -1,4 +1,4 @@
-from __dependencies__.blissful_basics import wrap_around_get, stringify, FS, print
+from blissful_basics import wrap_around_get, stringify, FS, print
 
 class Colors:
     def __init__(self, color_mapping):

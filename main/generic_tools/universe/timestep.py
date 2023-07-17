@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import json_fix
-from __dependencies__.blissful_basics import LazyDict
+from blissful_basics import LazyDict
 
 @dataclass
 class Timestep:

@@ -10,9 +10,9 @@ import numpy
 import numpy as np
 import gym
 
-import __dependencies__.blissful_basics as bb
-from __dependencies__.super_hash import super_hash
-from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify
+import blissful_basics as bb
+from super_hash import super_hash
+from blissful_basics import Csv, create_named_list_class, FS, print, stringify
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference

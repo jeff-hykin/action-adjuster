@@ -1,4 +1,4 @@
-import __dependencies__.blissful_basics as bb
+import blissful_basics as bb
 import cma
 import numpy
 

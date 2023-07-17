@@ -1,4 +1,4 @@
-from __dependencies__.blissful_basics import LazyDict
+from blissful_basics import LazyDict
 from tools.basics import sort_keys, randomly_pick_from
 from tools.universe.agent import Enhancement
 from tools.universe.timestep import TimestepSeries, Timestep, MockTimestep

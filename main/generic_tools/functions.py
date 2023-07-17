@@ -1,4 +1,4 @@
-from __dependencies__.super_hash import super_hash
+from super_hash import super_hash
 
 def cache_outputs(function):
     cache = {}

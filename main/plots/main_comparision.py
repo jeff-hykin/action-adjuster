@@ -2,8 +2,8 @@ import os
 from statistics import median, mean
 from copy import deepcopy
 
-from __dependencies__.blissful_basics import FS, LazyDict
-from __dependencies__.quik_config import ez_yaml
+from blissful_basics import FS, LazyDict
+from quik_config import ez_yaml
 import pandas as pd
 
 from config import config, path_to
