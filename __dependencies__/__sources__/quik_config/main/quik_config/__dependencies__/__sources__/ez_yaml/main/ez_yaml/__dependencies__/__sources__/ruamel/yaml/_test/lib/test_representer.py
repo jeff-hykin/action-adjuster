@@ -1,5 +1,5 @@
 
-from  import YAML
+import YAML
 import test_constructor
 import pprint
 

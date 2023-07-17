@@ -6,7 +6,7 @@ pdf: true
 import sys
 from io import StringIO
 exec(f"""import {".".join(__name__.split(".")[:-2])}.yaml;ruamel = {".".join(__name__.split(".")[:-2])}""")
-from  import YAML
+import YAML
 yaml=YAML()
 ostream = s = StringIO()
 istream = stream = doc = "a: 1"
@@ -62,7 +62,7 @@ Before 0.15.0 you could do:
 after:
 --- !python |
 from pathlib import Path
-from  import YAML
+import YAML
 
 yaml = YAML(typ='safe')
 yaml.default_flow_style = False

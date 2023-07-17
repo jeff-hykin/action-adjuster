@@ -193,7 +193,7 @@ def large_pickle_save(variable, file_path):
     so that they can be loaded in later
     ~4Gb max value
     """
-    from .__dependencies__ import file_system_py as FS
+    import file_system_py as FS
     import pickle
     bytes_out = pickle.dumps(variable, protocol=4)
     max_bytes = 2**31 - 1

@@ -1,5 +1,5 @@
 
-from  import YAML
+import YAML
 import codecs
 import tempfile
 import os

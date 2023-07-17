@@ -102,7 +102,7 @@ def pytest_generate_tests(metafunc):
 
 class TestYAMLData(object):
     def yaml(self, yaml_version=None):
-        from  import YAML
+        import YAML
 
         y = YAML()
         y.preserve_quotes = True
@@ -111,7 +111,7 @@ class TestYAMLData(object):
         return y
 
     def docs(self, path):
-        from  import YAML
+        import YAML
 
         tyaml = YAML(typ='safe', pure=True)
         tyaml.register_class(YAMLData)

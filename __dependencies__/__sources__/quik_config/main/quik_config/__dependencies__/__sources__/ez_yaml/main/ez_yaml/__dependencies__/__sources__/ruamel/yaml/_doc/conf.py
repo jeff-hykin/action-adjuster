@@ -54,7 +54,7 @@ author = 'Anthon van der Neut'
 # built documents.
 #
 try:
-    from  import __version__, version_info  # NOQA
+    import __version__, version_info  # NOQA
 
     # The short X.Y version.
     version = '.'.join([str(ch) for ch in version_info[:3]])

@@ -2,9 +2,9 @@ from time import time as now
 from random import random
 import json
 
-from .__dependencies__ import file_system_py as FS
-from .__dependencies__.super_map import LazyDict
-from .__dependencies__.super_hash import super_hash
+import file_system_py as FS
+from super_map import LazyDict
+from super_hash import super_hash
 
 # TODO:
     # have each experiment be given their own pickle file

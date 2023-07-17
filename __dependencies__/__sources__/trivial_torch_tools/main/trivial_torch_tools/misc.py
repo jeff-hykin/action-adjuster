@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import torch
 import torch.nn as nn
-from .__dependencies__.super_hash import super_hash
+from super_hash import super_hash
 
 def batch_input_and_output(inputs, outputs, batch_size):
     from .generics import bundle

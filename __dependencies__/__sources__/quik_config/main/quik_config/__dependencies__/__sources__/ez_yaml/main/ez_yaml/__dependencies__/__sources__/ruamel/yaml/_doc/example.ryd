@@ -11,7 +11,7 @@ Basic round trip of parsing YAML to Python objects, modifying
 and generating YAML:
 --- !python |
   import sys
-  from  import YAML
+  import YAML
 
   inp = """\
   # example
@@ -36,7 +36,7 @@ YAML handcrafted anchors and references as well as key merging
 are preserved. The merged keys can transparently be accessed
 using ``[]`` and ``.get()``:
 --- !python |
-  from  import YAML
+  import YAML
 
   inp = """\
   - &CENTER {x: 1, y: 2}
@@ -71,7 +71,7 @@ The ``CommentedMap``, which is the ``dict`` like construct one gets when round-t
 supports insertion of a key into a particular position, while optionally adding a comment:
 --- !python |
   import sys
-  from  import YAML
+  import YAML
 
   yaml_str = """\
   first_name: Art
@@ -105,7 +105,7 @@ You can change this default indentation by e.g. using ``yaml.indent()``:
 --- !python |
 
 import sys
-from  import YAML
+import YAML
 
 d = dict(a=dict(b=2),c=[3, 4])
 yaml = YAML()
@@ -136,7 +136,7 @@ within sequence) to begin on the next line use ``yaml.compact()``:
 --- !python |
 
 import sys
-from  import YAML
+import YAML
 
 d = [dict(b=2), [3, 4]]
 yaml = YAML()
@@ -161,7 +161,7 @@ three documents:
 
 --- !python |
 import sys
-from  import YAML
+import YAML
 
 data = {1: {1: [{1: 1, 2: 2}, {1: 1, 2: 2}], 2: 2}, 2: 42}
 
@@ -237,7 +237,7 @@ you really need to have it (or think you do):
 
 --- !python |
 import sys
-from  import YAML
+import YAML
 from .compat import StringIO
 
 class MyYAML(YAML):

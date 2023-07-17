@@ -14,9 +14,9 @@ import sys
 import math
 import urllib.parse
 
-from .__dependencies__ import json_fix
-from .__dependencies__ import websockets
-from .__dependencies__.websockets.sync.client import connect
+import json_fix
+import websockets
+from websockets.sync.client import connect
 
 connect = websockets.sync.client.connect
 this_file = __file__ # seems dumb but will break in interpreter if not assigned to a var

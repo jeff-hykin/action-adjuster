@@ -32,7 +32,7 @@ multi_doc_data = [['abc', 'xyz'], single_data]
 
 
 def get_yaml():
-    from  import YAML
+    import YAML
 
     return YAML()
 
@@ -67,7 +67,7 @@ class TestOldStyle:
 
 class TestContextManager:
     def test_single_dump(self, capsys):
-        from  import YAML
+        import YAML
 
         with YAML(output=sys.stdout) as yaml:
             yaml.dump(single_data)
@@ -76,7 +76,7 @@ class TestContextManager:
         assert out == single_doc
 
     def test_multi_dump(self, capsys):
-        from  import YAML
+        import YAML
 
         with YAML(output=sys.stdout) as yaml:
             yaml.explicit_start = True
@@ -92,19 +92,19 @@ class TestContextManager:
 
     # @pytest.mark.xfail(strict=True)
     # def test_single_load(self):
-    #     from  import YAML
+    #     import YAML
     #     with YAML(input=single_doc) as yaml:
     #         assert yaml.load() == single_data
     #
     # @pytest.mark.xfail(strict=True)
     # def test_multi_load(self):
-    #     from  import YAML
+    #     import YAML
     #     with YAML(input=multi_doc) as yaml:
     #         for idx, data in enumerate(yaml.load()):
     #             assert data == multi_doc_data[0]
 
     def test_roundtrip(self, capsys):
-        from  import YAML
+        import YAML
 
         with YAML(output=sys.stdout) as yaml:
             yaml.explicit_start = True

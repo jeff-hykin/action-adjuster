@@ -12,8 +12,8 @@ from os import path
 from threading import Thread
 from copy import deepcopy
 
-from .__dependencies__ import file_system_py as FS
-from .__dependencies__.super_hash import super_hash, hash_file
+import file_system_py as FS
+from super_hash import super_hash, hash_file
 
 try:
     # use dill if its available

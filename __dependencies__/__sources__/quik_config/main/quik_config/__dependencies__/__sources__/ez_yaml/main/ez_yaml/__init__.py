@@ -1,5 +1,5 @@
-from .__dependencies__ import ruamel 
-from .__dependencies__.ruamel import yaml
+import ruamel 
+from ruamel import yaml
 from io import StringIO
 from pathlib import Path
 import os

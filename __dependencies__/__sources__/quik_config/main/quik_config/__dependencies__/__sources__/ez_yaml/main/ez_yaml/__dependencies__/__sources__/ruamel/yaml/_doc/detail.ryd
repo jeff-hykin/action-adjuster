@@ -33,7 +33,7 @@ Details
 
 *In the following examples it is assumed you have done something like:*::
 
-  from  import YAML
+  import YAML
   yaml = YAML()
 
 *if not explicitly specified.*

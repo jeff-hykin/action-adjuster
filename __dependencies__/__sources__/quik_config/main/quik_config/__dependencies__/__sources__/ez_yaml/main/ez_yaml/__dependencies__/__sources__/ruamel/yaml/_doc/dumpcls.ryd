@@ -77,7 +77,7 @@ the ``yaml = YAML()`` line needs to be moved up in the file:
 
 --- !python |
 import sys
-from  import YAML, yaml_object
+import YAML, yaml_object
 
 yaml = YAML()
 
