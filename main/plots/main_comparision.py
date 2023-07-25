@@ -13,7 +13,7 @@ from generic_tools.plotting import graph_lines, graph_groups, xd_theme
 # action_adjuster.max_history_size
 
 experiment_name = "NOISE=MEDIUM,ADVERSITY=STRONG"
-experiment_number = 10
+experiment_number = 11
 groups = dict(
     no_adjuster=dict(
         folder_name_must_include=f"{experiment_number}.@NO_ADJUSTER",
