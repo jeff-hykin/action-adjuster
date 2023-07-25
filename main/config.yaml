@@ -58,7 +58,7 @@
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
-                name: dummy # 'bicycle' or 'dummy' or 'retrained'
+                name: retrained # 'bicycle' or 'dummy' or 'retrained'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
