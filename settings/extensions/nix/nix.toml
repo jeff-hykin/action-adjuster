@@ -247,6 +247,9 @@ load = [ "jq",]
 [[packages]]
 load = [ "git-subrepo",]
 
+[[packages]]
+load = [ "zellij",]
+
 #
 #
 # Basic Commandline tools

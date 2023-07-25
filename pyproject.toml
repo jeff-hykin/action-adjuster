@@ -11,7 +11,6 @@ matplotlib = "^3.7.1"
 cma = "^3.3.0"
 tdqm = "^0.0.1"
 torch = "1.13.1"
-stable-baselines3 = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 
