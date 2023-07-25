@@ -22,3 +22,4 @@ torch==1.13.1
 stable-baselines3>=1.7.0
 pyquaternion
 dill==0.3.6
+scipy
