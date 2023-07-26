@@ -9,11 +9,10 @@ import pandas as pd
 from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, graph_groups, xd_theme
-
+from specific_tools.comparison_runs import experiment_number
 # action_adjuster.max_history_size
 
-experiment_name = "NOISE=MEDIUM,ADVERSITY=STRONG"
-experiment_number = 12
+experiment_name = ""
 groups = dict(
     no_adjuster=dict(
         folder_name_must_include=f"{experiment_number}.@NO_ADJUSTER",

@@ -6,8 +6,8 @@
         records: "./records/"
         main: "./main.py"
         waypoints_folder: "./waypoint_paths/"
-        # default_waypoints: "./waypoint_paths/real1.csv"
-        default_waypoints: "./waypoint_paths/straight_line.csv"
+        default_waypoints: "./waypoint_paths/real1.csv"
+        # default_waypoints: "./waypoint_paths/straight_line.csv"
         saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
         temp_policy_folder: "./saved_policies/temp.ignore/"
@@ -48,7 +48,7 @@
                 default_to_perfect: False
                 always_perfect: False
                 use_transform: True # when true, this means it will modify the policies actions
-                update_rate: 0.5 # kinda similar to alpha/step-size
+                update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
                 max_history_size: 400 # timesteps
