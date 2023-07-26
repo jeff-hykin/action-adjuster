@@ -9,8 +9,8 @@ import pandas as pd
 from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, graph_groups, xd_theme
-from specific_tools.comparison_runs import experiment_number
-# action_adjuster.max_history_size
+from specific_tools import comparision_runs
+experiment_number = comparision_runs.experiment_number
 
 experiment_name = ""
 groups = dict(
@@ -105,6 +105,7 @@ def graph_variance_median_mean(groups, prefix=""):
         save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=mean,
+        x_axis_scale="log",
     )
 
 reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
