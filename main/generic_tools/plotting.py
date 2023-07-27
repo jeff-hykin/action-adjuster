@@ -106,7 +106,7 @@ def points_to_function(x_values, y_values, are_sorted=False):
     
     return inner_function
 
-def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
+def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None, x_axis_scale='linear', y_axis_scale='linear'):
     """
         Example:
             graph_lines(
@@ -149,6 +149,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None):
     }
     df = pd.DataFrame(data)
     fig = px.line(df, x=x_axis_name, y=y_axis_name, color="Name", title=title)
+    fig.update_layout(xaxis_type=x_axis_scale, yaxis_type=y_axis_scale)
     for line_index, line_info in enumerate(args):
         if line_info.get("color", None):
             fig.data[line_index].line.color = line_info["color"]

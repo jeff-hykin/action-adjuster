@@ -1,0 +1,194 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%2345678901234567890123456789012345678901234567890123456789012345678901234567890
+%        1         2         3         4         5         6         7         8
+
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+
+    %\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+
+    \IEEEoverridecommandlockouts                              % This command is only needed if 
+                                                            % you want to use the \thanks command
+
+    \overrideIEEEmargins                                      % Needed to meet printer requirements.
+
+    %In case you encounter the following error:
+    %Error 1010 The PDF file may be corrupt (unable to open PDF file) OR
+    %Error 1000 An error occurred while parsing a contents stream. Unable to analyze the PDF file.
+    %This is a known problem with pdfLaTeX conversion filter. The file cannot be opened with acrobat reader
+    %Please use one of the alternatives below to circumvent this error by uncommenting one or the other
+    %\pdfobjcompresslevel=0
+    %\pdfminorversion=4
+
+    % See the \addtolength command later in the file to balance the column lengths
+    % on the last page of the document
+
+    % The following packages can be found on http:\\www.ctan.org
+    %\usepackage{graphics} % for pdf, bitmapped graphics files
+    %\usepackage{epsfig} % for postscript graphics files
+    %\usepackage{mathptmx} % assumes new font selection scheme installed
+    %\usepackage{times} % assumes new font selection scheme installed
+    %\usepackage{amsmath} % assumes amsmath package installed
+    %\usepackage{amssymb}  % assumes amsmath package installed
+
+    \title{\LARGE \bf
+    Agnostic Online Action Adjustment*
+    }
+    % something with dynamic trimming
+
+
+    \author{Jeff Hykin$^{1}$, Akhil Nagariya, Guni Sharon, Srikanth Saripalli$^{2}$% <-this % stops a space
+    \thanks{*This work was not supported by any organization}% <-this % stops a space
+    \thanks{$^{1}$Albert Author is with Faculty of Electrical Engineering, Mathematics and Computer Science,
+            University of Twente, 7500 AE Enschede, The Netherlands
+            {\tt\small albert.author@papercept.net}}%
+    \thanks{$^{2}$Bernard D. Researcheris with the Department of Electrical Engineering, Wright State University,
+            Dayton, OH 45435, USA
+            {\tt\small b.d.researcher@ieee.org}}%
+    }
+
+
+    \begin{document}
+
+
+
+    \maketitle
+    \thispagestyle{empty}
+    \pagestyle{empty}
+
+
+
+\begin{abstract}
+    
+    % What problem is being addressed? What are we trying to solve
+    % What assumtions or requirements?
+    % Break up into theoretical and experimental, experimental improvements go at the end
+    % Give it to Izzy; see if she understands it
+    
+    % "a high level controller needs to be adapted to variaous environments and handle degradation of the machine over time"
+    % we address the problem of "high level controller controlling " (e.g. define the entities/wording) 
+    
+    This paper introduces a online adaptive control algorithm for optimizing unmanned ground vehicles (UGVs) using an invertable transformation on the action space. Unlike other adaptive control algorithms, the algorithm makes no modifications to the control policy, does not require a highly accurate dynamics model, and reduces the sim-to-real gap. This allows the technique to be applied to a wide range of UGVs with minimal to no modification. In this paper we present empirical validation on multiple UGVs with significantly varied dynamics across different environments, along with its theoretical capabilities and limitations.
+
+\end{abstract}
+
+
+\section{INTRODUCTION}
+
+    o
+
+\section{PRIOR WORK}
+
+    Fields of related work:
+    \begin{itemize}
+        \item Adaptive Control for UGVs: Previous studies and papers focusing on adaptive control methodologies applied to UGVs will be cited to establish the context and evolution of adaptive control techniques in the domain of autonomous vehicles.
+        \item Reinforcement Learning in Autonomous Systems: Since the proposed algorithm incorporates principles from reinforcement learning, related work on the integration of reinforcement learning in autonomous systems, particularly UGVs, will be cited to showcase the significance of combining adaptive control and learning-based approaches.
+        \item Robust Control for UGVs: Papers addressing robust control techniques designed to enhance the stability and performance of UGVs in the presence of uncertainties and disturbances will be cited to highlight the importance of robustness in the proposed algorithm.
+        \item Policy Preservation in Control Algorithms: Literature that emphasizes the preservation of policy guarantees in adaptive control and reinforcement learning algorithms will be cited to establish the significance of maintaining existing policies during adaptation.
+        \item Model-Free Control for UGVs: Research on model-free control approaches for UGVs will be cited as a basis for the algorithm's divergence from traditional high-accuracy dynamics models and the adoption of reinforcement learning.
+        \item Adaptive Control in Real-World Environments: Previous work that addresses the application of adaptive control in real-world dynamic environments, similar to the scenarios encountered by UGVs, will be cited to demonstrate the algorithm's relevance and potential in practical deployments.
+        \item Autonomous Vehicle Optimization: Papers focusing on optimization techniques for autonomous vehicles, including UGVs, will be referenced to highlight the importance of advanced control algorithms in enhancing UGV performance and safety.
+        \item UGV Dynamics and Environmental Variability: Research exploring the dynamics of different UGV configurations and environmental variability will be cited to demonstrate the algorithm's versatility and adaptability across diverse UGV platforms and operational conditions.
+        \item Empirical Evaluations of UGV Control Algorithms: Studies that present empirical evaluations of control algorithms applied to UGVs, particularly in varied environments and with different UGV platforms, will be cited to compare and validate the performance of the proposed algorithm.
+        \item Theoretical Analysis of Control Algorithms: Papers focusing on theoretical analyses of control algorithms, especially those that address adaptive control and reinforcement learning techniques, will be referenced to support the theoretical findings and insights presented in the paper.
+    \end{itemize}
+
+\section{METHOD}
+
+
+\section{RESULTS}
+
+
+\section{DISCUSSION}
+
+    Use this sample document as your LaTeX source file to create your document. Save this file as {\bf root.tex}. You have to make sure to use the cls file that came with this distribution. If you use a different style file, you cannot expect to get required margins. Note also that when you are creating your out PDF file, the source file is only part of the equation. {\it Your \TeX\ $\rightarrow$ PDF filter determines the output file size. Even if you make all the specifications to output a letter file in the source - if your filter is set to produce A4, you will only get A4 output. }
+
+    It is impossible to account for all possible situation, one would encounter using \TeX. If you are using multiple \TeX\ files you must make sure that the ``MAIN`` source file is called root.tex - this is particularly important if your conference is using PaperPlaza's built in \TeX\ to PDF conversion tool.
+
+    \subsection{Headings, etc}
+
+    Text heads organize the topics on a relational, hierarchical basis. For example, the paper title is the primary text head because all subsequent material relates and elaborates on this one topic. If there are two or more sub-topics, the next level head (uppercase Roman numerals) should be used and, conversely, if there are not at least two sub-topics, then no subheads should be introduced. Styles named ÒHeading 1Ó, ÒHeading 2Ó, ÒHeading 3Ó, and ÒHeading 4Ó are prescribed.
+
+    \subsection{Figures and Tables}
+
+    Positioning Figures and Tables: Place figures and tables at the top and bottom of columns. Avoid placing them in the middle of columns. Large figures and tables may span across both columns. Figure captions should be below the figures; table heads should appear above the tables. Insert figures and tables after they are cited in the text. Use the abbreviation ÒFig. 1Ó, even at the beginning of a sentence.
+
+    \begin{table}[h]
+    \caption{An Example of a Table}
+    \label{table_example}
+    \begin{center}
+    \begin{tabular}{|c||c|}
+    \hline
+    One & Two\\
+    \hline
+    Three & Four\\
+    \hline
+    \end{tabular}
+    \end{center}
+    \end{table}
+
+
+    \begin{figure}[thpb]
+        \centering
+        \framebox{\parbox{3in}{We suggest that you use a text box to insert a graphic (which is ideally a 300 dpi TIFF or EPS file, with all fonts embedded) because, in an document, this method is somewhat more stable than directly inserting a picture.
+    }}
+        %\includegraphics[scale=1.0]{figurefile}
+        \caption{Inductance of oscillation winding on amorphous
+        magnetic core versus DC bias magnetic field}
+        \label{figurelabel}
+    \end{figure}
+    
+
+    Figure Labels: Use 8 point Times New Roman for Figure labels. Use words rather than symbols or abbreviations when writing Figure axis labels to avoid confusing the reader. As an example, write the quantity ÒMagnetizationÓ, or ÒMagnetization, MÓ, not just ÒMÓ. If including units in the label, present them within parentheses. Do not label axes only with units. In the example, write ÒMagnetization (A/m)Ó or ÒMagnetization {A[m(1)]}Ó, not just ÒA/mÓ. Do not label axes with a ratio of quantities and units. For example, write ÒTemperature (K)Ó, not ÒTemperature/K.Ó
+
+\section{CONCLUSIONS}
+
+    A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
+
+    \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+                                    % on the last page of the document manually. It shortens
+                                    % the textheight of the last page by a suitable amount.
+                                    % This command does not take effect until the next page
+                                    % so it should come on the page before the last. Make
+                                    % sure that you do not shorten the textheight too much.
+
+\section*{APPENDIX}
+
+    Appendixes should appear before the acknowledgment.
+
+\section*{ACKNOWLEDGMENT}
+
+    The preferred spelling of the word ÒacknowledgmentÓ in America is without an ÒeÓ after the ÒgÓ. Avoid the stilted expression, ÒOne of us (R. B. G.) thanks . . .Ó  Instead, try ÒR. B. G. thanksÓ. Put sponsor acknowledgments in the unnumbered footnote on the first page.
+
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    References are important to the reader; therefore, each citation must be complete and correct. If at all possible, references should be commonly available publications.
+
+
+
+    \begin{thebibliography}{99}
+
+
+    \bibitem{c3} H. Poor, An Introduction to Signal Detection and Estimation.   New York: Springer-Verlag, 1985, ch. 4.
+    \bibitem{c4} B. Smith, ÒAn approach to graphs of linear forms (Unpublished work style),Ó unpublished.
+    \bibitem{c5} E. H. Miller, ÒA note on reflector arrays (Periodical styleÑAccepted for publication),Ó IEEE Trans. Antennas Propagat., to be publised.
+    \bibitem{c6} J. Wang, ÒFundamentals of erbium-doped fiber amplifiers arrays (Periodical styleÑSubmitted for publication),Ó IEEE J. Quantum Electron., submitted for publication.
+    \bibitem{c7} C. J. Kaufman, Rocky Mountain Research Lab., Boulder, CO, private communication, May 1995.
+    \bibitem{c9} M. Young, The Techincal Writers Handbook.  Mill Valley, CA: University Science, 1989.
+    \bibitem{c17} J. G. Kreifeldt, ÒAn analysis of surface-detected EMG as an amplitude-modulated noise,Ó presented at the 1989 Int. Conf. Medicine and Biological Engineering, Chicago, IL.
+    \bibitem{c18} J. Williams, ÒNarrow-band analyzer (Thesis or Dissertation style),Ó Ph.D. dissertation, Dept. Elect. Eng., Harvard Univ., Cambridge, MA, 1993. 
+    \bibitem{c19} N. Kawasaki, ÒParametric study of thermal and chemical nonequilibrium nozzle flow,Ó M.S. thesis, Dept. Electron. Eng., Osaka Univ., Osaka, Japan, 1993.
+    \bibitem{c20} J. P. Wilkinson, ÒNonlinear resonant circuit devices (Patent style),Ó U.S. Patent 3 624 12, July 16, 1990. 
+
+
+
+
+
+
+    \end{thebibliography}
+
+
+
+
+\end{document}
