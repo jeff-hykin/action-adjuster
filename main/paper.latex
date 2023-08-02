@@ -67,7 +67,11 @@
     % "a high level controller needs to be adapted to variaous environments and handle degradation of the machine over time"
     % we address the problem of "high level controller controlling " (e.g. define the entities/wording) 
     
-    This paper introduces a online adaptive control algorithm for optimizing unmanned ground vehicles (UGVs) using an invertable transformation on the action space. Unlike other adaptive control algorithms, the algorithm makes no modifications to the control policy, does not require a highly accurate dynamics model, and reduces the sim-to-real gap. This allows the technique to be applied to a wide range of UGVs with minimal to no modification. In this paper we present empirical validation on multiple UGVs with significantly varied dynamics across different environments, along with its theoretical capabilities and limitations.
+    Distribution shifts, such as sensor drift, battery degradation, steering resistance, etc, are a common problem for both manned and unmanned systems. While traditional methods, such as automatic trim control systems, require knowledge about the specific application, the proposed method can be applied to a wide range of vehicles with little to no modification. Specifically, when given an extremely rough model of the environment, such as a ballistics model that ignores air resistance, the proposed method is capable of improved performance without retraining the human or AI that is piloting the vehicle. For AI pilots that follow a policy, the proposed method helps reduce the sim-to-real gap while maintaining or even improving any guarantees made by the policy. In this paper, we present empirical validation on multiple unmanned ground vehicles (UGVs) with significantly varied dynamics across different environments, along with its theoretical capabilities and limitations.
+         
+    % using an invertable transformation on the action space
+    %  modification to the actor (the human or AI trying to pilot the vehicle) 
+    % This paper introduces a online adaptive control algorithm for optimizing unmanned ground vehicles (UGVs) using an invertable transformation on the action space. Unlike other adaptive control algorithms, the algorithm makes no modifications to the control policy, does not require a highly accurate dynamics model, and reduces the sim-to-real gap. This allows the technique to be applied to a wide range of UGVs with minimal to no modification.
 
 \end{abstract}
 
