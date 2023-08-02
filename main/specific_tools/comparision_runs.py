@@ -21,3 +21,10 @@ if __name__ == "__main__":
         
         for each_process in processes:
             each_process.wait()
+        # for some reason the processes don't seem to stop even after being waited on
+        for each_process in processes:
+            try: each_process.kill()
+            except: pass
+        for each_process in processes:
+            try: each_process.terminate()
+            except: pass
