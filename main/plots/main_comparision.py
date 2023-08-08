@@ -34,6 +34,15 @@ groups = dict(
     ),
 )
 
+def log_scale(value):
+    import math
+    if value == 0:
+        return 0
+    if value > 0:
+        return math.log(value+1)
+    else:
+        return -math.log((-value)+1)
+
 def load_group_data(groups):
     for group_name, group_info in groups.items():
         for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
@@ -67,7 +76,7 @@ def extract_curve_fit_as_lines(groups):
         entry_data = [ each for each in data.records if each.get("line_fit_score", None) != None ]
         line_data = dict(
             x_values=[ each.timestep       for each in entry_data ],
-            y_values=[ each.line_fit_score for each in entry_data ],
+            y_values=[ log_scale(each.line_fit_score) for each in entry_data ],
             name=plot_name,
             color=group_info["color"],
         )
@@ -105,7 +114,7 @@ def graph_variance_median_mean(groups, prefix=""):
         save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=mean,
-        x_axis_scale="log",
+        # y_axis_scale="log",
     )
 
 reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
