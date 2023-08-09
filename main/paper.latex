@@ -58,32 +58,27 @@
 
 
 \begin{abstract}
+    % abstract issues:
+        % - cramming all the terms in the begining
+        % - main benefits
+            % - "primitive model" is better than "highly detailed model", can't find a way to escape mentioning it
+            % - preserving operator guarentees
     
     % What problem is being addressed? What are we trying to solve
-    % What assumtions or requirements?
+        % - "vehicle operators"  (e.g. policy)
+        % - "controller"
+        % - "distribution shift problem"
+        % - "invertable transform function"
+    Vehicle operators, both human and autonomous, must often deal with the problem of distribution shift caused by vehicle degradation and new environments because the vehicle's underlying controllers are unable to adapt.
+    In this paper we introduce an algorithm for continuous online convergence on an ideal transform function for a vehicle's controller.
     
-    We address the problem of  adaptive control over a pre-trained controller facing distribution shifts in the underlying environment, e.g., ...
+    % how is it different?
+    % somehow add: "they don't preserve guarentees"
+    While traditional control methods, such as automatic trim control systems, require domain expert knowledge, we propose a blackbox optimization method using an invertable transformation and domain independent dynamics model.
+    % TODO: RL methods assume control of the vehicle operator itself (policy), and this one doesn't
+    
+    In this paper we present empirical validation using a trivial dynamics model across multiple unmanned ground vehicles (UGVs) in multiple environments, demonstrating improved crosstrack error for a autonomous vehicle operator.
 
-    % ^ add "pilot" and transformation function to that sentence
-    
-    % old sentence: Control problems often encounter distribution shifts, such as sensor drift, battery degradation, steering resistance, which are a common problem for both manned and unmanned vehicles. 
-    
-    While traditional methods, such as automatic trim control systems, require domain expert knowledge, we propose a domain independent blackbox optimization method for quickly and effectively train a control transformation function.
-
-    % add: "they don't preserve guarentees"
-
-    % add: explain the technique some, include 
-    
-    %can be applied to a wide range of vehicles with little to no modification. 
-    
-    Specifically, when given an extremely rough model of the environment, such as a ballistics model that ignores air resistance, the proposed method is capable of improved performance without retraining the human or AI that is piloting the vehicle. 
-    
-    %remove: For AI pilots that follow a policy, the proposed method helps reduce the sim-to-real gap while maintaining or even improving any guarantees made by the policy. 
-    
-    In this paper, we present empirical validation on multiple unmanned ground vehicles (UGVs) with significantly varied dynamics across different environments. The results demonstrate that....
-
-    % avoid intution or relative metrics; objetive measures
-    % talk about objective results instead of 
 \end{abstract}
 
 
