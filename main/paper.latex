@@ -56,6 +56,9 @@
     \pagestyle{empty}
 
 
+% TODO:
+    % - show the balance between convergence and safety (e.g. disable the additional validation/checks)
+    % - show more insights
 
 \begin{abstract}
     % abstract issues:
@@ -75,6 +78,7 @@
     % how is it different?
     % somehow add: "they don't preserve guarentees"
     While traditional control methods, such as automatic trim control systems, require domain expert knowledge, we propose a blackbox optimization method using an invertable transformation and domain independent dynamics model.
+    % In contrast, more generic techniques such as meta reinforcement learning assume that the 
     % TODO: RL methods assume control of the vehicle operator itself (policy), and this one doesn't
     
     In this paper we present empirical validation using a trivial dynamics model across multiple unmanned ground vehicles (UGVs) in multiple environments, demonstrating improved crosstrack error for a autonomous vehicle operator.
