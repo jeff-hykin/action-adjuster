@@ -113,19 +113,19 @@
 
 \section{PRIOR WORK}
 
-    Fields of related work:
-    \begin{itemize}
-        \item Adaptive Control for UGVs: Previous studies and papers focusing on adaptive control methodologies applied to UGVs will be cited to establish the context and evolution of adaptive control techniques in the domain of autonomous vehicles.
-        \item Reinforcement Learning in Autonomous Systems: Since the proposed algorithm incorporates principles from reinforcement learning, related work on the integration of reinforcement learning in autonomous systems, particularly UGVs, will be cited to showcase the significance of combining adaptive control and learning-based approaches.
-        \item Robust Control for UGVs: Papers addressing robust control techniques designed to enhance the stability and performance of UGVs in the presence of uncertainties and disturbances will be cited to highlight the importance of robustness in the proposed algorithm.
-        \item Policy Preservation in Control Algorithms: Literature that emphasizes the preservation of policy guarantees in adaptive control and reinforcement learning algorithms will be cited to establish the significance of maintaining existing policies during adaptation.
-        \item Model-Free Control for UGVs: Research on model-free control approaches for UGVs will be cited as a basis for the algorithm's divergence from traditional high-accuracy dynamics models and the adoption of reinforcement learning.
-        \item Adaptive Control in Real-World Environments: Previous work that addresses the application of adaptive control in real-world dynamic environments, similar to the scenarios encountered by UGVs, will be cited to demonstrate the algorithm's relevance and potential in practical deployments.
-        \item Autonomous Vehicle Optimization: Papers focusing on optimization techniques for autonomous vehicles, including UGVs, will be referenced to highlight the importance of advanced control algorithms in enhancing UGV performance and safety.
-        \item UGV Dynamics and Environmental Variability: Research exploring the dynamics of different UGV configurations and environmental variability will be cited to demonstrate the algorithm's versatility and adaptability across diverse UGV platforms and operational conditions.
-        \item Empirical Evaluations of UGV Control Algorithms: Studies that present empirical evaluations of control algorithms applied to UGVs, particularly in varied environments and with different UGV platforms, will be cited to compare and validate the performance of the proposed algorithm.
-        \item Theoretical Analysis of Control Algorithms: Papers focusing on theoretical analyses of control algorithms, especially those that address adaptive control and reinforcement learning techniques, will be referenced to support the theoretical findings and insights presented in the paper.
-    \end{itemize}
+Fields of related work:
+\begin{itemize}
+    \item Adaptive Control for UGVs: Previous studies and papers focusing on adaptive control methodologies applied to UGVs will be cited to establish the context and evolution of adaptive control techniques in the domain of autonomous vehicles.
+    \item Reinforcement Learning in Autonomous Systems: Since the proposed algorithm incorporates principles from reinforcement learning, related work on the integration of reinforcement learning in autonomous systems, particularly UGVs, will be cited to showcase the significance of combining adaptive control and learning-based approaches.
+    \item Robust Control for UGVs: Papers addressing robust control techniques designed to enhance the stability and performance of UGVs in the presence of uncertainties and disturbances will be cited to highlight the importance of robustness in the proposed algorithm.
+    \item Policy Preservation in Control Algorithms: Literature that emphasizes the preservation of policy guarantees in adaptive control and reinforcement learning algorithms will be cited to establish the significance of maintaining existing policies during adaptation.
+    \item Model-Free Control for UGVs: Research on model-free control approaches for UGVs will be cited as a basis for the algorithm's divergence from traditional high-accuracy dynamics models and the adoption of reinforcement learning.
+    \item Adaptive Control in Real-World Environments: Previous work that addresses the application of adaptive control in real-world dynamic environments, similar to the scenarios encountered by UGVs, will be cited to demonstrate the algorithm's relevance and potential in practical deployments.
+    \item Autonomous Vehicle Optimization: Papers focusing on optimization techniques for autonomous vehicles, including UGVs, will be referenced to highlight the importance of advanced control algorithms in enhancing UGV performance and safety.
+    \item UGV Dynamics and Environmental Variability: Research exploring the dynamics of different UGV configurations and environmental variability will be cited to demonstrate the algorithm's versatility and adaptability across diverse UGV platforms and operational conditions.
+    \item Empirical Evaluations of UGV Control Algorithms: Studies that present empirical evaluations of control algorithms applied to UGVs, particularly in varied environments and with different UGV platforms, will be cited to compare and validate the performance of the proposed algorithm.
+    \item Theoretical Analysis of Control Algorithms: Papers focusing on theoretical analyses of control algorithms, especially those that address adaptive control and reinforcement learning techniques, will be referenced to support the theoretical findings and insights presented in the paper.
+\end{itemize}
 
     REFERENCE:
     \vspsec
@@ -549,16 +549,6 @@ REFERENCE:
     \bibitem{c5} E. H. Miller, ÒA note on reflector arrays (Periodical styleÑAccepted for publication),Ó IEEE Trans. Antennas Propagat., to be publised.
     \bibitem{c6} J. Wang, ÒFundamentals of erbium-doped fiber amplifiers arrays (Periodical styleÑSubmitted for publication),Ó IEEE J. Quantum Electron., submitted for publication.
     \bibitem{c7} C. J. Kaufman, Rocky Mountain Research Lab., Boulder, CO, private communication, May 1995.
-    \bibitem{c9} M. Young, The Techincal Writers Handbook.  Mill Valley, CA: University Science, 1989.
-    \bibitem{c17} J. G. Kreifeldt, ÒAn analysis of surface-detected EMG as an amplitude-modulated noise,Ó presented at the 1989 Int. Conf. Medicine and Biological Engineering, Chicago, IL.
-    \bibitem{c18} J. Williams, ÒNarrow-band analyzer (Thesis or Dissertation style),Ó Ph.D. dissertation, Dept. Elect. Eng., Harvard Univ., Cambridge, MA, 1993. 
-    \bibitem{c19} N. Kawasaki, ÒParametric study of thermal and chemical nonequilibrium nozzle flow,Ó M.S. thesis, Dept. Electron. Eng., Osaka Univ., Osaka, Japan, 1993.
-    \bibitem{c20} J. P. Wilkinson, ÒNonlinear resonant circuit devices (Patent style),Ó U.S. Patent 3 624 12, July 16, 1990. 
-
-
-
-
-
 
     \end{thebibliography}
 
