@@ -56,29 +56,59 @@
     \pagestyle{empty}
 
 
+% TODO:
+    % - show the balance between convergence and safety (e.g. disable the additional validation/checks)
+    % - show more insights
 
 \begin{abstract}
+    % abstract issues:
+        % - cramming all the terms in the begining
+        % - main benefits
+            % - "primitive model" is better than "highly detailed model", can't find a way to escape mentioning it
+            % - preserving operator guarentees
     
     % What problem is being addressed? What are we trying to solve
-    % What assumtions or requirements?
-    % Break up into theoretical and experimental, experimental improvements go at the end
-    % Give it to Izzy; see if she understands it
+        % - "vehicle operators"  (e.g. policy)
+        % - "controller"
+        % - "distribution shift problem"
+        % - "invertable transform function"
+    Vehicle operators, both human and autonomous, must often deal with the problem of distribution shift caused by vehicle degradation and new environments because the vehicle's underlying controllers are unable to adapt.
+    In this paper we introduce an algorithm for continuous online convergence on an ideal transform function for a vehicle's controller.
     
-    % "a high level controller needs to be adapted to variaous environments and handle degradation of the machine over time"
-    % we address the problem of "high level controller controlling " (e.g. define the entities/wording) 
+    % how is it different?
+    % somehow add: "they don't preserve guarentees"
+    While traditional control methods, such as automatic trim control systems, require domain expert knowledge, we propose a blackbox optimization method using an invertable transformation and domain independent dynamics model.
+    % In contrast, more generic techniques such as meta reinforcement learning assume that the 
+    % TODO: RL methods assume control of the vehicle operator itself (policy), and this one doesn't
     
-    Distribution shifts, such as sensor drift, battery degradation, steering resistance, etc, are a common problem for both manned and unmanned systems. While traditional methods, such as automatic trim control systems, require knowledge about the specific application, the proposed method can be applied to a wide range of vehicles with little to no modification. Specifically, when given an extremely rough model of the environment, such as a ballistics model that ignores air resistance, the proposed method is capable of improved performance without retraining the human or AI that is piloting the vehicle. For AI pilots that follow a policy, the proposed method helps reduce the sim-to-real gap while maintaining or even improving any guarantees made by the policy. In this paper, we present empirical validation on multiple unmanned ground vehicles (UGVs) with significantly varied dynamics across different environments, along with its theoretical capabilities and limitations.
-         
-    % using an invertable transformation on the action space
-    %  modification to the actor (the human or AI trying to pilot the vehicle) 
-    % This paper introduces a online adaptive control algorithm for optimizing unmanned ground vehicles (UGVs) using an invertable transformation on the action space. Unlike other adaptive control algorithms, the algorithm makes no modifications to the control policy, does not require a highly accurate dynamics model, and reduces the sim-to-real gap. This allows the technique to be applied to a wide range of UGVs with minimal to no modification.
+    In this paper we present empirical validation using a trivial dynamics model across multiple unmanned ground vehicles (UGVs) in multiple environments, demonstrating improved crosstrack error for a autonomous vehicle operator.
 
 \end{abstract}
 
 
 \section{INTRODUCTION}
+    
+    REFERENCE:
+    
+    \vspsec
+    Both model-based and model-free reinforcement learning (RL) methods generally operate in one of two regimes: all training is performed in advance, producing a model or policy that can be used at test-time to make decisions in settings that approximately match those seen during training; or, training is performed online (e.g., as in the case of online temporal-difference learning), in which case the agent can slowly modify its behavior as it interacts with the environment. However, in both of these cases, dynamic changes such as failure of a robot's components, encountering a new terrain, environmental factors such as lighting and wind, or other unexpected perturbations, can cause the agent to fail. In contrast, humans can rapidly adapt their behavior to unseen physical perturbations and changes in their dynamics~\citep{braun2009learning}: adults can learn to walk on crutches in just a few seconds, people can adapt almost instantaneously to picking up an object that is unexpectedly heavy, and children that can walk on carpet and grass can quickly figure out how to walk on ice without having to relearn how to walk. How is this possible? If an agent has encountered a large number of perturbations in the past, it can in principle use that experience to \emph{learn how to adapt}. In this work, we
+    propose a meta-learning approach for learning online adaptation.
 
-    This template provides authors with most of the formatting specifications needed for preparing electronic versions of their papers. All standard paper components have been specified for three reasons: (1) ease of use when formatting individual papers, (2) automatic compliance to electronic requirements that facilitate the concurrent or later production of electronic products, and (3) conformity of style throughout a conference proceedings. Margins, column widths, line spacing, and type styles are built-in; examples of the type styles are provided throughout this document and are identified in italic type, within parentheses, following the example. Some components, such as multi-leveled equations, graphics, and tables are not prescribed, although the various table text styles are provided. The formatter will need to create these components, incorporating the applicable criteria that follow.
+    Motivated by the ability to tackle real-world applications, we specifically develop a model-based meta-reinforcement learning algorithm. In this setting, data for updating the model is readily available at every timestep in the form of recent experiences. But more crucially, the meta-training process for training such an adaptive model can be much more sample efficient than model-free meta-RL approaches~\citep{duan2016rl2,wang2016learning,finn2017maml}. Further, our approach foregoes the episodic framework on which model-free meta-RL approaches rely on, where tasks are pre-defined to be different rewards or environments, and tasks exist at the trajectory level only. Instead, our method considers each timestep to potentially be a new ``task, " where any detail or setting could have changed at any timestep. This view induces a more general meta-RL problem setting by allowing the notion of a task to represent anything from existing in a different part of the state space, to experiencing disturbances, or attempting to achieve a new goal.
+
+    Learning to adapt a model alleviates a central challenge of model-based reinforcement learning: the problem of acquiring a global model that is accurate throughout the entire state space. Furthermore, even if it were practical to train a globally accurate dynamics model, the dynamics inherently change as a function of uncontrollable and often unobservable environmental factors, such as those mentioned above. If we have a model that can adapt online, it need not be perfect everywhere a priori. This property has previously been exploited by adaptive control methods~\citep{aastrom2013adaptive,sastry1989adaptive, pastor2011online, franzi2016robustonline}; but, scaling such methods to complex tasks and nonlinear systems is exceptionally difficult. Even when working with deep neural networks, which have been used to model complex nonlinear systems~\citep{thanard}, it is exceptionally difficult to enable adaptation, since such models typically require large amounts of data and many gradient steps to learn effectively. By specifically training a neural network model to require only a small amount of experience to adapt, we can enable effective online adaptation in complex environments while putting less pressure on needing a perfect global model. 
+
+    The primary contribution of our work is an efficient meta reinforcement learning approach that achieves online adaptation in dynamic environments. To the best knowledge of the authors, this is the first meta-reinforcement learning algorithm to be applied in a real robotic system. Our algorithm efficiently trains a global model that is capable to use its recent experiences to quickly adapt, achieving fast online adaptation in dynamic environments. We evaluate two versions of our approach, recurrence-based adaptive learner (ReBAL) and gradient-based adaptive learner (GrBAL) on stochastic and simulated continuous control tasks with complex contact dynamics (Fig.~\ref{fig:mujoco-envs}). In our experiments, we show a quadrupedal ``ant'' adapting to the failure of different legs, as well as a ``half-cheetah" robot adapting to the failure off different joints, navigating terrains with different slopes, and walking on floating platforms of varying buoyancy. Our model-based meta RL method attains substantial improvement over prior approaches, including standard model-based methods, online model-adaptive methods, model-free methods, and prior meta-reinforcement learning methods, when trained with similar amounts of data. In all experiments, meta-training across multiple tasks is sample efficient, using only the equivalent of $1.5-3$ hours of real-world experience, roughly $10\times$ less than what model-free methods require to learn a single task. Finally, we demonstrate GrBAL on a real dynamic legged millirobot (see Fig~\ref{fig:mujoco-envs}). To highlight not only the sample efficiency of our meta model-based reinforcement learning approach, but also the importance of fast online adaptation in the real world, we show the agent's learned ability to adapt online to tasks such as a missing leg, novel terrains and slopes, miscalibration or errors in pose estimation, and new payloads to be pulled. 
+    \begin{figure}[t]
+    \vspace{-0.2cm}
+    \centering
+    \includegraphics[width=0.55\linewidth, height=0.25\linewidth]
+    {pictures/roach_adapt/roach_leg_turf_compressed.jpg}
+    \label{fig:roach_big}
+    \vspace{-0.1cm}
+    \caption{\small \footnotesize We implement our sample-efficient meta-reinforcement learning algorithm on a real legged millirobot, enabling online adaptation to new tasks and unexpected occurrences such as losing a leg (shown here), novel terrains and slopes, errors in pose estimation, and pulling payloads.}
+    \vspace{-0.2in}
+    \end{figure}
 
 \section{PRIOR WORK}
 
@@ -96,11 +126,351 @@ Fields of related work:
     \item Theoretical Analysis of Control Algorithms: Papers focusing on theoretical analyses of control algorithms, especially those that address adaptive control and reinforcement learning techniques, will be referenced to support the theoretical findings and insights presented in the paper.
 \end{itemize}
 
+    REFERENCE:
+    \vspsec
+    Advances in learning control policies have shown success on numerous complex and high dimensional tasks~\citep{schulman2015trust,lillicrap2015ddpg,mnih2015human,levine2016end,silver2017mastering}. While reinforcement learning algorithms provide a framework for learning new tasks, they primarily focus on mastery of individual skills, rather than generalizing and quickly adapting to new scenarios.
+    Furthermore, model-free approaches~\citep{peters2008reinforcement} require large amounts of system interaction to learn successful control policies, which often makes them impractical for real-world systems. In contrast, model-based methods attain superior sample efficiency by first learning a model of system dynamics, and then using that model to optimize a policy~\citep{deisenroth2013survey,lenz2015deepmpc,levine2016end,nagabandi2017roach,williams2017information}.  Our approach alleviates the need to learn a single global model by allowing the model to be adapted automatically to different scenarios online based on recent observations. A key challenge with model-based RL approaches is the difficulty of learning a global model that is accurate for the entire state space. Prior model-based approaches tackled this problem by incorporating model uncertainty using Gaussian Processes (GPs)~\citep{ko2009gp,deisenroth2011pilco, doerr2017mbpid}. However, these methods make additional assumptions on the system (such as smoothness), and does not scale to high dimensional environments.  \citet{chua2018deep} has recently showed that neural networks models can also benefit from incorporating uncertainty, and it can lead to model-based methods that attain model-free performance with a significant reduction on sample complexity. Our approach is orthogonal to theirs, and can benefit from incorporating such uncertainty.
+
+    Prior online adaptation approaches~\citep{tanaskovic2013adaptive,aswani2012extensions} have aimed to learn an approximate global model and then adapt it at test time. Dynamic evaluation algorithms~\citep{rei2015onlinerepre,krause2017dynamiceval,krause2016multiplicative,fortunato2017bayesian}, for example, learn an approximate global distribution at training time and adapt those model parameters at test time to fit the current local distribution via gradient descent. There exists extensive prior work on online adaptation in model-based reinforcement learning and adaptive control~\citep{sastry1989adaptive}. In contrast from inverse model adaptation~\citep{kelouwani2012online,underwood2010online, pastor2011online, franzi2016robustonline, franzi2016drift, rai2017feedback}, we are concerned in the problem of adapting the forward model, closely related to online system identification~\citep{manganiello2014optimization}. Work in model adaptation~\citep{levine2013guided,gu2016continuous,fu2015onlineadapt, weinstein2017motorcontrol} has shown that a perfect global model is not necessary, and prior knowledge can be fine-tuned to handle small changes. These methods, however, face a mismatch between what the model is trained for and how it is used at test time. In this paper, we bridge this gap by explicitly training a model for fast and effective adaptation. As a result, our model achieves more effective adaptation compared to these prior works, as validated in our experiments.
+
+    Our problem setting relates to meta-learning, a long-standing problem of interest in machine learning that is concerned with enabling artificial agents to efficiently learn new tasks by learning to learn~\citep{thrun1998learning,schmidhuber1991learning,naik1992meta,lake2015human}. A meta-learner can control learning through approaches such as deciding the learner's architecture~\citep{baker2016designing}, or by prescribing an optimization algorithm or update rule for the learner~\citep{bengio1990learning,schmidhuber1992learning,younger2001meta,andrychowicz2016learntolearn,li2016learning,ravi2016optimization}.
+    Another popular meta-learning approach involves simply unrolling a recurrent neural network (RNN) that ingests the data~\citep{santoro2016one,munkhdalai2017meta,munkhdalai2017learning,mishra2017simple} and learns internal representations of the algorithms themselves, one instantiation of our approach (ReBAL) builds on top of these methods.
+    On the other hand, the other instantiation of our method (GrBAL) builds on top of MAML~\citep{finn2017maml}. GrBAL differs from the supervised version of MAML in that MAML assumes access to a hand-designed distribution of tasks. Instead, one of our primary contributions is the online formulation of meta-learning, where tasks correspond to temporal segments, enabling ``tasks'' to be constructed automatically from the experience in the environment.
+
+    Meta-learning in the context of reinforcement learning has largely focused on model-free approaches~\citep{duan2016rl2,wang2016learning,sung2017learning,al2017cont}. However, these algorithms present even more (meta-)training sample complexity than non-meta model-free RL methods, which precludes them from real-world applications. Recent work~\citep{saemundsson2018meta}  has developed a model-based meta RL algorithm, framing meta-learning as a hierarchical latent variable model, training for episodic adaptation to dynamics changes; the modeling is done with GPs, and results are shown on the cart-pole and double-pendulum agents. In contrast, we propose an approach for learning online adaptation of high-capacity neural network dynamics models; we present two instantiations of this general approach and show results on both simulated agents and a real legged robot.
+
+\section{Preliminaries}
+
+    REFERENCE:
+    \label{sec:prelim}
+    \vspsec
+    In this section, we present model-based reinforcement learning, introduce the meta-learning formulation, and describe the two main meta-learning approaches.
+    \vspsubsec
+    \subsection{Model-Based Reinforcement Learning} \label{sec:prelim-mb}
+    \vspsubsec
+    Reinforcement learning agents aim to perform actions that maximize some notion of cumulative reward. Concretely, consider a Markov decision process (MDP)
+    defined by the tuple $(\mathcal{S}, \mathcal{A}, p, r, \gamma, \rho_0, H)$. Here, $\mathcal{S}$ is the set of states, $\mathcal{A}$ is the set of actions, $p({\bf s'}|{\bf s}, {\bf a})$ is the state transition distribution, $r: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}$ is a bounded reward function, $\rho_0: \mathcal{S} \to \mathbb{R}_+$ is the initial state distribution, $\gamma$ is the discount factor, and $H$ is the horizon. A trajectory segment is denoted by  $\tau(i, j) := ({\bf s}_{i}, {\bf a}_{i}, ..., {\bf s}_{j}, {\bf a}_{j}, {\bf s}_{j+1})$. Finally, the sum of expected rewards from a trajectory is the return. In this framework, RL aims to find a policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$ that prescribes the optimal action to take from each state in order to maximize the expected return. 
+
+    Model-based RL aims to solve this problem by learning the transition distribution $p({\bf s'}|{\bf s}, {\bf a})$, which is also referred to as the dynamics model. This can be done using a function approximator $\hat p_{\bm{\theta}}({\bf s'}|{\bf s}, {\bf a})$ to approximate the dynamics, where the weights $\bm{\theta}$ are optimized to maximize the log-likelihood of the observed data $\mathcal{D}$. In practice, this model is then used in the process of action selection by either producing data points from which to train a policy, or by producing predictions and dynamics constraints to be optimized by a controller.
+
+    \vspsubsec
+    \subsection{Meta-Learning} \label{sec:prelim-meta}
+    \vspsubsec
+
+    Meta-learning is concerned with automatically learning learning algorithms that are more efficient and effective than learning from scratch. These algorithms leverage data from \emph{previous} tasks to acquire a learning procedure that can quickly adapt to new tasks. These methods operate under the assumption that the previous meta-training tasks and the new meta-test tasks are drawn from the same task distribution $\rho(\mathcal{T})$ and share a common structure that can be exploited for fast learning. In the supervised learning setting, we aim to learn a function $f_{\bm{\theta}}$
+    with parameters ${\bm \theta}$ that minimizes 
+    a supervised loss $\mathcal{L}_{\mathcal{T}}$. 
+    Then, the goal of meta-learning is to find a learning procedure, denoted as $\bm{\theta}'= u_{\bm{\psi}}(\mathcal{D}_\mathcal{T}^\text{tr}, \bm{\theta})$, 
+    that can learn a range of tasks $\mathcal{T}$ from small datasets $\mathcal{D}_\mathcal{T}^\text{tr}$.
+
+    We can formalize this meta-learning problem setting as optimizing
+    for the parameters of the learning procedure ${\bm \theta}, {\bm \psi}$ as follows:
+    \begin{align}
+        \min_{\bm{\theta}, \bm{\psi}} \hspace{4pt} \mathbb{E}_{\mathcal{T} \sim \rho({\mathcal{T}})} %\mathbb{E}_{(\bm{x}, \bm{y}) \sim \mathcal{T}}  
+        \big[ \mathcal{L}(\data_\task^\text{test}, {\bm \theta}') \big] \hspace{10pt}
+    \text{s.t.} \hspace{10pt} \bm{\theta}'= u_{\bm{\psi}}(\mathcal{D}_\mathcal{T}^\text{tr}, \bm{\theta})
+    \end{align}
+    where $\data_\task^\text{tr}, \data_\task^\text{test}$ are sampled without replacement from the meta-training dataset $\data_\task$.
+
+    Once meta-training optimizes for the parameters ${\bm \theta}_*, {\bm \psi}_*$, the learning procedure $u_{\bm \psi}(\cdot, {\bm \theta})$ can then be used to learn new held-out tasks from small amounts of data.
+    We will also refer to the learning procedure $u$ as the update function.
+
+    \paragraph{Gradient-based meta-learning.} Model-agnostic meta-learning (MAML)~\citep{finn2017maml} aims to learn the initial parameters of a neural network such that taking one or several gradient descent steps from this initialization leads to effective generalization (or few-shot generalization) to new tasks. Then, when presented with new tasks, the model with the meta-learned initialization can be quickly fine-tuned using a few data points from the new tasks.
+    Using the notation from before, MAML uses gradient descent as a learning algorithm:
+    \begin{align}
+        u_{\bm{\psi}}(\data_\mathcal{T}^\text{tr}, \bm{\theta}) = \bm{\theta} - \alpha \nabla_{\bm{\theta}} %\mathbb{E}_{(\bm{x}, \bm{y}) \sim \mathcal{T}}  \big[
+        \mathcal{L}(\data_\task^\text{tr}, {\bm \theta})
+        %\big]
+    \end{align}
+    The learning rate $\alpha$ may be a learnable paramter (in which case $\bm{\psi}=\alpha$) or fixed as a hyperparameter, leading to $\bm{\psi}=\varnothing$. Despite the update rule being fixed, a learned initialization of an overparameterized deep network followed by gradient descent is  as expressive as update rules represented by deep recurrent networks~\citep{finn2017metauniv}.
+
+    \paragraph{Recurrence-based meta-learning.} Another approach to meta-learning is to use recurrent models. In this case, the update function is always learned, and $\bm{\psi}$ corresponds to the weights of the recurrent model that update the hidden state. The parameters $\bm{\theta}$ of the prediction model correspond to the remainder of the weights of the recurrent model and the hidden state. Both gradient-based and recurrence-based meta-learning methods have been used for meta model-free RL~\citep{finn2017maml,duan2016rl2}. We will build upon these ideas to develop a meta model-based RL algorithm that enables adaptation in dynamic environments, in an online way.
+
+
 \section{METHOD}
+
+    REFERENCE:
+        \vspsec
+        \section{Meta-Learning for Online Model Adaptation}\label{sec:ml4ac}
+        \vspsec
+        In this section, we present our approach for meta-learning for online model adaptation. As explained in Section~\ref{sec:prelim-meta}, standard meta-learning formulations require the learned model $\bm{\theta}_*, \bm{\psi}_*$ to learn using $M$ data points from some new ``task.'' In prior gradient-based and model-based meta-RL approaches~\citep{finn2017maml,saemundsson2018meta}, the $M$ has corresponded to $M$ trajectories, leading to episodic adaptation.
+
+        Our notion of task is slightly more fluid, where every segment of a trajectory can be considered to be a different ``task,'' and observations from the past $M$ \emph{timesteps} (rather than the past $M$ episodes) can be considered as providing information about the current task setting. 
+        Since changes in system dynamics, terrain details, or other environmental changes can occur at any time, we consider (at every time step) the problem of adapting the model using the $M$ past time steps to predict the next $K$ timesteps. In this setting, $M$ and $K$  are pre-specified hyperparameters; see appendix for a sensitivity analysis of these parameters.
+
+        In this work, we use the notion of environment $\mathcal{E}$ to denote different settings or configurations of a particular problem, ranging from malfunctions in the system's joints to the state of external disturbances. We assume a distribution of environments $\rho({\mathcal{E}})$ that share some common structure, such as the same observation and action space, but may differ in their dynamics $p_\mathcal{E}({\bf s'}|{\bf s}, {\bf a})$. We denote a trajectory segment by $\tau_{\mathcal{E}}(i, j)$, which represents a sequence of states and actions
+        $({\bf s}_{i}, {\bf a}_{i}, ..., {\bf s}_{j}, {\bf a}_{j}, {\bf s}_{j+1})$ sampled within an environment $\mathcal{E}$. Our algorithm assumes that the environment is locally consistent, in that every segment of length $j-i$ has the same environment. Even though this assumption is not always correct, it allows us to learn to adapt from data without knowing when the environment has changed. Due to the fast nature of our adaptation (less than a second), this assumption is seldom violated.
+
+        We pose the meta-RL problem in this setting as an optimization over ($\bm{\theta}$, $\bm{\psi}$) with respect to a maximum likelihood meta-objective. The meta-objective is the likelihood of the data under a predictive model $\hat p_{\bm{\theta}'}({\bf s'}|{\bf s}, {\bf a})$ with parameters $\bm{\theta}'$, where \mbox{$\bm{\theta}' = u_{\bm{\psi}}(\tau_{\mathcal{E}}(t-M, t-1), \bm{\theta})$} corresponds to model parameters that were updated using the past $M$ data points. Concretely, this corresponds to the following optimization:
+        %
+        \begin{align}
+        \label{eq:metaobj}
+            \min_{\bm{\theta}, \bm{\psi}} \hspace{4pt} \mathbb{E}_{\tau_{\mathcal{E}}(t-M, t+K) \sim \mathcal{D}}  \big[ \mathcal{L}(\tau_{\mathcal{E}}(t, t+K), \bm{\theta}'_{\mathcal{E}})\big] \hspace{10pt}
+        \text{s.t.:} \hspace{10pt} \bm{\theta}'_{\mathcal{E}} = u_{\bm{\psi}}(\tau_{\mathcal{E}}(t-M, t-1), \bm{\theta}),
+        \end{align}
+        %
+        In that $\tau_{\mathcal{E}}(t-M, t+K) \sim \mathcal{D}$ corresponds to trajectory segments sampled from our previous experience, and the loss $\mathcal{L}$ corresponds to the negative log likelihood of the data under the model:
+        %
+        \begin{align}
+        \loss(\tau_{\mathcal{E}}(t, t+K), \bm{\theta}_{\mathcal{E}}') \triangleq -\frac{1}{K} 
+        %\sum_{k = t}^{t+K} 
+        \sum_{k=t}^{t+K}
+        \log \hat p_{\bm{\theta}_{\mathcal{E}}'} ( {\bf s}_{k+1} | {\bf s}_{k}, {\bf a}_{k}).
+            \label{eq:inner update}
+        \end{align}
+        % 
+        In the meta-objective in Equation~\ref{eq:metaobj}, note that the past $M$ points are used to adapt $\bm{\theta}$ into $\bm{\theta'}$, and the loss of this $\bm{\theta'}$ is evaluated on the future $K$ points. Thus, we use the past $M$ timesteps to provide insight into how to adapt our model to perform well for nearby future timesteps. As outlined in Algorithm~\ref{alg:metatrain}, the update rule $u_{\bm{\psi}}$ for the inner update and a gradient step on $\bm{\theta}$ for the outer update allow us to optimize this meta-objective of adaptation. Thus, we achieve fast adaptation at test time by being able to fine-tune the model using just $M$ data points. 
+
+        While we focus on reinforcement learning problems in our experiments, this meta-learning approach could be used for a learning to adapt online in a variety of sequence modeling domains. We present our algorithm using both a recurrence and a gradient-based meta-learner, as we discuss next.
+
+        \paragraph{Gradient-Based Adaptive Learner (GrBAL).} GrBAL uses a gradient-based meta-learning to perform online adaptation; in particular, we use MAML~\citep{finn2017maml}. In this case, our update rule is prescribed by gradient descent (~\ref{eq:inner update}.)
+        %
+        \begin{align}
+        \bm{\theta^\prime}_{\mathcal{E}} = u_{\bm{\psi}}(\tau_{\mathcal{E}}(t-M, t-1), \bm{\theta}) = \bm{\theta}_{\mathcal{E}} + \bm{\psi} \nabla_{\bm{\theta}} \frac{1}{M} 
+        \sum_{m=t-M}^{t-1}
+        \log \hat p_{\bm{\theta}_{\mathcal{E}}} ( {\bf s}_{m+1} | {\bf s}_{m}, {\bf a}_{m})
+            \label{eq:inner update}
+        \vspace{-0.2in}
+        \end{align}
+        %
+        \paragraph{Recurrence-Based Adaptive Learner (ReBAL).} ReBAL, instead, utilizes a recurrent model, which  learns its own update rule (i.e., through its internal gating structure). In this case, $\bm\psi$ and $u_{\bm\psi}$ correspond to the weights of the recurrent model that update its hidden state.
+        % 
+        \begin{figure*}
+        \noindent
+        \begin{minipage}[t]{0.5\textwidth}
+        \begin{algorithm}[H]
+        \begin{algorithmic}[1]
+        \REQUIRE Distribution $\rho_{\mathcal{E}}$ over tasks
+        \REQUIRE Learning rate $\beta \in \mathbb{R}^+$
+        \REQUIRE Number of sampled tasks $N$, dataset $\mathcal{D}$
+        \REQUIRE Task sampling frequency $n_{S} \in \mathbb{Z}^{+}$
+        \STATE Randomly initialize $\bm{\theta}$
+        \FOR{$i = 1, ...$}
+        \IF{$i \bmod n_S = 0$}
+        \STATE Sample $\mathcal{E} \sim \rho(\mathcal{E})$
+        \STATE Collect $\tau_{\mathcal{E}}$ using Alg.~\ref{alg:generic}
+        \STATE $\mathcal{D} \leftarrow \mathcal{D} \cup \{\tau_{\mathcal{E}}\}$
+        \ENDIF
+            \FOR{$j=1 \dots N$}
+            \STATE $\tau_{\mathcal{E}}(t-M, t-1), \tau_{\mathcal{E}}(t, t+K) \sim \mathcal{D}$
+            \STATE $\bm{\theta}'_{\mathcal{E}} \leftarrow u_{\bm{\psi}}(\tau_{\mathcal{E}}(t-M, t-1), \bm{\theta})$
+            \STATE $\mathcal{L}_j  \leftarrow \mathcal{L} (\tau_{\mathcal{E}}(t, t+K), {\bm{\theta}'_{\mathcal{E}}})$
+            \ENDFOR
+            \STATE $\bm{\theta} \leftarrow \bm{\theta} - \beta \nabla_{\bm{\theta}} \frac{1}{N} \sum\limits_{j=1}^N \mathcal{L}_j$
+            \STATE $\bm{\psi} \leftarrow \bm{\psi} - \eta \nabla_{\bm{\psi}}  \frac{1}{N} \sum\limits_{j=1}^N \mathcal{L}_j$
+        \ENDFOR
+        \STATE Return (${\bm{\theta}}$, $\bm{\psi}$) as (${\bm{\theta}_*}$, $\bm{\psi_*}$)
+        \end{algorithmic}
+        \caption{Model-Based Meta-Reinforcement Learning (train time)}
+        \label{alg:metatrain}
+        \end{algorithm}
+        \end{minipage}
+        \noindent
+        \hspace{0.1cm}
+        \begin{minipage}[t]{0.45\textwidth}
+        \noindent
+        \begin{algorithm}[H]
+        \begin{algorithmic}[1]
+        \REQUIRE Meta-learned parameters $\bm{\theta}_*, \bm{\psi}_*$
+        \REQUIRE controller$()$, $H$, $r$, $n_{A}$
+        \STATE $\data \leftarrow \emptyset $\\
+        \FOR{ \text{each timestep $t$}}
+            \STATE $\bm{\theta}_*' \leftarrow u_{\bm{\psi_*}}(\data(t-M, t-1), \bm{\theta}_*)$\\
+            \STATE ${\bf a }\leftarrow$ controller$({\bm{\theta}_*'},r,H,n_{A})$\\
+            \STATE Execute ${\bf a}$, add result to $\data$
+        \ENDFOR
+        \STATE Return rollout $\data$
+        \end{algorithmic}
+        \caption{Online Model Adaptation\\(test time)}
+        \label{alg:generic}
+        \end{algorithm}
+        \centering
+        \vspace{-0.3cm}
+        \includegraphics[width=.42\textwidth]{pictures/envs/crippled_cheetah.png}
+        \includegraphics[width=.42\textwidth]{pictures/envs/mujoco_ant.png}\\
+
+        \includegraphics[width=.42\textwidth]{pictures/envs/mujoco_hfield.png}
+        \includegraphics[width=.42\textwidth]{pictures/envs/mujoco_pier.png}\\
+        \hspace{0.02cm}
+        \includegraphics[width=.42\textwidth]{pictures/roach_adapt/roach_slope.jpg}
+        \includegraphics[width=.42\textwidth]{pictures/roach_adapt/roach_leg_crop.jpg}
+        \vspace{-0.2cm}
+        \caption[width=0.4\textwidth]{\small Two real-world and four simulated environments on which our method is evaluated and adaptation is crucial for success (e.g., adapting to different slopes and leg failures)}
+        %\TODO{Add picture of the roach}.}
+        \vspace{-0.1cm}
+        \label{fig:mujoco-envs}
+        \end{minipage}
+        \vspace{-0.2 in}
+        \end{figure*}
+
+
+        \vspsec
+        \section{Model-Based Meta-Reinforcement Learning}\label{sec:generic_alg}
+        \vspsec
+        Now that we have discussed our approach for enabling online adaptation, we next propose how to build upon this idea to develop a model-based meta-reinforcement learning algorithm.
+        First, we explain how the agent can use the adapted model to perform a task, given parameters $\bm{\theta}_*$ and $ \bm{\psi}_*$ from optimizing the meta-learning objective.
+
+        Given  $\bm{\theta}_*$ and $ \bm{\psi}_*$, we use the agent's recent experience to adapt the model parameters: $\bm{\theta}_*^\prime = u_{\bm{\psi}_*}(\tau(t-M, t), \bm{\theta}_*)$. This results in a model $\hat{p}_{\bm{\theta_*^\prime}}$ that better captures the local dynamics in the current setting, task, or environment. This adapted model is then passed to our controller, along with the reward function $r$ and a planning horizon $H$. We use a planning $H$ that is smaller than the adaptation horizon $K$, since the adapted model is only valid within the current context. We use model predictive path integral control (MPPI)~\citep{williams15mppi}, but, in principle, our model adaptation approach is agnostic to the model predictive control (MPC) method used.
+
+        The use of MPC compensates for model inaccuracies by preventing accumulating errors, since we replan at each time step using updated state information. MPC also allows for further benefits in this setting of online adaptation, because the model $\hat p_{\bm{\theta}_\mathcal{E}'}$ itself will also improve by the next time step. After taking each step, we append the resulting state transition onto our dataset, reset the model parameters back to $\bm{\theta}_*$, and repeat the entire planning process for each timestep. See Algorithm~\ref{alg:generic} for this adaptation procedure. Finally, in addition to test-time, we also perform this online adaptation procedure during the meta-training phase itself, to provide on-policy rollouts for meta-training. For the complete meta-RL algorithm, see  Algorithm~\ref{alg:metatrain}.
+
 
 
 \section{RESULTS}
 
+REFERENCE:
+    \vspsec
+    \section{Experiments}\label{sec:results}
+    \vspsec
+    Our evaluation aims to answer the following questions: (1) Is adaptation actually changing the model? (2) Does our approach enable fast adaptation to varying dynamics, tasks, and environments, both inside and outside of the training distribution? (3) How does our method's performance compare to that of other methods? (4) How do GrBAL and ReBAL compare? (5) How does meta model-based RL compare to meta model-free RL in terms of sample efficiency and performance for these experiments? (6) Can our method learn to adapt online on a real robot, and if so, how does it perform?
+    We next present our set-up and results, motivated by these questions. Videos are available online\footnote{Videos available at: \url{https://sites.google.com/berkeley.edu/metaadaptivecontrol}}, and further analysis is provided in the appendix.
+    We first conduct a comparative evaluation of our algorithm, on a variety of simulated robots using the MuJoCo physics engine~\citep{todorov2012mujoco}. For all of our environments, we model the transition probabilities as Gaussian random variables with mean parameterized by a neural network model (3 hidden layers of 512 units each and ReLU activations) and fixed variance. In this case, maximum likelihood estimation corresponds to minimizing the mean squared error. We now describe the setup of our environments (Fig.~\ref{fig:mujoco-envs}), where each agent requires different types of adaptation to succeed at run-time:
+
+    \vspace{-0.1in}
+    \paragraph{Half-cheetah (HC): disabled joint.} For each rollout during meta-training, we randomly sample a joint to be disabled (i.e., the agent cannot apply torques to that joint). At test time, we evaluate performance in two different situations: disabling a joint unseen during training, and switching between disabled joints during a rollout. The former examines extrapolation to out-of-distribution environments, and the latter tests fast adaptation to changing dynamics.
+
+    %\vspace{-0.1in}
+    \paragraph{HC: sloped terrain.} For each rollout during meta-training, we randomly select an upward or downward slope of low steepness. At test time, we evaluate performance on unseen settings including a gentle upward slope, a steep upward slope, and a steep hill that first goes up and then down.
+
+    %\vspace{-0.1in}
+    \paragraph{HC: pier.} In this experiment, the cheetah runs over a series of blocks that are floating on water. Each block moves up and down when stepped on, and the changes in the dynamics are rapidly changing due to each block having different damping and friction properties. The HC is meta-trained by varying these block properties, and tested on a specific (randomly-selected) configuration of properties.
+
+    %\vspace{-0.1in}
+    \paragraph{Ant: crippled leg.} For each meta-training rollout, we randomly sample a leg to cripple on this quadrupedal robot. This causes unexpected and drastic changes to the underlying dynamics. We evaluate this agent at test time by crippling a leg from outside of the training distribution, as well as transitioning within a rollout from normal operation to having a crippled leg.
+
+
+    In the following sections, we evaluate our model-based meta-RL methods (GrBAL and ReBAL) in comparison to several prior methods:
+    \begin{itemize}[leftmargin=*]
+    \item \textbf{Model-free RL (TRPO)}: To evaluate the importance of adaptation, we compare to a model-free RL agent that is trained across environments $\mathcal{E}\sim\rho(\mathcal{E})$ using TRPO~\citep{schulman2015trust}.
+    \item \textbf{Model-free meta-RL (MAML-RL)}: We compare to a state-of-the-art model-free meta-RL method, MAML-RL~\citep{finn2017maml}.
+    \item \textbf{Model-based RL (MB)}: Similar to the model-free agent, we also compare to a single model-based RL agent, to evaluate the importance of adaptation. This model is trained using supervised model-error and iterative model bootstrapping. %, and an MPPI planner~\cite{williams15mppi}.
+    \item \textbf{Model-based RL with dynamic evaluation (MB+DE)}: We compare to an agent trained with model-based RL, as above. However, at test time, the model is adapted by taking a gradient step at each timestep using the past $M$ observations, akin to dynamic evaluation~\citep{krause2017dynamiceval}. This final comparison evaluates the benefit of explicitly training for adaptability.
+    \end{itemize}
+
+    All model-based approaches (MB, MB+DE, GrBAL, and ReBAL) use model bootstrapping, use the same neural network architecture, and use the same planner within experiments: MPPI~\citep{williams15mppi} for the simulated experiments and random shooting (RS)~\citep{nagabandi2017neural} for the real-world experiments.
+
+
+    \begin{wrapfigure}{R}{0.55\textwidth}
+    \centering
+    \vspace{-0.1in}
+    \includegraphics[width=\linewidth]{pictures/hist.png}
+    \includegraphics[height=0.03\textwidth, width=0.7\linewidth]{pictures/caption_hist.png}
+    \vspace{-0.3cm}
+    \caption{\small Histogram of normalized $K$-step model prediction errors of GrBAL, showing the improvement of the post-update model's predictions over the pre-update ones.}
+    \label{fig:model_errors} 
+    \vspace{-0.2in}
+    \end{wrapfigure}
+    % 
+    % \vspsubsec
+    \subsection{Effect of Adaptation}
+    \vspsubsec
+    First, we analyze the effect of the model adaptation, and show results from test-time runs on three environments: HC pier, HC sloped terrain with a steep up/down hill, and ant crippled leg with the chosen leg not seen as crippled during training. Figure~\ref{fig:model_errors} displays the distribution shift between the pre-update and post-update model prediction errors of three GrBAL runs, showing that using the past $M$ timesteps to update $\bm{\theta_*}$ (pre) into $\bm{\theta_*'}$ (post) does indeed reduce model error on predicting the following $K$ timesteps.
+
+    \subsection{Performance and Meta-training Sample Efficiency}\label{sec:baselines}
+    \vspsubsec
+
+    We first study the sample efficiency of the meta-training process.
+    Figure~\ref{fig:learning_curves} shows the average return across test environments w.r.t. the amount of data used for meta-training. We (meta-)train the model-free methods (TRPO and MAML-RL) until convergence, using the equivalent of about two days of real-world experience. In contrast, we meta-train the model-based methods (including our approach) using the equivalent of 1.5-3 hours of real-world experience. Our methods result in superior or equivalent performance to the model-free agent that is trained with $1000$ times more data. Our methods also surpass the performance of the non-meta-learned model-based approaches. Finally, our performance closely matches the high asymptotic performance of the model-free meta-RL method for half-cheetah disabled, and achieves a suboptimal performance for ant crippled but, again, it does so with the equivalent of $1000$ times less data. Note that this suboptimality in asymptotic performance is a known issue with model-based methods, and thus an interesting direction for future efforts.
+    The improvement in sample efficiency from using model-based methods matches prior findings~\citep{deisenroth2011pilco,nagabandi2017neural,thanard}; the most important evaluation, which we discuss in more detail next, is the ability for our method to adapt online to drastic dynamics changes in only a handful of timesteps.
+
+    % 
+    \begin{figure}[H]
+    \centering
+    \vspace{-0.1in}
+    \includegraphics[width=0.9\linewidth]{pictures/sample_efficiency.png}
+    \vspace{-0.1in}
+    \caption{\small Compared to model-free RL, model-free meta-RL, and model-based RL methods, our model-based meta-RL methods achieve good performance with 1000$\times$ less data. Dotted lines indicate performance at convergence. For MB+DE+MPPI, we perform dynamic evaluation at test time on the final MB+MPPI model.}
+    \label{fig:learning_curves}
+    \vspace{-0.1in}
+    \end{figure}
+
+    \begin{wrapfigure}{R}{0.4\textwidth}
+    \vspace{-0.4in}
+    \centering
+    \includegraphics[width=\linewidth]{pictures/simulated_experiments.png}
+    \caption{\small Simulated results in a variety of dynamic test environments. GrBAL outperforms other methods, even the MB oracle, in all experiments where fast adaptation is necessary. These results highlight the difficulty of training a global model, and the importance of adaptation.
+    }
+    \label{fig:sim_exp}
+    \vspace{-0.1in}
+    \end{wrapfigure}
+
+    \vspsubsec
+    \subsection{Test-time Performance: Online Adaptation \& Generalization}\label{sec:fast_adapt}
+    \vspsubsec
+
+    In our second comparative evaluation, we evaluate final test time performance both GrBAL and ReBAL in comparison to the aforementioned methods.
+    In the interest of developing efficient algorithms for real-world applications, we operate all methods in the low data regime for all experiments: the amount of data available (meta-)training is fixed across methods, and roughly corresponds to 1.5-3 hours of real-world experience depending on the domain. We also provide the performance of a MB oracle, which is trained using unlimited data from only the given test environment (rather than needing to generalize to various training environments).
+
+    In these experiments, note that all agents were meta-trained on a distribution of tasks/environments (as detailed above), but we then evaluate their adaptation ability on unseen environments at test time. We test the ability of each approach to adapt to sudden changes in the environment, as well as to generalize beyond the training environments. We evaluate the fast adaptation (F.A.) component on the HC disabled joint, ant crippled leg, and the HC pier. On the first two, we cause a joint/leg of the robot to malfunction in the middle of a rollout. We evaluate the generalization component also on the tasks of HC disabled joint and ant crippled leg, but this time, the leg/joint that malfunctions has not been seen as crippled during training. The last environment that we test generalization on is the HC slopped terrain for a hill, where the agent has to run up and down a steep slope, which is outside of the gentle slopes that it experienced during training. The results, shown in Fig.~\ref{fig:sim_exp}, show returns that are normalized such that the MB oracle achieves a return of 1.
+
+    In all experiments, due to low quantity of training data, TRPO performs poorly. Although MB+DE achieves better generalization than MB, the slow nature of its adaptation causes it to fall behind MB in the environments that require fast adaptation. On the other hand, our approach surpasses the other approaches in all of the experiments. In fact, in the HC pier and the fast adaptation of ant environments, our approach surpasses the model-based oracle. This result showcases the importance of adaptation in stochastic environments, where even a model trained with a lot of data cannot be robust to unexpected occurrences or disturbances. ReBAL displays its strengths on scenarios where longer sequential inputs allow it to better asses current environment settings, but overall, GrBAL seems to perform better for both generalization and fast adaptation.
+
+    \vspsubsec
+    \subsection{Real-World Results}
+    \vspsubsec
+    To test our meta model-based RL method's sample efficiency, as well as its ability to perform fast and effective online adaptation, we applied GrBAL to a real legged millirobot, comparing it to model-based RL (MB) and model-based RL with dynamic evaluation (MB+DE). Due to the cost of running real robot experiments, we chose the better performing method (i.e., GrBAL) to evaluate on the real robot.
+    This small 6-legged robot, as shown in Fig.~1 and Fig.~\ref{fig:mujoco-envs}, presents a modeling and control challenge in the form of highly stochastic and dynamic movement. This robot is an excellent candidate for online adaptation for many reasons: the rapid manufacturing techniques and numerous custom-design steps used to construct this robot make it impossible to reproduce the same dynamics each time, its linkages and other body parts deteriorate over time, and it moves very quickly and dynamically with 
+
+    The state space of the robot is a 24-dimensional vector, including center of mass positions and velocities, center of mass pose and angular velocities, back-EMF readings of motors, encoder readings of leg motor angles and velocities, and battery voltage. We define the action space to be velocity setpoints of the rotating legs. The action space has a dimension of two, since one motor on each side is coupled to all three of the legs on that side. All experiments are conducted in a motion capture room. Computation is done on an external computer, and the velocity setpoints are streamed over radio at 10 Hz to be executed by a PID controller on the microcontroller on-board of the robot.
+
+    We meta-train a dynamics model for this robot using the meta-objective described in Equation~\ref{eq:metaobj}, and we train it to adapt on entirely real-world data from three different training terrains: carpet, styrofoam, and turf. We collect approximately 30 minutes of data from each of the three training terrains. This data was entirely collected using a random policy, in conjunction with a safety policy, whose sole purpose was to prevent the robot from exiting the area of interest.
+
+    Our first group of results (Table~\ref{tbl:roach_table}) show that, when data from a random policy is used to train a dynamics model, both a model trained with a standard supervised learning objective (MB) and a GrBAL model achieve comparable performance for executing desired trajectories on terrains from the training distribution.
+
+    Next, we test the performance of our method on what it is intended for: fast online adaptation of the learned model to enable successful execution of new, changing, or out-of-distribution environments at test time. Similar to the comparisons above, we compare GrBAL to a model-based method (MB) that involves neither meta-training nor online adaptation, as well as a dynamic evaluation method that involves online adaptation of that MB model (MB+DE).
+    Our results (Fig.~6) demonstrate that GrBAL substantially outperforms MB and MB+DE, and, unlike MB and MB+DE, and that GrBAL can quickly 1) adapt online to a missing leg, 2) adjust to novel terrains and slopes, 3) account for miscalibration or errors in pose estimation, and 4) compensate for pulling payloads.
+    None of these environments were seen during training time, but the agent's ability to learn how to learn enables it to quickly leverage its prior knowledge and fine-tune to adapt to new environments online. Furthermore, the poor performance of the MB and MB+DE baselines demonstrate not only the need for adaptation, but also the importance of good initial parameters to adapt from (in this case, meta-learned parameters).
+    The qualitative results of these experiments in Fig.~\ref{fig:roach_test} show that the robot is able to use our method to adapt online and effectively follow the target trajectories, even in the presence of new environments and unexpected perturbations at test time.
+
+    bounding-style gaits; hence, its dynamics are strongly dependent on the terrain or environment at hand.
+    \begin{figure*}
+    \noindent
+    \begin{minipage}[t]{0.475\textwidth}
+    \centering
+    \vspace{-0.1in}
+    \begin{table}[H]
+
+    \centering
+    \footnotesize
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{|ll||l|l|l|l|}
+    \hline
+                                                    &       & Left & Str &  Z-z& F-8 \\ \hline \hline
+    \multicolumn{1}{|l|}{\!\!Carpet\!}    & GrBAL & 4.07 & 3.26     & 7.08    & 5.28     \\ \cline{2-6} 
+    \multicolumn{1}{|l|}{}                           & MB    & 3.94 & 3.26     & 6.56    & 5.21     \\ \hline
+    \multicolumn{1}{|l|}{\!\!Styrofoam\!} & GrBAL & 3.90 & 3.75     & 7.55    & 6.01     \\ \cline{2-6} 
+    \multicolumn{1}{|l|}{}                           & MB    & 4.09 & 4.06     & 7.48    & 6.54     \\ \hline
+    \multicolumn{1}{|l|}{\!\!Turf}      & GrBAL & 1.99 & 1.65     & 2.79    & 3.40     \\ \cline{2-6} 
+    \multicolumn{1}{|l|}{}                           & MB    & 1.87 & 1.69     & 3.52    & 2.61     \\ \hline
+    \end{tabular}%
+    }
+    \caption{\small Trajectory following costs for real-world GrBAL and MB results when tested on three terrains that were seen during training. Tested here for left turn (Left), straight line (Str), zig-zag (Z-z), and figure-8 shapes (F-8). The methods perform comparably, indicating that online adaptation is not needed in the training terrains, but including it is not detrimental.
+    \label{tbl:roach_table}
+    }
+    \end{table}
+    % \vspace{-0.1in}
+    \end{minipage}
+    \noindent
+    \hspace{0.1cm}
+    \begin{minipage}[t]{0.475\textwidth}
+    \noindent
+    \centering
+    \vspace{-0.1in}
+    \includegraphics[width=\linewidth]{pictures/roach_testTasks.png}
+    \label{fig:roach_bars}
+    \vspace{-0.7cm}
+    \caption{\small GrBAL clearly outperforms both MB and MB+DE, when tested on environments that (1) require online adaptation, and/or (2) were never seen during training.}
+    \end{minipage}
+    \vspace{-0.2 in}
+    \end{figure*}
+
+    \begin{figure}[H]
+    \centering
+    \vspace{-0.1in}
+    \includegraphics[width=\linewidth]{pictures/paths.png}
+    \caption{\small The dotted black line indicates the desired trajectory in the $xy$ plane. By effectively adapting online, our method prevents drift from a missing leg, prevents sliding sideways down a slope, accounts for pose miscalibration errors, and adjusts to pulling payloads (left to right). Note that none of these tasks/environments were seen during training time, and they require fast and effective online adaptation for success.}
+    \label{fig:roach_test}
+    \end{figure}
 
 \section{DISCUSSION}
 
@@ -146,14 +516,13 @@ Fields of related work:
 
 \section{CONCLUSIONS}
 
-    A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
+    REFERENCE:
+    \vspsec
+    \section{Conclusion}
+    \vspsec
+    In this work, we present an approach for model-based meta-RL that enables fast, online adaptation of large and expressive models in dynamic environments. We show that meta-learning a model for online adaptation results in a method that is able to adapt to unseen situations or sudden and drastic changes in the environment, and is also sample efficient to train. We provide two instantiations of our approach (ReBAL and GrBAL), and we provide a comparison with other prior methods on a range of continuous control tasks. Finally, we show that (compared to model-free meta-RL approaches), our approach is practical for real-world applications, and that this capability to adapt quickly is particularly important under complex real-world dynamics.
 
-    \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
-                                    % on the last page of the document manually. It shortens
-                                    % the textheight of the last page by a suitable amount.
-                                    % This command does not take effect until the next page
-                                    % so it should come on the page before the last. Make
-                                    % sure that you do not shorten the textheight too much.
+    A conclusion section is not required. Although a conclusion may review the main points of the paper, do not replicate the abstract as the conclusion. A conclusion might elaborate on the importance of the work or suggest applications and extensions. 
 
 \section*{APPENDIX}
 
