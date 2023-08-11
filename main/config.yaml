@@ -14,6 +14,39 @@
     
     (local_data): ./local_data.ignore.yaml
     
+    road map:
+        - Sept. 15th
+        - RELLIS Mon Aug 14th; 6.00pm
+            - get code working
+            - linear testing
+        - 6 visits; 2 per week for 3 weeks
+        - run tests with non-linear adversity
+        - run tests with non-static adversity
+        - compare against IQLR
+        - LATER: try RC experiments
+        - writing the paper
+        
+    on call:
+        - abstract
+        - control library
+        
+    todo:
+        - read up on LQR 
+        - read up on ILQR 
+        - read up on guassian-newton optimization
+        - watch: https://www.youtube.com/playlist?list=PLMrJAkhIeNNR20Mz-VpzgfQs5zrYi085m
+        
+    writing paper:
+        what we offer:
+            - ours is non-linear
+            - they assume that the transformation isn't changing over time
+            - optimal adaptive:
+                - needs accurate model; cite references that optimal adaptive control needs accurate models to 
+                - can do learned model
+        word it towards RL stuff so that we don't get control-theory guys:
+        relate it to the k* value in paper1: 
+            
+        
     related papers:
     
         paper1: https://www.annualreviews.org/doi/abs/10.1146/annurev-control-062922-090153

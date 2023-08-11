@@ -65,7 +65,8 @@
         % - cramming all the terms in the begining
         % - main benefits
             % - "primitive model" is better than "highly detailed model", can't find a way to escape mentioning it
-            % - preserving operator guarentees
+            % - preserving operator guarentees (don't have access to proprietary hardware/controller; can't come up with a good model; sensors are expensive)
+            % - avoids dangerous to explore
     
     % What problem is being addressed? What are we trying to solve
         % - "vehicle operators"  (e.g. policy)
