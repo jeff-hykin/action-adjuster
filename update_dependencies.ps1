@@ -11,7 +11,6 @@ import ProgressBar from "https://deno.land/x/progress@v1.3.8/mod.ts"
 FileSystem.cwd = await FileSystem.walkUpUntil(".git/")
 
 let depsFolder
-console.log("finding the __dependencies__ folder")
 for await (const each of FileSystem.recursivelyIterateItemsIn('.', { searchOrder: 'breadthFirstSearch'})) {
     if (each.isFolder && each.basename == "__dependencies__") {
         depsFolder = each.path
@@ -29,7 +28,6 @@ for (const eachPath of await glob(`${depsFolder}/__sources__/*/.gitrepo`)) {
         break
     }
 }
-console.log(`looking for missing __sources__`)
 for (const [importName, value] of Object.entries(dependencies)) {
     const { path, git_url: gitUrl } = value
     const repoPath = `${depsFolder}/__sources__/${importName}`
