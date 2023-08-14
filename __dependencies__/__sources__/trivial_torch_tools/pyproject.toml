@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trivial_torch_tools"
-version = "0.6.3"
+version = "0.6.4"
 description = "Decorators for reducing pytorch boilerplate"
 authors=[]
 
@@ -21,7 +21,6 @@ python = ">=3.7,<3.12"
 twine = "3.4.1"
 "keyrings.alt" = "4.0.2"
 toml = "^0.10.2"
-file-system-py = "0.0.11"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
