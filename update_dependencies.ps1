@@ -23,7 +23,7 @@ const dependencies = JSON.parse(await FileSystem.read(settingsJsonPath))?.pure_p
 for (const eachPath of await glob(`${depsFolder}/__sources__/*/.gitrepo`)) {
     const folderToPull = FileSystem.parentPath(eachPath)
     console.log(`pulling: ${eachPath}`)
-    const { success } = (await run`git subrepo pull ${folderToPull}`) 
+    const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
     if (!success) {
         break
     }
