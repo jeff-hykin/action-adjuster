@@ -27,6 +27,22 @@ canidates.sort(compareProperty({ keyList: [ "length" ], largestFirst: false }))
 const depsFolder = canidates[0]
 for (const eachPath of await glob(`${depsFolder}/__sources__/*/.gitrepo`)) {
     const folderToPull = FileSystem.parentPath(eachPath)
-    await run`git subrepo pull ${folderToPull}`
+    const { success } = (await run`git subrepo pull ${folderToPull}`) 
+    if (!success) {
+        break
+    }
+}
+const dependencies = JSON.parse(await FileSystem.read(`${depsFolder}/settings.json`))?.pure_python_packages ?? {}
+for (const [importName, value] of Object.entries(dependencies)) {
+    const { path, git_url: gitUrl } = value
+    const repoPath = `${depsFolder}/__sources__/${importName}`
+    if (gitUrl) {
+        if (!(await FileSystem.info(repoPath)).exists) {
+            const {success} = await run`git subrepo clone ${gitUrl} ${repoPath}`
+            if (!success) {
+                break
+            }
+        }
+    }
 }
 // (this comment is part of deno-guillotine, dont remove) #>
