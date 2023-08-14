@@ -15,11 +15,22 @@ from copy import deepcopy
 from .__dependencies__ import file_system_py as FS
 from .__dependencies__.super_hash import super_hash, hash_file
 
-try:
-    # use dill if its available
-    import dill as pickle
-except ImportError as error:
-    pass
+# TODO:
+    # create a class based system as an alternaitve to global settings
+    # perform lightweight checks on list-likes (numpy, torch tensors, etc), by saving their shape and comparing shape before fully hashing what might be a giantic object (if shapes are different cache is instantly busted)
+
+def get_pickle():
+    pickle = None
+    if settings.prefer_dill_over_pickle:
+        try:
+            # use dill if its available
+            import dill as pickle
+        except ImportError as error:
+            import pickle
+    else:
+        import pickle
+    
+    return pickle
 
 class Object:
     pass
@@ -30,6 +41,7 @@ class NotGiven:
 settings = Object()
 settings.default_folder = "cache.ignore/"
 settings.worker_que_size = 1000
+settings.prefer_dill_over_pickle = True
 
 class CacheData:
     calculated = False
@@ -122,7 +134,7 @@ def cache(folder=NotGiven, depends_on=lambda:None, watch_attributes=[], watch_fi
                     if path.exists(data.cache_file_name):
                         try:
                             with open(data.cache_file_name, 'rb') as cache_file:
-                                func_hash, cache_temp = pickle.load(cache_file)
+                                func_hash, cache_temp = get_pickle().load(cache_file)
                                 if func_hash == data.deep_hash:
                                     data.cache = cache_temp
                         except Exception as error:
@@ -171,7 +183,7 @@ def worker():
                     data = worker_que.get(block=False)
                 FS.clear_a_path_for(data.cache_file_name, overwrite=True)
                 with open(data.cache_file_name, 'wb') as cache_file:
-                    pickle.dump((data.deep_hash, data.cache), cache_file, protocol=4)
+                    get_pickle().dump((data.deep_hash, data.cache), cache_file, protocol=4)
                 worker_que.task_done()
         except queue.Empty:
             continue
