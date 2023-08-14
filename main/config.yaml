@@ -26,11 +26,12 @@
         - LATER: try RC experiments
         - writing the paper
         
-    on call:
-        - abstract
-        - control library
-        
     todo:
+        - simulate battery drain
+        - simulate steering drift over time
+        - simulate wind drift
+        - simulate delayed dynamics; sliding out (too much angular momentum)
+        - autograd
         - read up on LQR 
         - read up on ILQR 
         - read up on guassian-newton optimization
@@ -163,6 +164,8 @@
                 # 
                 # action offset 
                 # 
+                dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
+                battery_decay_rate: 0.01
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
@@ -243,6 +246,13 @@
             # 
             velocity_offset: 0.5
             spin_offset: 0.75
+        
+        ADVERSITY;BATTERY_DRAIN:
+            # 
+            # action offset 
+            # 
+            dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
+            battery_decay_rate: 0.01
         
         NOISE=NONE:
             simulator:
