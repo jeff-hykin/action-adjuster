@@ -1,6 +1,7 @@
 {
     "pure_python_packages": {
         "blissful_basics": {
+            "git_url": "git@github.com:jeff-hykin/blissful_basics.git",
             "path": "__sources__/blissful_basics/main/blissful_basics"
         },
         "cool_cache": {
