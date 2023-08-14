@@ -66,7 +66,13 @@ server1.push(event_name="found_an_event", data={"Hello from different process!":
 
 ```py
 from elegant_events import Server
-server1 = Server("localhost", 7070)
+server1 = Server(
+    "localhost",
+    7070,
+    cert_filepath=None, # for using secure websocket communication between processes
+    key_filepath=None,
+    password=None,
+)
 
 server1.yell(event_name, data)
 # only already-started processes will hear this event

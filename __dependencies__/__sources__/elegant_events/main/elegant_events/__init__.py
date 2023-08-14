@@ -2,7 +2,16 @@ if __name__ == '__main__':
     import sys
     # to be fully pure, the module name is dynamic to allow for any name (two versions of elegant_events could run at the same time under different names)
     exec(f"import {sys.argv[1]} as elegant_events")
-    elegant_events.start_server(address=sys.argv[2], port=sys.argv[3])
+    cert_filepath = None
+    key_filepath = None
+    password = None
+    try: cert_filepath = sys.argv[4] or None
+    except Exception as error: pass
+    try: key_filepath = sys.argv[5] or None
+    except Exception as error: pass
+    try: password = sys.argv[6] or None
+    except Exception as error: pass
+    elegant_events.start_server(address=sys.argv[2], port=sys.argv[3], cert_filepath=cert_filepath, key_filepath=key_filepath, password=password)
     exit(0)
 
 from random import random
@@ -22,25 +31,60 @@ connect = websockets.sync.client.connect
 this_file = __file__ # seems dumb but will break in interpreter if not assigned to a var
 url_encode = lambda string: urllib.parse.quote(string.encode('utf8'))
 
+def optional_ssl_kwarg(protocol, client_name=None, cert_filepath=None, key_filepath=None, password=None,):
+    if client_name:
+        import ssl
+        ssl_object = ssl.SSLContext(protocol)
+        ssl_object.load_cert_chain(
+            cert_filepath,
+            keyfile=key_filepath,
+            password=password,
+        )
+        return dict(ssl=ssl_object)
+    return {}
+
 class Server:
+    # TODO:
+        # add a que system for storing messages for not-yet-online devices
     # TODO: add a get-time endpoint
-    # TODO: add a get-id endpoint to allow for shorter ids (to save on bandwith)
     # TODO: add a whenever(only_most_recent) that will look at the backlog-batch and only trigger on the most recent one (intentionally drop packets)
     # TODO: add a "who did what" debugging tool
     # TODO: add a push(to="id") that pre-fills the backlog for a particular client
-    def __init__(self, address, port, debugging=False, client_name=None):
+    def __init__(self, address, port, debugging=False, client_name=None, cert_filepath=None, key_filepath=None, password=None):
         self.address            = address
         self.port               = port
         self.connections        = dict()
-        self.client_id          = client_name if client_name != None else f"{random()}"
+        self.client_id          = f"@{client_name}"
+        if self.client_id == None:
+            import socket
+            import os
+            import inspect
+            # https://stackoverflow.com/questions/28021472/get-relative-path-of-caller-in-python
+            try:
+                frame = inspect.stack()[1]
+                module = inspect.getmodule(frame[0])
+                directory = os.path.abspath(module.__file__)
+            # if inside a repl (error =>) assume that the working directory is the path
+            except (AttributeError, IndexError) as error:
+                directory = os.getcwd()
+            
+            if os.path.isabs(directory):
+                path_to_caller = directory
+            else:
+                # See note at the top
+                path_to_caller = join(intial_cwd, directory)
+            # networking name, followed by where its being called from, followed by unique-ifying salt
+            # TODO: improve this by having a builtin-"get_anon_id" endpoint, to allow for shorter ids (to save on bandwith)
+            self.client_id = f"{socket.gethostname()}:{os.path.basename(path_to_caller)}:{random()}"
+        
         self.tracking           = []
-        self.url_base           = f"ws://{self.address}:{self.port}"
+        self.url_base           = f"ws://{self.address}:{self.port}" if not client_name else f"wss://{self.address}:{self.port}"
         self.callback_entries   = {} # key1=event_name, value=list of (callback_func, should_catch_and_print_errors, runs_once, time_threshold)
         self.debugging          = debugging
         self.time_at_prev_check = 0 # start at begining of time, to fetch any/all missed messages
         try:
             debugging and print("trying to connect")
-            with connect(f"{self.url_base}/builtin/ping") as websocket:
+            with connect(f"{self.url_base}/builtin/ping", **optional_ssl_kwarg(ssl.PROTOCOL_TLS_CLIENT, cert_filepath, key_filepath, password)) as websocket:
                 debugging and print("sending message")
                 websocket.send("ping")
                 debugging and print("waiting for message")
@@ -58,6 +102,9 @@ class Server:
                     __name__,
                     address,
                     f"{port}",
+                    cert_filepath or "",
+                    key_filepath or "",
+                    password  or "",
                 ],
                 **(dict(stdout=sys.stdout) if self.debugging else dict(stdout=subprocess.PIPE)),
                 # stderr=subprocess.STDOUT,
@@ -211,7 +258,7 @@ class Server:
                 self._process_backlog(backlog)
 
 
-def start_server(address, port):
+def start_server(address, port, cert_filepath=None, key_filepath=None, password=None):
     import asyncio
     import argparse 
     import base64
@@ -360,7 +407,7 @@ def start_server(address, port):
     # start servers
     # 
     async def main():
-        async with serve(socket_response, address, port):
+        async with serve(socket_response, address, port, **optional_ssl_kwarg(ssl.PROTOCOL_TLS_SERVER, cert_filepath, key_filepath, password)):
             await asyncio.Future()  # run forever
 
     asyncio.run(main())
