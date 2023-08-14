@@ -304,8 +304,8 @@ class WarthogEnv(gym.Env):
                 relative_velocity: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
                 relative_spin: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
         '''
-        absolute_velocity = clip(relative_velocity, min=Warthog.min_relative_velocity, max=Warthog.max_relative_velocity) * config.vehicle.controller_max_velocity
-        absolute_spin     = clip(relative_spin    , min=Warthog.min_relative_spin    , max=Warthog.max_relative_spin    ) * config.vehicle.controller_max_spin
+        absolute_velocity = clip(relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity
+        absolute_spin     = clip(relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
         
         next_spacial_info = WarthogEnv.SpacialInformation(
             x=old_spacial_info.x,
@@ -514,8 +514,8 @@ class WarthogEnv(gym.Env):
         # 
         if True:
             # first force them to be within normal ranges
-            mutated_relative_velocity_action = clip(self.original_relative_velocity,  min=Warthog.min_relative_velocity, max=Warthog.max_relative_velocity)
-            mutated_relative_spin_action     = clip(self.original_relative_spin    ,  min=Warthog.min_relative_spin    , max=Warthog.max_relative_spin    )
+            mutated_relative_velocity_action = clip(self.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+            mutated_relative_spin_action     = clip(self.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
             
             # 
             # ADVERSITY
@@ -524,9 +524,9 @@ class WarthogEnv(gym.Env):
                 # battery adversity
                 if config.simulator.dynamic_adversity == 'battery':
                     self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
-                    mutated_relative_velocity_action -= Warthog.max_relative_velocity * self.simulated_battery_level
+                    mutated_relative_velocity_action -= WarthogEnv.max_relative_velocity * self.simulated_battery_level
                     # make sure velocity never goes negative (treat low battery as resistance)
-                    mutated_relative_velocity_action = clip(mutated_relative_velocity_action,  min=Warthog.min_relative_velocity, max=Warthog.max_relative_velocity)
+                    mutated_relative_velocity_action = clip(mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
                 
                 # additive adversity
                 mutated_relative_velocity_action += config.simulator.velocity_offset
