@@ -217,7 +217,7 @@ if True:
                 self._callback(self)
                 # if no items were removed (e.g. callback didn't clean up)
                 # then flush the buffer
-                if len(self) >= self.threshold
+                if len(self) >= self.threshold:
                     self.clear()
         
         def when_overflowing(self, function_being_wrapped):
