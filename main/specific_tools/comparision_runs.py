@@ -5,7 +5,7 @@ from config import path_to
 from subprocess import Popen, PIPE
 
 
-experiment_number = 16
+experiment_number = 17
 if __name__ == "__main__":
     finished = 0
     number_of_episode_runs_per_scenario = 15
@@ -14,7 +14,7 @@ if __name__ == "__main__":
         for each_profile in [ "@NORMAL_ADJUSTER", "@NO_ADJUSTER", "@PERFECT_ADJUSTER", ]:
             run_number_string = f"{run_number}".rjust(3,' ')
             output_folder = f"{path_to.records}/{experiment_number}.{each_profile}|{run_number_string}.ignore"
-            profiles = [ each_profile, "@WARTHOG", "@NOISE=MEDIUM", "@ADVERSITY=STRONG" ]
+            profiles = [ each_profile, "@WARTHOG", "@NOISE=MEDIUM", "@ADVERSITY=STRONG", "@BATTERY_DRAIN" ]
             print(f"working on: {output_folder}")
             process = Popen([ sys.executable, path_to.main, *profiles, f"output_folder:{json.dumps(output_folder)}" ])
             processes.append(process)

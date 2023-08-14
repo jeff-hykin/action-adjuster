@@ -90,7 +90,7 @@
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
                 max_history_size: 5000 # timesteps
                 solver_max_iterations: 10000
-                use_threading: False
+                use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
@@ -247,10 +247,7 @@
             velocity_offset: 0.5
             spin_offset: 0.75
         
-        ADVERSITY;BATTERY_DRAIN:
-            # 
-            # action offset 
-            # 
+        BATTERY_DRAIN:
             dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
             battery_decay_rate: 0.01
         
