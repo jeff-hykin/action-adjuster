@@ -55,3 +55,37 @@ conda activate main_env
     
 # conda config --append channels conda-forge
 # conda install libgcc=5.2.0
+
+# $ bash
+# $ pp
+# $ cd repos/action-adjuster
+# $ . ./main/.envrc
+# $ conda install ros-roscore ros-rospy 
+
+# Collecting package metadata (current_repodata.json): done
+# Solving environment: failed with initial frozen solve. Retrying with flexible solve.
+# Collecting package metadata (repodata.json): done
+# Solving environment: failed with initial frozen solve. Retrying with flexible solve.
+
+# PackagesNotFoundError: The following packages are not available from current channels:
+
+#   - ros-roscore
+
+# Current channels:
+
+#   - https://repo.anaconda.com/pkgs/main/linux-64
+#   - https://repo.anaconda.com/pkgs/main/noarch
+#   - https://repo.anaconda.com/pkgs/r/linux-64
+#   - https://repo.anaconda.com/pkgs/r/noarch
+#   - https://conda.anaconda.org/conda-forge/linux-64
+#   - https://conda.anaconda.org/conda-forge/noarch
+
+# To search for alternate channels that may provide the conda package you're
+# looking for, navigate to
+
+#     https://anaconda.org
+
+# and use the search bar at the top of the page.
+conda install ros-rospy
+conda install ros-common-msgs
+conda install ros-message-filters
