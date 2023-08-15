@@ -431,7 +431,7 @@ class WarthogEnv(gym.Env):
         closest_relative_index = kwargs["closest_relative_index"]
         running_reward, *other = WarthogEnv.original_reward_function(**kwargs)
         running_reward += closest_relative_index * config.reward_parameters.completed_waypoint_bonus
-        return running_reward, *other
+        return (running_reward, *other)
     
     @staticmethod
     def reward_function2(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index):
