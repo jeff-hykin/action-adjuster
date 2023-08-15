@@ -27,7 +27,7 @@
         - writing the paper
         
     todo:
-        - simulate battery drain
+        - DONE: simulate battery drain
         - simulate steering drift over time
         - simulate wind drift
         - simulate delayed dynamics; sliding out (too much angular momentum)
