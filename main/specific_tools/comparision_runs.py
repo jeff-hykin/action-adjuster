@@ -7,7 +7,9 @@ from knockknock import telegram_sender
 from __dependencies__.blissful_basics import FS
 
 def notify_if_possible(func):
-    api_token = FS.read(f"{FS.home}/.ssh/default_telegram_bot_token")
+    from os.path import expanduser
+    home = expanduser('~')
+    api_token = FS.read(f"{home}/.ssh/default_telegram_bot_token")
     if api_token:
         return telegram_sender(token=api_token, chat_id=688903965)(func)
     else:
