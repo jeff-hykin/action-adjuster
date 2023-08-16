@@ -78,6 +78,8 @@
             
     (profiles):
         (default):
+            experiment_number: 18
+            number_of_episode_runs_per_scenario: 5
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             should_use_ros: False
             action_adjuster:

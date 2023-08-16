@@ -1,14 +1,14 @@
 import sys
 import subprocess
 import json
-from config import path_to
+from config import path_to, config
 from subprocess import Popen, PIPE
 
 
-experiment_number = 18
+experiment_number = config.experiment_number
+number_of_episode_runs_per_scenario = config.number_of_episode_runs_per_scenario
 if __name__ == "__main__":
     finished = 0
-    number_of_episode_runs_per_scenario = 15
     for run_number in range(finished, number_of_episode_runs_per_scenario):
         processes = []
         for each_profile in [ "@NORMAL_ADJUSTER", "@NO_ADJUSTER", "@PERFECT_ADJUSTER", ]:
