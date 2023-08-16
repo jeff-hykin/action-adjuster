@@ -1040,7 +1040,7 @@ if True:
             slope = (y1 - y0) / (x1 - x0)
             slopes.push(slope)
             slope = mean(slopes)
-            slopes = [0:smoothing]
+            slopes = slopes[0:smoothing]
             y = y0 + slope * (x - x0)
 
             return y
