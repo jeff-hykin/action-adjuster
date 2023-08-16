@@ -5,7 +5,7 @@ from config import path_to
 from subprocess import Popen, PIPE
 
 
-experiment_number = 17
+experiment_number = 18
 if __name__ == "__main__":
     finished = 0
     number_of_episode_runs_per_scenario = 15
