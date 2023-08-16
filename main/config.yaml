@@ -78,7 +78,7 @@
             
     (profiles):
         (default):
-            experiment_number: 18
+            experiment_number: 19
             number_of_episode_runs_per_scenario: 5
             vehicle: null # filled in by "WARTHOG" profile below (way below)
             should_use_ros: False
