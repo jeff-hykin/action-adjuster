@@ -4,7 +4,7 @@ from time import sleep
 import json
 import math
 import threading
-from multiprocessing import Manager
+from multiprocess import Manager
 from collections import namedtuple
 
 import torch
@@ -22,18 +22,6 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 from generic_tools.numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
-
-# replace pickle with dill for multiprocessing
-import dill, multiprocessing
-dill.Pickler.dumps, dill.Pickler.loads   = dill.dumps, dill.loads
-multiprocessing.reduction.ForkingPickler = dill.Pickler
-multiprocessing.reduction.dump           = dill.dump
-try: multiprocessing.queues._ForkingPickler   = dill.Pickler
-except Exception as error: pass
-try: multiprocessing.reduction.ForkingPickler = dill.Pickler
-except Exception as error: pass
-try: multiprocessing.connection._ForkingPickler = dill.Pickler
-except Exception as error: pass
 
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 mean_squared_error_core = torch.nn.MSELoss()
