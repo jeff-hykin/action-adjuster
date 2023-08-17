@@ -18,6 +18,12 @@ To disable rendering:
 python ./main/main.py @WARTHOG simulator:should_render:False
 ```
 
+# Running experiments
+
+1. Change the `experiment_number` inside the `config.yaml`
+2. Run `python ./main/specific_tools/comparision_runs.py`
+3. Once the experiment is finished, run `python ./main/plots/main_comparision.py` which will both display graphs and generate html files
+
 # Options
 
 As an example, open up `main/config.yaml` and find `max_velocity:`
