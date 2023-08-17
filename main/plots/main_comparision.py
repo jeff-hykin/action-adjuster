@@ -118,14 +118,18 @@ def graph_variance_median_mean(groups, prefix=""):
         # y_axis_scale="log",
     )
 
-reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
-graph_variance_median_mean(
-    groups=reward_groups,
-    prefix="reward",
-)
+def main():
+    reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
+    graph_variance_median_mean(
+        groups=reward_groups,
+        prefix="reward",
+    )
 
-curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
-graph_variance_median_mean(
-    groups=curve_fit_groups,
-    prefix="line_fit_score",
-)
+    curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
+    graph_variance_median_mean(
+        groups=curve_fit_groups,
+        prefix="line_fit_score",
+    )
+
+if __name__ == '__main__':
+    main()

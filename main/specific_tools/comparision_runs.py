@@ -8,6 +8,8 @@ from __dependencies__.informative_iterator import ProgressBar
 from generic_tools.notifier import setup_notifier_if_possible
 
 if __name__ == "__main__":
+    from plots.main_comparision import main as generate_plots
+    
     finished = 0
     for progress, run_number in ProgressBar(tuple(range(finished, config.number_of_episode_runs_per_scenario))):
         send_notification(progress.previous_output)
@@ -22,10 +24,10 @@ if __name__ == "__main__":
         
         for each_process in processes:
             each_process.wait()
+            
+        try: generate_plots()
+        except Exception as error:
+            pass
         
     # start generating the graphs so they're cached
     send_notification(progress.previous_output)
-    try:
-        import plots.main_comparision
-    except Exception as error:
-        pass
