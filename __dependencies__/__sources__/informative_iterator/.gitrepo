@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/informative-iterator.git
+	branch = master
+	commit = e16545cbe1b6ccac39fa9356148d3c01e4ee8336
+	parent = 608465f53bfc6da1d3ff26d12867c5d4e11f8632
+	method = merge
+	cmdver = 0.4.1
