@@ -86,6 +86,6 @@ conda activate main_env
 #     https://anaconda.org
 
 # and use the search bar at the top of the page.
-conda install ros-rospy
-conda install ros-common-msgs
-conda install ros-message-filters
+# conda install ros-rospy
+# conda install ros-common-msgs
+# conda install ros-message-filters
