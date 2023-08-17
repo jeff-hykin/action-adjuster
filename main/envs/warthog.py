@@ -12,7 +12,7 @@ import gym
 
 import __dependencies__.blissful_basics as bb
 from __dependencies__.super_hash import super_hash
-from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip
+from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip, countdown
 
 from config import config, path_to
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
@@ -218,7 +218,7 @@ class WarthogEnv(gym.Env):
         self.velocity_error   = 0
         self.phi_error        = 0
         self.prev_timestamp   = time.time()
-        self.should_render    = config.simulator.should_render
+        self.should_render    = config.simulator.should_render and countdown(config.simulator.render_rate)
         
         if self.should_render:
             self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
@@ -629,7 +629,7 @@ class WarthogEnv(gym.Env):
         # 
         # render
         # 
-        if self.should_render:
+        if self.should_render():
             self.render()
         
         additional_info = WarthogEnv.AdditionalInfo(

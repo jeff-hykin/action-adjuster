@@ -136,9 +136,10 @@
                 main_node_name: 'warthog_faker'
             
             simulator:
-                starting_waypoint: 0 # integer or 'random'
+                starting_waypoint: 0 # integer or 'random' <- a string
                 save_data: True
                 should_render: True
+                render_rate: 50 # timesteps
                 max_velocity: 4
                 action_length: 2
                 action_space:

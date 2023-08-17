@@ -12,6 +12,7 @@ info = find_and_load(
 absolute_path_to  = info.absolute_path_to
 path_to           = info.path_to
 config            = info.config
+secrets           = info.secrets
 selected_profiles = list(info.selected_profiles)
 debug = LazyDict()
 
@@ -22,4 +23,8 @@ import subprocess
 commit_hash = subprocess.check_output(['git', 'rev-parse', "HEAD"]).decode('utf-8')[0:-1]
 FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
 
-send_notification = setup_notifier_if_possible(disable=True, token_path=f"{FS.get_home()}/.ssh/default_telegram_bot_token", chat_id=688903965)
+send_notification = setup_notifier_if_possible(
+    disable=secrets.get("send_notification", False),
+    token=secrets.get("telegram_token", None),
+    chat_id=secrets.get("telegram_chat_id", None),
+)
