@@ -1,3 +1,4 @@
+from generic_tools.notifier import setup_notifier_if_possible
 from __dependencies__.quik_config import find_and_load
 from __dependencies__.blissful_basics import FS, LazyDict
 
@@ -20,3 +21,5 @@ FS.copy(item="config.yaml", to=config.output_folder, new_name=None)
 import subprocess
 commit_hash = subprocess.check_output(['git', 'rev-parse', "HEAD"]).decode('utf-8')[0:-1]
 FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
+
+send_notification = setup_notifier_if_possible(token_path=f"{FS.get_home()}/.ssh/default_telegram_bot_token", chat_id=688903965)

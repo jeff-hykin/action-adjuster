@@ -10,7 +10,8 @@ from config import config, path_to
 from specific_tools.data_gathering import get_recorder_data
 from generic_tools.plotting import graph_lines, graph_groups, xd_theme
 from specific_tools import comparision_runs
-experiment_number = comparision_runs.experiment_number
+
+experiment_number = config.experiment_number
 
 experiment_name = ""
 groups = dict(
