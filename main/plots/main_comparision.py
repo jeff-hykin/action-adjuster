@@ -85,7 +85,7 @@ def extract_curve_fit_as_lines(groups):
         lines.append(line_data)
     return lines, groups
 
-def graph_variance_median_mean(groups, prefix=""):
+def graph_variance_median_mean(groups, prefix="", display=True):
     graph_name = "variance"
     graph_groups(
         groups,
@@ -95,6 +95,7 @@ def graph_variance_median_mean(groups, prefix=""):
         save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=None,
+        display=display,
     )
     graph_name = "median"
     graph_groups(
@@ -105,6 +106,7 @@ def graph_variance_median_mean(groups, prefix=""):
         save_to="./plots/"+FS.name(__file__)+"_"+prefix+"_"+graph_name+".html",
         remove_space_below_individual=False,
         group_averaging_function=median,
+        display=display,
     )
     graph_name = "mean"
     graph_groups(
@@ -116,19 +118,22 @@ def graph_variance_median_mean(groups, prefix=""):
         remove_space_below_individual=False,
         group_averaging_function=mean,
         # y_axis_scale="log",
+        display=display,
     )
 
-def main():
+def main(display=True):
     reward_lines, reward_groups = extract_accumulated_reward_as_lines(groups)
     graph_variance_median_mean(
         groups=reward_groups,
         prefix="reward",
+        display=display,
     )
 
     curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
     graph_variance_median_mean(
         groups=curve_fit_groups,
         prefix="line_fit_score",
+        display=display,
     )
 
 if __name__ == '__main__':

@@ -17,6 +17,16 @@ from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep
 import generic_tools.universe.runtimes as runtimes
 
+# 
+# policy
+# 
+if config.policy.name == 'dummy':
+    from policies.dummy import policy
+if config.policy.name == 'bicycle':
+    from policies.bicycle import policy
+if config.policy.name == 'retrained':
+    from policies.retrained import policy
+
 run_main_hooks_if_needed(__name__)
 
 recorder = RecordKeeper(selected_profiles=selected_profiles, config=config)
@@ -29,16 +39,6 @@ env = WarthogEnv(
     trajectory_output_path=f"{config.output_folder}/trajectory.log",
     recorder=recorder,
 )
-
-# 
-# policy
-# 
-if config.policy.name == 'dummy':
-    from policies.dummy import policy
-if config.policy.name == 'bicycle':
-    from policies.bicycle import policy
-if config.policy.name == 'retrained':
-    from policies.retrained import policy
 
 # this is just a means of making the policy pseudo-deterministic, not intentionally an optimization
 # TODO: if anything this will act like a memory leak, so it needs to be capped. However, to not break things its cap size depends on how quickly the fit_points is called and how big the buffer is

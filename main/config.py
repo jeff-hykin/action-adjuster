@@ -22,4 +22,4 @@ import subprocess
 commit_hash = subprocess.check_output(['git', 'rev-parse', "HEAD"]).decode('utf-8')[0:-1]
 FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
 
-send_notification = setup_notifier_if_possible(token_path=f"{FS.get_home()}/.ssh/default_telegram_bot_token", chat_id=688903965)
+send_notification = setup_notifier_if_possible(disable=True, token_path=f"{FS.get_home()}/.ssh/default_telegram_bot_token", chat_id=688903965)

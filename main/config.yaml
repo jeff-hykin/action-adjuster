@@ -149,7 +149,7 @@
                     high: 1000
                     shape: [ 42 ]
                 horizon: 10 # number of waypoints in the observation
-                max_number_of_timesteps_per_episode: 5_000
+                max_number_of_timesteps_per_episode: 5000
                 number_of_trajectories: 100
                 action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
                 granularity_of_calculations: 4 # the simulator is run this many times per action_duration in order to allow actions to smoothly propogate
@@ -224,6 +224,15 @@
             dummy_policy:
                 relative_velocity: 0.5 # this value is scaled by controller_max_velocity
                 relative_spin: 0       # this value is scaled by controller_max_spin
+        
+            vehicle:
+                name: Warthog
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
         
         WARTHOG:
             vehicle:

@@ -3,12 +3,12 @@ import subprocess
 import json
 from config import path_to, config, send_notification
 from subprocess import Popen, PIPE
-from __dependencies__.blissful_basics import FS
+from __dependencies__.blissful_basics import FS, run_main_hooks_if_needed
 from __dependencies__.informative_iterator import ProgressBar
-from generic_tools.notifier import setup_notifier_if_possible
 
 if __name__ == "__main__":
     from plots.main_comparision import main as generate_plots
+    run_main_hooks_if_needed(__name__)
     
     finished = 0
     for progress, run_number in ProgressBar(tuple(range(finished, config.number_of_episode_runs_per_scenario))):
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         for each_process in processes:
             each_process.wait()
             
-        try: generate_plots()
+        try: generate_plots(display=False)
         except Exception as error:
             pass
         

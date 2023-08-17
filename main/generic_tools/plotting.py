@@ -106,7 +106,7 @@ def points_to_function(x_values, y_values, are_sorted=False):
     
     return inner_function
 
-def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None, x_axis_scale='linear', y_axis_scale='linear'):
+def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None, x_axis_scale='linear', y_axis_scale='linear', display=True):
     """
         Example:
             graph_lines(
@@ -156,7 +156,11 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None, x_axis_sca
     if save_to:
         FS.ensure_is_folder(FS.parent_path(save_to))
         fig.write_html(save_to)
-    fig.show()
+    
+    if display:
+        fig.show()
+    
+    return fig
 
 from copy import deepcopy
 def graph_groups(
