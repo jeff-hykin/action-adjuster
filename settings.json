@@ -14,6 +14,10 @@
             "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
             "path": "__sources__/trivial_torch_tools/main/trivial_torch_tools"
         },
+        "informative_iterator": {
+            "git_url": "git@github.com:jeff-hykin/informative-iterator.git",
+            "path": "__sources__/informative_iterator/main/informative_iterator"
+        },
         "elegant_events": {
             "path": "__sources__/elegant_events/main/elegant_events"
         },
