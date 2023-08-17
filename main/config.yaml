@@ -90,8 +90,8 @@
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
-                max_history_size: 1000 # timesteps
-                solver_max_iterations: 10000
+                max_history_size: 1_000 # timesteps
+                solver_max_iterations: 10_000
                 use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
@@ -149,7 +149,7 @@
                     high: 1000
                     shape: [ 42 ]
                 horizon: 10 # number of waypoints in the observation
-                max_number_of_timesteps_per_episode: 5000
+                max_number_of_timesteps_per_episode: 5_000
                 number_of_trajectories: 100
                 action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
                 granularity_of_calculations: 4 # the simulator is run this many times per action_duration in order to allow actions to smoothly propogate

@@ -66,12 +66,17 @@ with print.indent:
         RosRuntime(agent=agent, env=env)
     else:
         # basic runtime
-        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=699):
+        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=config.simulator.max_number_of_timesteps_per_episode):
             pass
         
         print("done")
         import subprocess
         # for some multi-threading reason this process doesn't close after exit
-        stdout = subprocess.check_output(['kill', '-9', f"{os.getpid()}"]).decode('utf-8')[0:-1]
-        print("called kill -9 on self, now exiting")
-        exit()
+        pid = os.getpid()
+        print(f"called kill on self {os.getpid()}, now exiting")
+        stdout = subprocess.check_output(['kill', f"{pid}"]).decode('utf-8')[0:-1]
+        
+        from time import sleep
+        sleep(1)
+        print(f"calling kill -9 on self {pid}")
+        stdout = subprocess.check_output(['kill', '-9', f"{pid}"]).decode('utf-8')[0:-1]
