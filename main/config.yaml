@@ -90,7 +90,7 @@
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
-                max_history_size: 1_000 # timesteps
+                max_history_size: 1_500 # timesteps
                 solver_max_iterations: 10_000
                 use_threading: True
             
