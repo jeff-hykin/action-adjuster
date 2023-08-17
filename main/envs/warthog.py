@@ -524,7 +524,9 @@ class WarthogEnv(gym.Env):
                 # battery adversity
                 if config.simulator.dynamic_adversity == 'battery':
                     self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
-                    mutated_relative_velocity_action -= WarthogEnv.max_relative_velocity * self.simulated_battery_level
+                    self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
+                    self.recorder.commit()
+                    mutated_relative_velocity_action *= self.simulated_battery_level
                     # make sure velocity never goes negative (treat low battery as resistance)
                     mutated_relative_velocity_action = clip(mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
                 
