@@ -24,7 +24,7 @@ commit_hash = subprocess.check_output(['git', 'rev-parse', "HEAD"]).decode('utf-
 FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
 
 send_notification = setup_notifier_if_possible(
-    disable=secrets.get("send_notification", False),
+    disable=not secrets.get("send_notification", False),
     token=secrets.get("telegram_token", None),
     chat_id=secrets.get("telegram_chat_id", None),
 )
