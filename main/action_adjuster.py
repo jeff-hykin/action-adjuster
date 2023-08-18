@@ -32,8 +32,8 @@ pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), *
 # simple vars
 # 
 recorder_path = f"{config.output_folder}/recorder.yaml" 
-time_slowdown = 0.5 # the bigger this is, the more iterations the solver will complete before the episode is over
-                    # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
+time_slowdown = 0.05 # the bigger this is, the more iterations the solver will complete before the episode is over
+                  # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 shared_thread_data = None
     # ^ will contain
         # "timestep": an int that is always the number of the latest timestep
