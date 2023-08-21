@@ -248,6 +248,7 @@ class Solver:
                 # choose the long-term best as the starting point
                 self.latest_confirmed_transform = best_with_new_data[0]
             else:
+                self.stdev += self.stdev * config.cmaes.increase_rate
                 print(f'''canidate passed inspection: {self.unconfirmed_transform}''')
                 print(f'''prev transform            : {self.latest_confirmed_transform}''')
                 print(f'''canidate score: {objective_function(self.unconfirmed_transform.as_numpy)}''')

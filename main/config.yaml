@@ -123,8 +123,9 @@
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
             
             cmaes:
-                inital_stdev: 0.001
+                inital_stdev: 0.1 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
                 reduction_rate: 2 # 2== cut in half
+                increase_rate: 0.01 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
             
             ros_runtime:
                 main_node_name: 'warthog_listener'
