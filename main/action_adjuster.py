@@ -132,32 +132,34 @@ class Transform:
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
-# this class does a little data organization, then sends data to the solver, and receives answers from the solver
+# this class does a little data organization, receives data from the agent, solves, then sends data back the agent (using shared_thread_data)
 class Solver:
     self = None
     def __init__(self, policy, waypoints_list):
         Solver.self = self
-        self.stdev = 0.01 # for cmaes
+        self.stdev = config.cmaes.inital_stdev # for cmaes
         self.unconfirmed_transform      = Transform()
         self.latest_confirmed_transform = Transform()
         self.selected_solutions         = set([ self.latest_confirmed_transform ])
         self.waypoints_list             = waypoints_list
         self.policy                     = policy
+        self.start_timestep             = shared_thread_data.get("timestep", 0)
         self.last_canidate_was_valid    = True # attribute is for logging purposes only
+        self.solve_time                 = 0
     
     # this function is only called if multithreading is enabled
     @staticmethod
     def thread_solver_loop():
-        while threading.main_thread().is_alive():
+        while True:
             if Solver.self:
+                start_time = time()
                 Solver.self.fit_points()
+                Solver.self.solve_time = time() - start_time
+                print(f'''#\n# fit_points took: {Solver.self.solve_time}sec\n#''')
     
     def fit_points(self):
-        start_time = time()
-        with print.indent: 
-            start_timestep = shared_thread_data["timestep"]
-            timestep_data = shared_thread_data["timestep_data"]
-            sample_size = len(timestep_data)
+        timestep_data = shared_thread_data["timestep_data"]
+        sample_size = len(timestep_data)
         # not enough data
         if sample_size < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
             print("not enough data for fit_points() just yet")
@@ -236,12 +238,13 @@ class Solver:
                 args=solutions,
                 values=scores,
             )
-            self.last_canidate_was_valid = new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
+            new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
+            self.last_canidate_was_valid = not new_data_invalidated_recent_best
             # basically overfitting detection
             # reduce stdev, and don't use the canidate
             print(f'''new_data_invalidated_recent_best: {new_data_invalidated_recent_best}''')
             if new_data_invalidated_recent_best:
-                self.stdev = self.stdev/2
+                self.stdev = self.stdev/config.cmaes.reduction_rate
                 # choose the long-term best as the starting point
                 self.latest_confirmed_transform = best_with_new_data[0]
             else:
@@ -269,12 +272,11 @@ class Solver:
                 # dont log directly from this thread, send it to the main thread so theres not a race condition on the output file
                 shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(
                     timestep=shared_thread_data["timestep"], # the timestep the computation was finished
-                    timestep_started=start_timestep, # the active timestep when the fit_points was called
-                    start_time=time(),
-                    record_time=time(),
+                    timestep_started=self.start_timestep, # the active timestep when the fit_points was called
                     line_fit_score=score_before,
                     last_canidate_was_valid=self.last_canidate_was_valid,
                     sample_size=sample_size,
+                    fit_points_time_seconds=self.solve_time,
                     distance_to_optimal=mean_squared_error(self.latest_confirmed_transform.as_numpy, perfect_transform_input),
                     latest_confirmed_transform=to_pure(self.latest_confirmed_transform.as_numpy),
                     perfect_transform_input=to_pure(perfect_transform_input),
@@ -283,6 +285,7 @@ class Solver:
         # 
         # generate new canidate
         # 
+        self.start_timestep = shared_thread_data["timestep"]
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             # find next best
             best_new_transform = Transform(
@@ -303,7 +306,7 @@ class Solver:
                 )
             )
             with print.indent: 
-                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(canidate_transform=self.unconfirmed_transform)]
+                shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(timestep=shared_thread_data["timestep"], canidate_transform=self.unconfirmed_transform,)]
             
             score_after = objective_function(self.unconfirmed_transform.as_numpy)
             print(f'''new canidate transform = {self.unconfirmed_transform}''')
@@ -311,7 +314,8 @@ class Solver:
             print(f'''canidate score = {score_after}''')
             # if no improvement at all, then shrink the stdev
             if score_after < score_before:
-                self.stdev = self.stdev/10
+                self.stdev = self.stdev/config.cmaes.reduction_rate
+                print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
     
     @staticmethod
     def project(
@@ -327,7 +331,6 @@ class Solver:
         #                                                               is only there because the historic transform was doing part of the work
         # so we need to do action - historic_transform + best transform
         if historic_transform:
-            print(f'''most_recent_action = {most_recent_action}''')
             base_action = historic_transform.adjust_action(
                 action=most_recent_action,
                 mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work

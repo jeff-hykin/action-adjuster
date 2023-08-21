@@ -80,7 +80,6 @@
         (default):
             experiment_number: 22
             number_of_episode_runs_per_scenario: 1
-            vehicle: null # filled in by "WARTHOG" profile below (way below)
             should_use_ros: False
             action_adjuster:
                 disabled: False
@@ -91,7 +90,7 @@
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
                 max_history_size: 1_500 # timesteps
-                solver_max_iterations: 2_000
+                solver_max_iterations: 40
                 use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
@@ -122,6 +121,10 @@
                     
                     0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
+            
+            cmaes:
+                inital_stdev: 0.001
+                reduction_rate: 2 # 2== cut in half
             
             ros_runtime:
                 main_node_name: 'warthog_listener'
@@ -168,7 +171,7 @@
                 # action offset 
                 # 
                 dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
-                battery_decay_rate: 0.001
+                battery_decay_rate: 0.0001
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
