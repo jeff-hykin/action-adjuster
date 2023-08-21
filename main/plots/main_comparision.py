@@ -85,6 +85,23 @@ def extract_curve_fit_as_lines(groups):
         lines.append(line_data)
     return lines, groups
 
+def extract_distance_to_optimal_as_lines(groups):
+    groups = deepcopy(groups)
+    lines = []
+    for group_name, group_info, file_name, data in load_group_data(groups):
+        # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.1823086236371031, "distance_to_optimal": 0.0}
+        plot_name = file_name.replace("@","").replace("|"," ").lower()
+        entry_data = [ each for each in data.records if each.get("distance_to_optimal", None) != None ]
+        line_data = dict(
+            x_values=[ each.timestep       for each in entry_data ],
+            y_values=[ log_scale(each.line_fit_score) for each in entry_data ],
+            name=plot_name,
+            color=group_info["color"],
+        )
+        group_info["lines"].append(line_data)
+        lines.append(line_data)
+    return lines, groups
+
 def graph_variance_median_mean(groups, prefix="", display=True):
     graph_name = "variance"
     graph_groups(
@@ -128,11 +145,18 @@ def main(display=True):
         prefix="reward",
         display=display,
     )
-
+    
     curve_fit_lines, curve_fit_groups = extract_curve_fit_as_lines(groups)
     graph_variance_median_mean(
         groups=curve_fit_groups,
         prefix="line_fit_score",
+        display=display,
+    )
+    
+    lines, groups = extract_distance_to_optimal_as_lines(groups)
+    graph_variance_median_mean(
+        groups=groups,
+        prefix="distance_to_optimal",
         display=display,
     )
 
