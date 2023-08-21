@@ -164,43 +164,32 @@ class Solver:
             sleep(1)
             return
         
+        correct_next_spacial_predictions = tuple(each.next_spacial_info for each in timestep_data)
         # create inputs and predictions
-        correct_answers_for_predictions = timestep_data[config.action_adjuster.future_projection_length:]
-        inputs_for_predictions          = timestep_data[:-config.action_adjuster.future_projection_length]
-        assert len(correct_answers_for_predictions) == len(inputs_for_predictions), "probably an off-by-one error, every prediction should have an input"
-        
         def objective_function(numpy_array):
             hypothetical_transform = Transform(numpy_array)
-            next_spacial_projections = []
-            predicted_next_spacial_values = []
-            correct_next_spacial_predictions = tuple(each.next_spacial_info for each in correct_answers_for_predictions)
-            spacial_expectation = None
-            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
-                # each_additional_info_object.timestep_index
-                # each_additional_info_object.spacial_info
-                # each_additional_info_object.spacial_info_with_noise
-                # each_additional_info_object.observation_from_spacial_info_with_noise
-                # each_additional_info_object.original_reaction
-                # each_additional_info_object.historic_transform
-                # each_additional_info_object.mutated_reaction
-                # each_additional_info_object.next_spacial_info
-                # each_additional_info_object.next_spacial_info_spacial_info_with_noise
-                # each_additional_info_object.next_observation_from_spacial_info_with_noise
-                # each_additional_info_object.reward
-                action_expectation, spacial_expectation, observation_expectation = self.project(
-                    policy=self.policy,
+            predicted_next_spacial_values    = tuple(
+                self.project(
+                    spacial_info_before_action=each.spacial_info_with_noise,
+                    most_recent_action=each.original_reaction,
+                    historic_transform=each.historic_transform,
                     transform=hypothetical_transform,
-                    historic_transform=historic_transform,
-                    spacial_info_after_most_recent_action=next_spacial_info,
-                    observation_from_spacial_info_with_noise_after_most_recent_action=next_observation_from_spacial_info_with_noise,
-                    closest_index_after_most_recent_action=next_closest_index,
-                    action_duration=action_duration,
+                    action_duration=each.action_duration,
                 )
-                next_spacial_projections.append(spacial_expectation)
-                predicted_next_spacial_values.append(spacial_expectation[-1]) 
-            
-            assert len(spacial_expectation) == config.action_adjuster.future_projection_length, "If this is off by one, probably edit the self.project() function"
-            
+                    for each in timestep_data
+            )
+            # available data:
+            #     timestep_data[0].timestep_index
+            #     timestep_data[0].spacial_info
+            #     timestep_data[0].spacial_info_with_noise
+            #     timestep_data[0].observation_from_spacial_info_with_noise
+            #     timestep_data[0].original_reaction
+            #     timestep_data[0].historic_transform
+            #     timestep_data[0].mutated_reaction
+            #     timestep_data[0].next_spacial_info
+            #     timestep_data[0].next_spacial_info_spacial_info_with_noise
+            #     timestep_data[0].next_observation_from_spacial_info_with_noise
+            #     timestep_data[0].reward
             
             exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
             # loss function
@@ -217,7 +206,11 @@ class Solver:
                     losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
                     losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
             
-            return -sum(losses)
+            score = -sum(losses)
+            # if not globals().get("skip", None):
+            #     import code; code.interact(local={**globals(),**locals()})
+                
+            return score
         
         # 
         # overfitting protection (validate the canidate)
@@ -320,67 +313,41 @@ class Solver:
             if score_after < score_before:
                 self.stdev = self.stdev/10
     
+    @staticmethod
     def project(
-        self,
-        policy,
         transform,
+        spacial_info_before_action,
+        most_recent_action,
         historic_transform,
-        spacial_info_after_most_recent_action, # whatever action was last executed, this should be the resulting next spacial info
-        observation_from_spacial_info_with_noise_after_most_recent_action, # whatever action was last executed, this should be the resulting next observation
-        closest_index_after_most_recent_action,
         action_duration,
     ):
-        action_expectation      = [ ]
-        next_observation_expectation = [ ]
-        next_spacial_expectation     = [ ]
-        current_spacial_info   = spacial_info_after_most_recent_action
-        observation            = observation_from_spacial_info_with_noise_after_most_recent_action
-        closest_waypoint_index = closest_index_after_most_recent_action
-        with print.indent:
-            for each in range(config.action_adjuster.future_projection_length):
-                with print.indent:
-                    action = policy(observation)
-                    
-                    # action + nothing            = predicted_observation -1.0
-                    # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
-                    # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
-                    #                                                               is only there because the historic transform was doing part of the work
-                    # so we need to do action - historic_transform + best transform
-                    if historic_transform:
-                        action = historic_transform.adjust_action(
-                            action=action,
-                            mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
-                        )
-                    
-                    # this part is trying to guess/recreate the advesarial part of the .step() function
-                    relative_velocity_action, relative_spin_action = transform.adjust_action(
-                        action=action,
-                        mimic_adversity=False, # we want to undo the adversity when projecting into the future
-                    )
-                    next_spacial_info = WarthogEnv.generate_next_spacial_info(
-                        old_spacial_info=current_spacial_info,
-                        relative_velocity=relative_velocity_action,
-                        relative_spin=relative_spin_action,
-                        action_duration=action_duration,
-                    )
-                    closest_relative_index, _ = WarthogEnv.get_closest(
-                        remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
-                        x=next_spacial_info.x,
-                        y=next_spacial_info.y,
-                    )
-                    closest_waypoint_index += closest_relative_index
-                    next_observation = WarthogEnv.generate_observation(
-                        remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
-                        current_spacial_info=next_spacial_info,
-                    )
-                    action_expectation.append(WarthogEnv.ReactionClass([relative_velocity_action, relative_spin_action, observation]))
-                    next_spacial_expectation.append(next_spacial_info)
-                    next_observation_expectation.append(next_observation)
-                    
-                    observation          = next_observation
-                    current_spacial_info = next_spacial_info
-            
-        return action_expectation, next_spacial_expectation, next_observation_expectation
+        # action + nothing            = predicted_observation -1.0
+        # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
+        # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
+        #                                                               is only there because the historic transform was doing part of the work
+        # so we need to do action - historic_transform + best transform
+        if historic_transform:
+            print(f'''most_recent_action = {most_recent_action}''')
+            base_action = historic_transform.adjust_action(
+                action=most_recent_action,
+                mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
+            )
+        
+        # keep
+        # this part is trying to guess/recreate the advesarial part of the .step() function
+        relative_velocity_action, relative_spin_action = transform.adjust_action(
+            action=base_action,
+            mimic_adversity=False, # we want to undo the adversity when projecting into the future
+        )
+        # keep
+        next_spacial_info = WarthogEnv.generate_next_spacial_info(
+            old_spacial_info=spacial_info_before_action,
+            relative_velocity=relative_velocity_action,
+            relative_spin=relative_spin_action,
+            action_duration=action_duration,
+        )
+        # keep
+        return next_spacial_info
 
     
 class ActionAdjustedAgent(Skeleton):
