@@ -146,6 +146,7 @@ class Solver:
         self.start_timestep             = shared_thread_data.get("timestep", 0)
         self.last_canidate_was_valid    = True # attribute is for logging purposes only
         self.solve_time                 = 0
+        self.objective_func_call_count  = 0
     
     # this function is only called if multithreading is enabled
     @staticmethod
@@ -158,7 +159,7 @@ class Solver:
                 print(f'''#\n# fit_points took: {Solver.self.solve_time}sec\n#''')
     
     def fit_points(self):
-        timestep_data = shared_thread_data["timestep_data"]
+        timestep_data = shared_thread_data["timestep_data"][-config.action_adjuster.max_history_size:]
         sample_size = len(timestep_data)
         # not enough data
         if sample_size < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
@@ -166,11 +167,20 @@ class Solver:
             sleep(1)
             return
         
-        correct_next_spacial_predictions = tuple(each.next_spacial_info for each in timestep_data)
+        # row1 = x, row2 = y, row3 = angle, row4 = velocity, row5 = spin, row6 = time
+        correct_next_spacial_predictions = to_tensor(each.next_spacial_info for each in timestep_data).transpose(0,1)
+        x,y,angle,velocity,spin,*_ = tuple(range(len(correct_next_spacial_predictions[0])))
+        indicies = [x,y,angle,velocity,spin]
+        losses = to_tensor([0]*len(indicies))
+        
+        call_count = 0
         # create inputs and predictions
         def objective_function(numpy_array):
+            nonlocal call_count
+            call_count += 1
             hypothetical_transform = Transform(numpy_array)
-            predicted_next_spacial_values    = tuple(
+            # row1 = x, row2 = y, row3 = angle, row4 = velocity, row5 = spin, row6 = time
+            predicted_next_spacial_values = to_tensor(
                 self.project(
                     spacial_info_before_action=each.spacial_info_with_noise,
                     most_recent_action=each.original_reaction,
@@ -179,40 +189,19 @@ class Solver:
                     action_duration=each.action_duration,
                 )
                     for each in timestep_data
-            )
-            # available data:
-            #     timestep_data[0].timestep_index
-            #     timestep_data[0].spacial_info
-            #     timestep_data[0].spacial_info_with_noise
-            #     timestep_data[0].observation_from_spacial_info_with_noise
-            #     timestep_data[0].original_reaction
-            #     timestep_data[0].historic_transform
-            #     timestep_data[0].mutated_reaction
-            #     timestep_data[0].next_spacial_info
-            #     timestep_data[0].next_spacial_info_spacial_info_with_noise
-            #     timestep_data[0].next_observation_from_spacial_info_with_noise
-            #     timestep_data[0].reward
+            ).transpose(0,1)
             
-            exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
-            # loss function
-            losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-            # Note: len(predicted_spacial_values) should == len(real_spacial_values) + future_projection_length
-            # however, it will be automatically truncated because of the zip behavior
-            with print.indent:
-                for each_actual, each_predicted in zip(correct_next_spacial_predictions, predicted_next_spacial_values):
-                    x1, y1, angle1, velocity1, spin1, *_ = each_actual
-                    x2, y2, angle2, velocity2, spin2, *_ = each_predicted
-                    losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-                    losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-                    losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                    losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-                    losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
+            for each_row_index, correct, predicted in zip(indicies, correct_next_spacial_predictions, predicted_next_spacial_values):
+                # special case of angle
+                if each_row_index == angle:
+                    # FIXME
+                    # losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                    pass
+                # normal case
+                else:
+                    losses[each_row_index] = mean_squared_error_core(correct, predicted)
             
-            score = -sum(losses)
-            # if not globals().get("skip", None):
-            #     import code; code.interact(local={**globals(),**locals()})
-                
-            return score
+            return -losses.sum().item()
         
         # 
         # overfitting protection (validate the canidate)
@@ -277,6 +266,7 @@ class Solver:
                     line_fit_score=score_before,
                     last_canidate_was_valid=self.last_canidate_was_valid,
                     sample_size=sample_size,
+                    call_count=self.objective_func_call_count,
                     fit_points_time_seconds=self.solve_time,
                     distance_to_optimal=mean_squared_error(self.latest_confirmed_transform.as_numpy, perfect_transform_input),
                     latest_confirmed_transform=to_pure(self.latest_confirmed_transform.as_numpy),
@@ -317,6 +307,8 @@ class Solver:
             if score_after < score_before:
                 self.stdev = self.stdev/config.cmaes.reduction_rate
                 print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
+        
+        self.objective_func_call_count = call_count
     
     @staticmethod
     def project(
