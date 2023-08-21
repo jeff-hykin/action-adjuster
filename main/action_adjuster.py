@@ -32,7 +32,7 @@ pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), *
 # simple vars
 # 
 recorder_path = f"{config.output_folder}/recorder.yaml" 
-time_slowdown = 0.05 # the bigger this is, the more iterations the solver will complete before the episode is over
+time_slowdown = config.simulator.action_duration # the bigger this is, the more iterations the solver will complete before the episode is over
                   # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
 shared_thread_data = None
     # ^ will contain
@@ -242,6 +242,7 @@ class Solver:
             new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
             # basically overfitting detection
             # reduce stdev, and don't use the canidate
+            print(f'''new_data_invalidated_recent_best: {new_data_invalidated_recent_best}''')
             if new_data_invalidated_recent_best:
                 self.stdev = self.stdev/2
                 # choose the long-term best as the starting point
