@@ -275,6 +275,7 @@ class Solver:
                     timestep=shared_thread_data["timestep"], # the timestep the computation was finished
                     timestep_started=start_timestep, # the active timestep when the fit_points was called
                     line_fit_score=score_before,
+                    distance_to_optimal=mean_squared_error(self.latest_confirmed_transform.as_numpy, perfect_transform_input),
                 )]
         
         # 
