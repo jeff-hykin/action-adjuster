@@ -143,7 +143,7 @@ def graph_lines(*args, title, x_axis_name, y_axis_name, save_to=None, x_axis_sca
         y_values += list(each["y_values"])
         names += [each["name"]]*len(each["x_values"])
     
-    assert len(set(names)) == len(names), f"When graphing multiple lines, they need to have unique names:\n{names}"
+    assert len(set([each["name"] for each in args])) == len(args), f"""When graphing multiple lines, they need to have unique names:\n{([each["name"] for each in args])}"""
     data = {
         x_axis_name: x_values,
         y_axis_name: y_values,
