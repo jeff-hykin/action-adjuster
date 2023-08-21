@@ -31,37 +31,38 @@ pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), *
 # 
 # simple vars
 # 
-recorder_path = f"{config.output_folder}/recorder.yaml" 
-time_slowdown = config.simulator.action_duration # the bigger this is, the more iterations the solver will complete before the episode is over
-                  # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
-shared_thread_data = None
-    # ^ will contain
-        # "timestep": an int that is always the number of the latest timestep
-        # "transform_json"
-        # "timestep_data"
-        # "records_to_log"
+if True:
+    recorder_path = f"{config.output_folder}/recorder.yaml" 
+    time_slowdown = config.simulator.action_duration # the bigger this is, the more iterations the solver will complete before the episode is over
+                    # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
+    shared_thread_data = None
+        # ^ will contain
+            # "timestep": an int that is always the number of the latest timestep
+            # "transform_json"
+            # "timestep_data"
+            # "records_to_log"
 
-# TODO: replace this with a normalization method
-spacial_coefficients = WarthogEnv.SpacialInformation(
-    x=100, 
-    y=100, 
-    angle=1, 
-    velocity=0.3, 
-    spin=0.3, 
-    timestep=0 
-)
+    # TODO: replace this with a normalization method
+    spacial_coefficients = WarthogEnv.SpacialInformation(
+        x=100, 
+        y=100, 
+        angle=1, 
+        velocity=0.3, 
+        spin=0.3, 
+        timestep=0 
+    )
 
-# for testing, setup the perfect adjuster as comparison
-perfect_answer = to_tensor([
-    [ 1,     0,    config.simulator.velocity_offset, ],
-    [ 0,     1,        config.simulator.spin_offset, ],
-    [ 0,     0,                                   1, ],
-]).numpy()
-perfect_transform_input = perfect_answer[0:2,:]
+    # for testing, setup the perfect adjuster as comparison
+    perfect_answer = to_tensor([
+        [ 1,     0,    config.simulator.velocity_offset, ],
+        [ 0,     1,        config.simulator.spin_offset, ],
+        [ 0,     0,                                   1, ],
+    ]).numpy()
+    perfect_transform_input = perfect_answer[0:2,:]
 
-inital_transform = numpy.eye(config.simulator.action_length+1)[0:2,:] 
-if config.action_adjuster.default_to_perfect:
-    inital_transform = perfect_transform_input
+    inital_transform = numpy.eye(config.simulator.action_length+1)[0:2,:] 
+    if config.action_adjuster.default_to_perfect:
+        inital_transform = perfect_transform_input
 
 class Transform:
     inital = inital_transform
@@ -255,11 +256,13 @@ class Solver:
                 self.selected_solutions.add(self.unconfirmed_transform)
                 # use the canidate transform as the base for finding new answers
                 self.latest_confirmed_transform = self.unconfirmed_transform
-        
+            
         # 
         # record data
         # 
         if True:
+            # send to agent
+            shared_thread_data["transform_json"] = json.dumps(self.latest_confirmed_transform)
             score_before = objective_function(self.latest_confirmed_transform.as_numpy)
             # kill this process once the limit is reaced
             with print.indent: 
