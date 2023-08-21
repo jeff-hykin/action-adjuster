@@ -153,10 +153,7 @@ class Solver:
     def thread_solver_loop():
         while True:
             if Solver.self:
-                start_time = time()
                 Solver.self.fit_points()
-                Solver.self.solve_time = time() - start_time
-                print(f'''#\n# fit_points took: {Solver.self.solve_time}sec\n#''')
     
     def fit_points(self):
         timestep_data = shared_thread_data["timestep_data"][-config.action_adjuster.max_history_size:]
@@ -280,16 +277,15 @@ class Solver:
         # 
         self.start_timestep = shared_thread_data["timestep"]
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
-            with Timer(name="guess_to_maximize"):
-                # find next best
-                best_new_transform = Transform(
-                    guess_to_maximize(
-                        objective_function,
-                        initial_guess=self.latest_confirmed_transform.as_numpy,
-                        stdev=self.stdev,
-                        max_iterations=config.action_adjuster.solver_max_iterations,
-                    )
+            # find next best
+            best_new_transform = Transform(
+                guess_to_maximize(
+                    objective_function,
+                    initial_guess=self.latest_confirmed_transform.as_numpy,
+                    stdev=self.stdev,
+                    max_iterations=config.action_adjuster.solver_max_iterations,
                 )
+            )
             # print(f'''call_count = {call_count}''')
             # print(f'''duration = {duration}''')
             # print(f'''duration/call = {duration/call}''')
