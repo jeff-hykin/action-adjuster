@@ -1,6 +1,6 @@
 from copy import deepcopy
 from random import random, sample, choices
-from time import sleep
+from time import sleep, time
 import json
 import math
 import threading
@@ -143,6 +143,7 @@ class Solver:
         self.selected_solutions         = set([ self.latest_confirmed_transform ])
         self.waypoints_list             = waypoints_list
         self.policy                     = policy
+        self.last_canidate_was_valid    = True # attribute is for logging purposes only
     
     # this function is only called if multithreading is enabled
     @staticmethod
@@ -152,11 +153,13 @@ class Solver:
                 Solver.self.fit_points()
     
     def fit_points(self):
+        start_time = time()
         with print.indent: 
             start_timestep = shared_thread_data["timestep"]
             timestep_data = shared_thread_data["timestep_data"]
+            sample_size = len(timestep_data)
         # not enough data
-        if len(timestep_data) < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
+        if sample_size < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
             print("not enough data for fit_points() just yet")
             sleep(1)
             return
@@ -240,7 +243,7 @@ class Solver:
                 args=solutions,
                 values=scores,
             )
-            new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
+            self.last_canidate_was_valid = new_data_invalidated_recent_best = self.unconfirmed_transform not in best_with_new_data
             # basically overfitting detection
             # reduce stdev, and don't use the canidate
             print(f'''new_data_invalidated_recent_best: {new_data_invalidated_recent_best}''')
@@ -274,8 +277,14 @@ class Solver:
                 shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(
                     timestep=shared_thread_data["timestep"], # the timestep the computation was finished
                     timestep_started=start_timestep, # the active timestep when the fit_points was called
+                    start_time=time(),
+                    record_time=time(),
                     line_fit_score=score_before,
+                    last_canidate_was_valid=self.last_canidate_was_valid,
+                    sample_size=sample_size,
                     distance_to_optimal=mean_squared_error(self.latest_confirmed_transform.as_numpy, perfect_transform_input),
+                    latest_confirmed_transform=to_pure(self.latest_confirmed_transform.as_numpy),
+                    perfect_transform_input=to_pure(perfect_transform_input),
                 )]
         
         # 
