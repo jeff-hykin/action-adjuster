@@ -15,7 +15,7 @@ experiment_number = config.experiment_number
 
 def plot_over_time(attribute, paths=[f"{path_to.default_output_folder}/recorder.yaml"], colors=[xd_theme.blue]):
     lines = []
-    for path, color in zip(paths, colors+[xd_theme.blue for _ in paths]):
+    for path, color in zip(paths, colors+list(xd_theme.values())):
         recorder_data = load_recorder(path)
         if not recorder_data:
             raise Exception(f'''couldnt read {path}''')
@@ -31,7 +31,7 @@ def plot_over_time(attribute, paths=[f"{path_to.default_output_folder}/recorder.
                 color=color or xd_theme.blue,
             )
         )
-        
+    
     graph_lines(
         *lines,
         title=f"{attribute} over time",
@@ -41,9 +41,18 @@ def plot_over_time(attribute, paths=[f"{path_to.default_output_folder}/recorder.
     
 if __name__ == '__main__':
     plot_over_time(
-        attribute="fit_points_time_seconds",
+        attribute="line_fit_score",
         paths=[
             f"{path_to.default_output_folder}/recorder.yaml",
             f"output.max_iter_40.ignore/recorder.yaml",
+            f"output.max_iter_50.ignore/recorder.yaml",
+        ],
+    )
+    plot_over_time(
+        attribute="accumulated_reward",
+        paths=[
+            f"{path_to.default_output_folder}/recorder.yaml",
+            f"output.max_iter_40.ignore/recorder.yaml",
+            f"output.max_iter_50.ignore/recorder.yaml",
         ],
     )

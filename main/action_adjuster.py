@@ -11,7 +11,7 @@ import torch
 import numpy
 
 import __dependencies__.blissful_basics as bb
-from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class
+from __dependencies__.blissful_basics import to_pure, print, countdown, singleton, FS, stringify, LazyDict, create_named_list_class, Timer, Time
 from __dependencies__.trivial_torch_tools import to_tensor
 from __dependencies__.super_hash import super_hash
 from __dependencies__.rigorous_recorder import RecordKeeper
@@ -174,9 +174,11 @@ class Solver:
         losses = to_tensor([0]*len(indicies))
         
         call_count = 0
+        duration = 0
         # create inputs and predictions
         def objective_function(numpy_array):
             nonlocal call_count
+            nonlocal duration
             call_count += 1
             hypothetical_transform = Transform(numpy_array)
             # row1 = x, row2 = y, row3 = angle, row4 = velocity, row5 = spin, row6 = time
@@ -200,8 +202,8 @@ class Solver:
                 # normal case
                 else:
                     losses[each_row_index] = mean_squared_error_core(correct, predicted)
-            
-            return -losses.sum().item()
+            output = -losses.sum().item()
+            return output
         
         # 
         # overfitting protection (validate the canidate)
@@ -278,16 +280,19 @@ class Solver:
         # 
         self.start_timestep = shared_thread_data["timestep"]
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
-            # find next best
-            best_new_transform = Transform(
-                guess_to_maximize(
-                    objective_function,
-                    initial_guess=self.latest_confirmed_transform.as_numpy,
-                    stdev=self.stdev,
-                    max_iterations=config.action_adjuster.solver_max_iterations,
+            with Timer(name="guess_to_maximize"):
+                # find next best
+                best_new_transform = Transform(
+                    guess_to_maximize(
+                        objective_function,
+                        initial_guess=self.latest_confirmed_transform.as_numpy,
+                        stdev=self.stdev,
+                        max_iterations=config.action_adjuster.solver_max_iterations,
+                    )
                 )
-            )
-            
+            # print(f'''call_count = {call_count}''')
+            # print(f'''duration = {duration}''')
+            # print(f'''duration/call = {duration/call}''')
             # canidate is the incremental shift towards next_best
             self.unconfirmed_transform = Transform(
                 shift_towards(
@@ -307,6 +312,7 @@ class Solver:
             if score_after < score_before:
                 self.stdev = self.stdev/config.cmaes.reduction_rate
                 print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
+            
         
         self.objective_func_call_count = call_count
     

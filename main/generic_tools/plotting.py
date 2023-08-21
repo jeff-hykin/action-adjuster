@@ -19,32 +19,35 @@ class Colors:
     def __iter__(self):
         for each in self._color_mapping.values():
             yield each
+    
+    def values(self):
+        return self._color_mapping.values()
 
 xd_theme = Colors({
+    "blue":             '#82aaff',
+    "purple":           '#c792ea',
+    "dim_green":        '#80cbc4',
+    "pink":             '#e57eb3',
+    "yellow":           '#fec355',
+    "bold_green":       '#4ec9b0',
+    "brown":            '#ce9178',
+    "rust":             '#c17e70',
+    "orange":           '#f78c6c',
+    "bananna_yellow":   '#ddd790',
+    "lime":             '#c3e88d',
+    "green":            '#4ec9b0',
+    "soft_red":         '#f07178',
+    "dark_slate":       '#3f848d',
+    "vibrant_green":    '#04d895',
     "black":            '#000000',
     "white":            '#ffffff',
     "light_gray":       '#c7cbcd',
     "cement":           '#698098',
     "gray":             '#546e7a',
-    "brown":            '#ce9178',
-    "rust":             '#c17e70',
-    "orange":           '#f78c6c',
-    "yellow":           '#fec355',
-    "bananna_yellow":   '#ddd790',
-    "lime":             '#c3e88d',
-    "green":            '#4ec9b0',
-    "bold_green":       '#4ec9b0d0',
-    "vibrant_green":    '#04d895',
-    "dim_green":        '#80cbc4',
     "light_slate":      '#64bac5',
-    "dark_slate":       '#3f848d',
     "light_blue":       '#89ddff',
-    "blue":             '#82aaff',
-    "electric_blue":    '#00aeffe7',
-    "purple":           '#c792ea',
-    "pink":             '#e57eb3',
+    "electric_blue":    '#00aeff',
     "red":              '#ff5572',
-    "soft_red":         '#f07178',
 })
 default_theme = xd_theme
 
