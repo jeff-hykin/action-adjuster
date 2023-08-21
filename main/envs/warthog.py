@@ -58,7 +58,10 @@ class WarthogEnv(gym.Env):
         "SpacialInformation",
         [ "x", "y", "angle", "velocity", "spin", "timestep" ]
     )
-    ReactionClass = create_named_list_class([ "relative_velocity", "relative_spin", "observation" ])
+    ReactionClass = namedtuple(
+        "ReactionClass",
+        [ "relative_velocity", "relative_spin", ]
+    )
     WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
     class Waypoint(numpy.ndarray):
         keys = [ "x", "y", "angle", "velocity" ]
@@ -639,8 +642,8 @@ class WarthogEnv(gym.Env):
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
             observation_from_spacial_info_with_noise=self.prev_observation,
             historic_transform=Unknown,
-            original_reaction=WarthogEnv.ReactionClass([ self.original_relative_velocity, self.original_relative_spin, self.prev_observation ]),
-            mutated_reaction=WarthogEnv.ReactionClass([ self.mutated_relative_velocity, self.mutated_relative_spin, self.prev_observation ]),
+            original_reaction=WarthogEnv.ReactionClass(self.original_relative_velocity, self.original_relative_spin ),
+            mutated_reaction=WarthogEnv.ReactionClass(self.mutated_relative_velocity, self.mutated_relative_spin ),
             next_spacial_info=self.spacial_info,
             next_spacial_info_spacial_info_with_noise=self.spacial_info_with_noise,
             next_observation_from_spacial_info_with_noise=self.observation,
