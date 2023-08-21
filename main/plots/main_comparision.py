@@ -44,6 +44,9 @@ def log_scale(value):
     else:
         return -math.log((-value)+1)
 
+def no_scale(value):
+    return value
+
 def load_group_data(groups):
     for group_name, group_info in groups.items():
         for file_name, data in get_recorder_data(group_info["folder_name_must_include"]):
@@ -86,15 +89,17 @@ def extract_curve_fit_as_lines(groups):
     return lines, groups
 
 def extract_distance_to_optimal_as_lines(groups):
+    feature = "distance_to_optimal"
+    scale = log_scale
     groups = deepcopy(groups)
     lines = []
     for group_name, group_info, file_name, data in load_group_data(groups):
         # data.records[0] = {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -0.1823086236371031, "distance_to_optimal": 0.0}
         plot_name = file_name.replace("@","").replace("|"," ").lower()
-        entry_data = [ each for each in data.records if each.get("distance_to_optimal", None) != None ]
+        entry_data = [ each for each in data.records if each.get(feature, None) != None ]
         line_data = dict(
             x_values=[ each.timestep       for each in entry_data ],
-            y_values=[ log_scale(each.line_fit_score) for each in entry_data ],
+            y_values=[ scale(each[feature]) for each in entry_data ],
             name=plot_name,
             color=group_info["color"],
         )
@@ -153,9 +158,9 @@ def main(display=True):
         display=display,
     )
     
-    lines, groups = extract_distance_to_optimal_as_lines(groups)
+    lines, new_groups = extract_distance_to_optimal_as_lines(groups)
     graph_variance_median_mean(
-        groups=groups,
+        groups=new_groups,
         prefix="distance_to_optimal",
         display=display,
     )
