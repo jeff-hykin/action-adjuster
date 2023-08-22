@@ -78,7 +78,7 @@
             
     (profiles):
         (default):
-            experiment_number: 22
+            experiment_number: 23
             number_of_episode_runs_per_scenario: 1
             should_use_ros: False
             action_adjuster:
@@ -90,7 +90,7 @@
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
                 max_history_size: 1_500 # timesteps
-                solver_max_iterations: 40
+                solver_max_iterations: 2000
                 use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
@@ -172,7 +172,7 @@
                 # action offset 
                 # 
                 dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
-                battery_decay_rate: 0.0001
+                battery_decay_rate: 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
