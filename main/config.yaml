@@ -78,7 +78,7 @@
             
     (profiles):
         (default):
-            experiment_number: 24
+            experiment_number: 26
             number_of_episode_runs_per_scenario: 1
             should_use_ros: False
             action_adjuster:
@@ -89,8 +89,8 @@
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
-                max_history_size: 1_500 # timesteps
-                solver_max_iterations: 2000
+                max_history_size: 5000 # timesteps
+                solver_max_iterations: 10000
                 use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
@@ -143,7 +143,7 @@
                 starting_waypoint: 0 # integer or 'random' <- a string
                 save_data: True
                 should_render: True
-                render_rate: 50 # timesteps
+                render_rate: 10 # timesteps
                 max_velocity: 4
                 action_length: 2
                 action_space:

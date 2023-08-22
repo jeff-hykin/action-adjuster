@@ -40,16 +40,16 @@ def plot_over_time(attribute, paths=[f"{path_to.default_output_folder}/recorder.
     )
     
 if __name__ == '__main__':
+    # plot_over_time(
+    #     attribute="line_fit_score",
+    #     paths=[
+    #         f"{path_to.default_output_folder}/recorder.yaml",
+    #         f"output.max_iter_40.ignore/recorder.yaml",
+    #         f"output.max_iter_50.ignore/recorder.yaml",
+    #     ],
+    # )
     plot_over_time(
-        attribute="line_fit_score",
-        paths=[
-            f"{path_to.default_output_folder}/recorder.yaml",
-            f"output.max_iter_40.ignore/recorder.yaml",
-            f"output.max_iter_50.ignore/recorder.yaml",
-        ],
-    )
-    plot_over_time(
-        attribute="accumulated_reward",
+        attribute="simulated_battery_level",
         paths=[
             f"{path_to.default_output_folder}/recorder.yaml",
             f"output.max_iter_40.ignore/recorder.yaml",
