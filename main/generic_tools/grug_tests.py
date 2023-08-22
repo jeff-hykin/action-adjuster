@@ -70,9 +70,6 @@ def grug_test():
                 try:
                     yaml_path = grug_folder_for_this_func+f"/{input_hash}.input.yaml"
                     pickle_path = grug_folder_for_this_func+f"/{input_hash}.input.pickle"
-                    print(f'''input_hash = {input_hash}''')
-                    print(f'''FS.exists(yaml_path) = {FS.exists(yaml_path)}''')
-                    print(f'''FS.exists({pickle_path}) = {FS.exists(pickle_path)}''')
                     if not (FS.exists(yaml_path) or FS.exists(pickle_path)):
                         yamlized_function_input = YamlFailed
                         try:
@@ -117,7 +114,7 @@ def grug_test():
 
 @grug_test()
 def add_nums(a,b):
-    return a + b
+    return a + b + 1
 
 
 GrugTest.record_io = True
