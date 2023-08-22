@@ -174,12 +174,8 @@ class Solver:
         duration = 0
         # create inputs and predictions
         def objective_function(numpy_array):
-            nonlocal call_count
-            nonlocal duration
-            call_count += 1
             hypothetical_transform = Transform(numpy_array)
-            # row1 = x, row2 = y, row3 = angle, row4 = velocity, row5 = spin, row6 = time
-            predicted_next_spacial_values = to_tensor(
+            predicted_next_spacial_values    = tuple(
                 self.project(
                     spacial_info_before_action=each.spacial_info_with_noise,
                     most_recent_action=each.original_reaction,
@@ -188,19 +184,40 @@ class Solver:
                     action_duration=each.action_duration,
                 )
                     for each in timestep_data
-            ).transpose(0,1)
+            )
+            # available data:
+            #     timestep_data[0].timestep_index
+            #     timestep_data[0].spacial_info
+            #     timestep_data[0].spacial_info_with_noise
+            #     timestep_data[0].observation_from_spacial_info_with_noise
+            #     timestep_data[0].original_reaction
+            #     timestep_data[0].historic_transform
+            #     timestep_data[0].mutated_reaction
+            #     timestep_data[0].next_spacial_info
+            #     timestep_data[0].next_spacial_info_spacial_info_with_noise
+            #     timestep_data[0].next_observation_from_spacial_info_with_noise
+            #     timestep_data[0].reward
             
-            for each_row_index, correct, predicted in zip(indicies, correct_next_spacial_predictions, predicted_next_spacial_values):
-                # special case of angle
-                if each_row_index == angle:
-                    # FIXME
-                    # losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                    pass
-                # normal case
-                else:
-                    losses[each_row_index] = mean_squared_error_core(correct, predicted)
-            output = -losses.sum().item()
-            return output
+            exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
+            # loss function
+            losses = [0,0,0,0,0] # x, y, angle, velocity, spin
+            # Note: len(predicted_spacial_values) should == len(real_spacial_values) + future_projection_length
+            # however, it will be automatically truncated because of the zip behavior
+            with print.indent:
+                for each_actual, each_predicted in zip(correct_next_spacial_predictions, predicted_next_spacial_values):
+                    x1, y1, angle1, velocity1, spin1, *_ = each_actual
+                    x2, y2, angle2, velocity2, spin2, *_ = each_predicted
+                    losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+                    losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+                    losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                    losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+                    losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
+            
+            score = -sum(losses)
+            # if not globals().get("skip", None):
+            #     import code; code.interact(local={**globals(),**locals()})
+                
+            return score
         
         # 
         # overfitting protection (validate the canidate)

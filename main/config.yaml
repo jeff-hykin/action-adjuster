@@ -6,8 +6,8 @@
         records: "./records/"
         main: "./main.py"
         waypoints_folder: "./waypoint_paths/"
-        default_waypoints: "./waypoint_paths/real1.csv"
-        # default_waypoints: "./waypoint_paths/straight_line.csv"
+        # default_waypoints: "./waypoint_paths/real1.csv"
+        default_waypoints: "./waypoint_paths/straight_line.csv"
         saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
         temp_policy_folder: "./saved_policies/temp.ignore/"
@@ -78,7 +78,7 @@
             
     (profiles):
         (default):
-            experiment_number: 23
+            experiment_number: 24
             number_of_episode_runs_per_scenario: 1
             should_use_ros: False
             action_adjuster:
@@ -95,7 +95,7 @@
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
-                name: retrained # 'bicycle' or 'dummy' or 'retrained'
+                name: dummy # 'bicycle' or 'dummy' or 'retrained'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
@@ -123,7 +123,7 @@
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
             
             cmaes:
-                inital_stdev: 0.1 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
+                inital_stdev: 0.01 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
                 reduction_rate: 2 # 2== cut in half
                 increase_rate: 0.01 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
             
@@ -172,7 +172,7 @@
                 # action offset 
                 # 
                 dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
-                battery_decay_rate: 0.0005
+                battery_decay_rate: 0 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
