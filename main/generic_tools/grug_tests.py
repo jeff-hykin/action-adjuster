@@ -4,9 +4,12 @@ import ez_yaml
 from blissful_basics import FS, large_pickle_save, large_pickle_load
 
 # TODO:
-    # add additional inputs
-    # add file path arg inputs
-    # add CLI for replay mode
+    # add the replay mode
+        # figure out how to detect/import functions
+        # add CLI for replay mode
+    # add `additional_inputs` in the decorator
+        # figure out how to pass them in during replay
+        # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
 def path_of_caller(*paths):
     import os
@@ -40,10 +43,13 @@ test_counts = {}
 def grug_test():
     """
     @grug_test()
-    def pure_function(arg1, arg2):
-        return arg1 + arg2
-    
-    GrugTest.record_io
+    def add_nums(a,b):
+        return a + b + 1
+
+
+    GrugTest.record_io = True
+    for a,b in zip(range(10), range(30, 40)):
+        add_nums(a,b)
     """
     def decorator(function_being_wrapped):
         if GrugTest.production_override:
@@ -110,14 +116,3 @@ def grug_test():
             return output
         return wrapper
     return decorator
-
-
-@grug_test()
-def add_nums(a,b):
-    return a + b + 1
-
-
-GrugTest.record_io = True
-for a,b in zip(range(10), range(30, 40)):
-    add_nums(a,b)
-
