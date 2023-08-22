@@ -78,8 +78,8 @@
             
     (profiles):
         (default):
-            experiment_number: 26
-            number_of_episode_runs_per_scenario: 1
+            experiment_number: '29.hist_on_as_anti__shouldnt_work'
+            number_of_episode_runs_per_scenario: 10
             should_use_ros: False
             action_adjuster:
                 disabled: False
