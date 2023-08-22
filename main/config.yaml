@@ -78,7 +78,7 @@
             
     (profiles):
         (default):
-            experiment_number: '29.hist_on_as_anti__shouldnt_work'
+            experiment_number: '30.hist_on_as_anti_full_test'
             number_of_episode_runs_per_scenario: 10
             should_use_ros: False
             action_adjuster:
@@ -95,7 +95,7 @@
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
-                name: dummy # 'bicycle' or 'dummy' or 'retrained'
+                name: 'retrained' # 'bicycle' or 'dummy' or 'retrained'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
@@ -172,7 +172,7 @@
                 # action offset 
                 # 
                 dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
-                battery_decay_rate: 0 # 0.0005
+                battery_decay_rate: 0.0006 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
