@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     finished = 0
     for progress, run_number in ProgressBar(tuple(range(finished, config.number_of_episode_runs_per_scenario))):
-        send_notification(progress.previous_output)
+        if progress.index != 0: send_notification(progress.previous_output)
         processes = []
         for each_profile in [ "@NORMAL_ADJUSTER", "@NO_ADJUSTER", "@PERFECT_ADJUSTER", ]:
             run_number_string = f"{run_number}".rjust(3,' ')
