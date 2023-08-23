@@ -254,7 +254,7 @@ class Solver:
         # overfitting protection (validate the canidate)
         # 
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
-            solutions = list(self.selected_solutions) + [ self.unconfirmed_transform ]
+            solutions = tuple(set(list(self.selected_solutions) + [ self.unconfirmed_transform ]))
             perfect_score = objective_function(perfect_transform_input)
             print("")
             print(f'''perfect objective value: {perfect_score}''')
