@@ -78,24 +78,24 @@
             
     (profiles):
         (default):
-            experiment_number: 24
-            number_of_episode_runs_per_scenario: 1
+            experiment_number: '31'
+            number_of_episode_runs_per_scenario: 10
             should_use_ros: False
             action_adjuster:
                 disabled: False
                 default_to_perfect: False
                 always_perfect: False
                 use_transform: True # when true, this means it will modify the policies actions
-                update_rate: 1 # kinda similar to alpha/step-size
+                update_rate: 0.1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
-                max_history_size: 1_500 # timesteps
-                solver_max_iterations: 2000
+                max_history_size: 5000 # timesteps
+                solver_max_iterations: 10000
                 use_threading: True
             
             curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
             policy:
-                name: dummy # 'bicycle' or 'dummy' or 'retrained'
+                name: 'dummy' # 'bicycle' or 'dummy' or 'retrained'
                 
             reward_parameters:
                 max_expected_crosstrack_error:  2.0   # meters
@@ -123,9 +123,9 @@
                     62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
             
             cmaes:
-                inital_stdev: 0.01 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
+                inital_stdev: 0.001 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
                 reduction_rate: 2 # 2== cut in half
-                increase_rate: 0.01 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
+                increase_rate: 0.001 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
             
             ros_runtime:
                 main_node_name: 'warthog_listener'
@@ -143,7 +143,7 @@
                 starting_waypoint: 0 # integer or 'random' <- a string
                 save_data: True
                 should_render: True
-                render_rate: 50 # timesteps
+                render_rate: 10 # timesteps
                 max_velocity: 4
                 action_length: 2
                 action_space:
@@ -172,7 +172,7 @@
                 # action offset 
                 # 
                 dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
-                battery_decay_rate: 0 # 0.0005
+                battery_decay_rate: 0.0006 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 

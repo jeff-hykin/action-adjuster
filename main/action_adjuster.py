@@ -175,16 +175,47 @@ class Solver:
         # create inputs and predictions
         def objective_function(numpy_array):
             hypothetical_transform = Transform(numpy_array)
-            predicted_next_spacial_values    = tuple(
-                self.project(
-                    spacial_info_before_action=each.spacial_info_with_noise,
-                    most_recent_action=each.original_reaction,
-                    historic_transform=each.historic_transform,
-                    transform=hypothetical_transform,
-                    action_duration=each.action_duration,
+            
+            predicted_next_spacial_values = []
+            for each in timestep_data:
+                spacial_info_before_action = each.spacial_info_with_noise
+                most_recent_action         = each.original_reaction
+                historic_transform         = each.historic_transform
+                transform                  = hypothetical_transform
+                action_duration            = each.action_duration
+                
+                # action + nothing            = predicted_observation -1.0
+                # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
+                # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
+                #                                                               is only there because the historic transform was doing part of the work
+                # so we need to do action - historic_transform + best transform
+                if historic_transform:
+                    vanilla_action = historic_transform.adjust_action(
+                        action=most_recent_action,
+                        mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
+                    )
+                
+                    # NOTE: the assert below should always be true, its only commented out for performance reasons
+                    # also_vanilla_action = self.policy(each.observation_from_spacial_info_with_noise)
+                    # assert mean_squared_error(vanilla_action, also_vanilla_action) == 0
+                
+                # keep
+                # this part is trying to guess/recreate the advesarial part of the .step() function
+                relative_velocity_action, relative_spin_action = transform.adjust_action(
+                    action=vanilla_action,
+                    mimic_adversity=True, # we want to undo the adversity when projecting into the future
                 )
-                    for each in timestep_data
-            )
+                # keep
+                next_spacial_info = WarthogEnv.generate_next_spacial_info(
+                    old_spacial_info=spacial_info_before_action,
+                    relative_velocity=relative_velocity_action,
+                    relative_spin=relative_spin_action,
+                    action_duration=action_duration,
+                )
+                predicted_next_spacial_values.append(
+                    next_spacial_info
+                )
+            
             # available data:
             #     timestep_data[0].timestep_index
             #     timestep_data[0].spacial_info
@@ -217,7 +248,7 @@ class Solver:
             # if not globals().get("skip", None):
             #     import code; code.interact(local={**globals(),**locals()})
                 
-            return score
+            return to_pure(score)
         
         # 
         # overfitting protection (validate the canidate)
@@ -328,42 +359,6 @@ class Solver:
             
         
         self.objective_func_call_count = call_count
-    
-    @staticmethod
-    def project(
-        transform,
-        spacial_info_before_action,
-        most_recent_action,
-        historic_transform,
-        action_duration,
-    ):
-        # action + nothing            = predicted_observation -1.0
-        # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
-        # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
-        #                                                               is only there because the historic transform was doing part of the work
-        # so we need to do action - historic_transform + best transform
-        if historic_transform:
-            base_action = historic_transform.adjust_action(
-                action=most_recent_action,
-                mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
-            )
-        
-        # keep
-        # this part is trying to guess/recreate the advesarial part of the .step() function
-        relative_velocity_action, relative_spin_action = transform.adjust_action(
-            action=base_action,
-            mimic_adversity=False, # we want to undo the adversity when projecting into the future
-        )
-        # keep
-        next_spacial_info = WarthogEnv.generate_next_spacial_info(
-            old_spacial_info=spacial_info_before_action,
-            relative_velocity=relative_velocity_action,
-            relative_spin=relative_spin_action,
-            action_duration=action_duration,
-        )
-        # keep
-        return next_spacial_info
-
     
 class ActionAdjustedAgent(Skeleton):
     previous_timestep = None
