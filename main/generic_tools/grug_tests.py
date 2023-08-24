@@ -1,52 +1,101 @@
 from super_hash import super_hash
 from warnings import warn
 import ez_yaml
-from  blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent
+from  __dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent
 from generic_tools import geometry
 import pickle
 import sys
+import os
+import json
 
 # Version 0.1
     # add the replay mode
 # Version 1.0
+    # autodetect the git folder
     # add CLI tools
 # Version 2.0
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
     # fix the problem of tuples getting converted to lists (changes hash) when yamlizing
 
-from ez_yaml import yaml
+from ez_yaml import yaml, ruamel
+
+
+        # setup loader (basically options)
+alt_yaml = ruamel.yaml.YAML()
+alt_yaml.indent(mapping=3, sequence=2, offset=0)
+alt_yaml.allow_duplicate_keys = True
+alt_yaml.width = float("Infinity")
+alt_yaml.explicit_start = False
+# show null
+alt_yaml.representer.add_representer(
+    type(None),
+    lambda self, data: self.represent_scalar(u'tag:yaml.org,2002:null', u'null')
+)
+from io import StringIO
+def to_string(obj, options=None):
+    if options == None: options = {}
+    string_stream = StringIO()
+    alt_yaml.dump(obj, string_stream, **options)
+    output_str = string_stream.getvalue()
+    string_stream.close()
+    return output_str
+
+def to_object(string=None, file_path=None, options=None, load_nested_yaml=False):
+    if options == None: options = {}
+    output = alt_yaml.load(string, **options)
+    if load_nested_yaml:
+        output = eval_load_yaml_file_tag(output, original_file_path=":<inline-string>:") 
+    return output
 
 @yaml.register_class
 class YamlPickled:
     yaml_tag = "!python/pickled"
-    delimiter = "|"
+    delimiter = ":"
     
     def __init__(self, value):
         self.value = value
     
     @classmethod
     def from_yaml(cls, constructor, node):
-        string = node.value[node.value.index(YamlPickled.delimiter)+1:]
+        string = to_object(node.value)[node.value.index(YamlPickled.delimiter)+1:]
         # node.value is the python-value
         return pickle.loads(valid_string_to_bytes(string))
     
     @classmethod
     def to_yaml(cls, representer, data):
-        prefix = f"{type(data.value)} Couldn't be yaml-seralized so it was pickled first".replace(YamlPickled.delimiter, "")
+        prefix = f"{type(data.value)}".replace(YamlPickled.delimiter, "")
+        if prefix.startswith("<class '") and prefix.endswith("'>"):
+            prefix = prefix[8:-2]
+        
         # value needs to be a string (or some other yaml-primitive)
         return representer.represent_scalar(
             tag=cls.yaml_tag,
-            value=prefix + YamlPickled.delimiter + bytes_to_valid_string(
+            value=to_string(prefix + YamlPickled.delimiter + bytes_to_valid_string(
                 pickle.dumps(data.value, protocol=4)
-            ),
-            style=None,
+            )),
+            # style="|",
             anchor=None
         )
 
 class GrugTest:
-    _path_to_main = None
-    
+    """
+        Example:
+            grug_test = GrugTest(
+                project_folder=".",
+                test_folder="./tests/grug_tests",
+                fully_disable=os.environ.get("PROD")!=None,
+                record_io=os.environ.get("DEV")!=None,
+            )
+            
+            @grug_test
+            def add_nums(a,b):
+                return a + b + 1
+
+            # normal usage
+            for a,b in zip(range(10), range(30, 40)):
+                add_nums(a,b)
+    """
     def __init__(
         self,
         name="__default__",
@@ -82,49 +131,27 @@ class GrugTest:
             **self.grug_info,
             "functions_with_tests": self.grug_info.get("functions_with_tests", []),
         }
-        
-    # record_summary
-        # name of test set
-        # path to main
-        # sys.path
-        # import statements for all recorded values
     
-    # old feature: replaying inputs
-    # def _generate_import_for(func, function_name, path_of_caller):
-    #     func_module = getattr(func, "__module__", None)
-    #     error_prefix = f"""\n\nHi, GrugTest here\nSo for the {function_name} function\n(which I think is defined in {repr(path_of_caller)})\n"""
-    #     if not func_module:
-    #         raise Exception(f'''{error_prefix}I'm trying to figure out how to import it (so I can replay the inputs)\nNormally I check {function_name}.__module__ to figure out what module its from, but that value is None\n\nTo fix this just add the 'import_statement' argument, ex:\n    @grug_test(import_statement="from somewhere import my_func as grug_function")\n    def my_func():\n        pass\n''')
-    #     if func_module == "__main__":
-    #         if not self._path_to_main:
-    #             raise Exception(f'''{error_prefix}I'm trying to figure out how to import it (so I can replay the inputs)\nIt is defined in the __main__ but I'm unable to figure out where this is.\n\nTo fix this just add the 'import_statement' argument, ex:\n    @grug_test(import_statement="from somewhere import my_func as grug_function")\n    def my_func():\n        pass\n''')
-    #         else:
-    #             raise Exception(f'''{error_prefix}I'm trying to figure out how to import it (so I can replay the inputs)\nIt is defined in the __main__ but I'm unable to figure out where this is.\n\nTo fix this just add the 'import_statement' argument, ex:\n    @grug_test(import_statement="from somewhere import my_func as grug_function")\n    def my_func():\n        pass\n''')
-    # 
-    #     if type(path_to_main) == str:
-    #         self.import_main_string += f"""import sys\n"""
-    #         self.import_main_string += f"""sys.path.insert(0, {repr(FS.dirname(path_to_main))})\n"""
-    #         self.import_main_string += f"""import {FS.basename(path_to_main)}"""
-
     # 
     # decorator
     # 
     def __call__(self, *args, how_to_import=None, func_name=None, test_name=None, **kwargs):
         """
-        grug_test = GrugTest(
-            project_folder=".",
-            test_folder="./tests/grug_tests",
-            fully_disable=os.environ.get("PROD")!=None,
-            record_io=os.environ.get("DEV")!=None,
-        )
-        
-        @grug_test
-        def add_nums(a,b):
-            return a + b + 1
+        Example:
+            grug_test = GrugTest(
+                project_folder=".",
+                test_folder="./tests/grug_tests",
+                fully_disable=os.environ.get("PROD")!=None,
+                record_io=os.environ.get("DEV")!=None,
+            )
+            
+            @grug_test
+            def add_nums(a,b):
+                return a + b + 1
 
-        # normal usage
-        for a,b in zip(range(10), range(30, 40)):
-            add_nums(a,b)
+            # normal usage
+            for a,b in zip(range(10), range(30, 40)):
+                add_nums(a,b)
         
         """
         source = get_path_of_caller()
@@ -285,3 +312,19 @@ def get_path_of_caller(*paths):
     else:
         # See note at the top
         return FS.join(intial_cwd, directory, *paths)
+
+
+grug_test = GrugTest(
+    project_folder=".",
+    test_folder="./tests/grug_tests",
+    fully_disable=os.environ.get("PROD")!=None,
+    record_io=True,
+)
+
+@grug_test
+def add_nums(a,b):
+    return a + b + 1
+
+# normal usage
+for a,b in zip(range(10), range(30, 40)):
+    add_nums(a,b)
