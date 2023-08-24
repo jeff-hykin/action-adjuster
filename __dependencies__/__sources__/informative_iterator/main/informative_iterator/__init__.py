@@ -81,9 +81,10 @@ def to_time_string(secs):
 nested_progress_bars = []
 class ProgressBar:
     """
-    from informative_iterator import ProgressBar, time
-    for progress, each in ProgressBar(10000):
-        time.sleep(0.01)
+    Example:
+        from informative_iterator import ProgressBar, time
+        for progress, each in ProgressBar(10000):
+            time.sleep(0.01)
     """
     
     layout = [ 'title', 'bar', 'percent', 'spacer', 'fraction', 'spacer', 'remaining_time', 'spacer', 'end_time', 'spacer', 'duration', 'spacer', ]
@@ -297,13 +298,14 @@ class ProgressBar:
                 
                 if self.progress_data.updated:
                     self.prev_time = self.progress_data.time
-                    self.times.append(self.progress_data.time)
-                    self.past_indicies.append(self.progress_data.index)
                     
                 # also printout at each percent marker
                 if self.progress_data.percent >= self.next_percent_mark:
                     self.next_percent_mark += self.percent_per_print
                     self.progress_data.updated = True
+                
+                self.times.append(self.progress_data.time)
+                self.past_indicies.append(self.progress_data.index)
                 
                 if self.progress_data.updated:
                     self.total_eslaped_time = 0
