@@ -8,8 +8,6 @@ import sys
 import os
 import json
 
-# Version 0.1
-    # add the replay mode
 # Version 1.0
     # report which tests have recordings but were not tested during replay mode (e.g. couldn't reach/find function)
     # autodetect the git folder
