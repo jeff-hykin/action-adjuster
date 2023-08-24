@@ -1421,6 +1421,9 @@ if True:
     # bits
     # 
     if True:
+        def bytes_to_binary(value, separator=""):
+            return separator.join([f'{each:0<8b}' for each in value])
+        
         def get_bit(n, bit):
             return (n >> bit) & 1
 
@@ -1432,77 +1435,62 @@ if True:
 
         seven = 7
         eight = 8
-        def concat_bytes_arrays(arrays):
-            length = sum(len(arr) for arr in arrays)
-            result = bytearray(length)
-            offset = 0
-            for arr in arrays:
-                result[offset:offset+len(arr)] = arr
-                offset += len(arr)
-            return bytes(result)
-
         def seven_to_eight_bits(seven_bytes):
+            seven_bytes = bytearray(seven_bytes)
             new_bytes = bytearray(eight)
-            index = -1
-            for each in seven_bytes:
-                index += 1
+            for index, each in enumerate(seven_bytes):
                 new_bytes[index] = set_bit(each, eight - 1, 0)
                 if get_bit(each, eight - 1):
                     new_bytes[eight - 1] = set_bit(new_bytes[eight - 1], index)
             return bytes(new_bytes)
 
         def eight_to_seven_bits(eight_bytes):
+            eight_bytes = bytearray(eight_bytes)
             seven_bytes = eight_bytes[:seven]
             final_byte = eight_bytes[seven]
             new_bytes = bytearray(seven)
-            index = -1
-            for each in seven_bytes:
-                index += 1
+            for index, each in enumerate(seven_bytes):
                 new_bytes[index] = each
                 if get_bit(final_byte, index):
                     new_bytes[index] = set_bit(new_bytes[index], seven)
             return bytes(new_bytes)
 
-        def bytes_to_valid_string(bytes):
-            number_of_blocks = (len(bytes) + seven - 1) // seven
+        def bytes_to_valid_string(the_bytes):
+            the_bytes = bytearray(the_bytes)
+            number_of_blocks = (len(the_bytes) + seven - 1) // seven
             buffer_size = (number_of_blocks * eight) + 1
             buffer = bytearray(buffer_size)
             last_slice = []
             for index in range(number_of_blocks):
+                last_slice = the_bytes[index * seven:(index + 1) * seven]
                 new_bytes = seven_to_eight_bits(
-                    last_slice = bytes[index * seven:(index + 1) * seven]
+                    last_slice
                 )
                 offset = -1
                 for byte in new_bytes:
                     offset += 1
                     buffer[(index * eight) + offset] = byte
+            
             buffer[-1] = seven - len(last_slice)
-            return buffer.decode()
+            return buffer.decode(encoding='utf-8')
 
         def valid_string_to_bytes(string):
-            char_count = len(string)
-            ascii_numbers = bytearray(char_count)
-            for i in range(char_count):
-                ascii_numbers[i] = ord(string[i])
+            ascii_numbers = bytearray(bytes(string, 'utf-8'))
             
             chunks_of_eight = ascii_numbers[:-1]
             slice_end = -ascii_numbers[-1]
             
-            eight = 8
             number_of_blocks = (len(chunks_of_eight) + eight - 1) // eight
-            arrays = []
+            output = bytes()
             for index in range(number_of_blocks):
-                arrays.append(
-                    eight_to_seven_bits(
-                        chunks_of_eight[index * eight:(index + 1) * eight]
-                    )
+                output += eight_to_seven_bits(
+                    chunks_of_eight[index * eight:(index + 1) * eight]
                 )
             
-            array = concat_bytes_arrays(arrays)
             if slice_end == 0:
-                slice_end = len(array)
+                slice_end = len(output)
             
-            return array[:slice_end]
+            return output[:slice_end]
 
     # 
     # python pickle
@@ -1600,7 +1588,7 @@ if True:
     class Csv:
         # reads .csv, .tsv, etc 
         @staticmethod
-        def read(path=None, *, string=None, seperator=",", first_row_is_column_names=False, column_names=None, skip_empty_lines=True, comment_symbol=None):
+        def read(path=None, *, string=None, separator=",", first_row_is_column_names=False, column_names=None, skip_empty_lines=True, comment_symbol=None):
             """
                 Examples:
                     comments, column_names, rows = csv.read("something/file.csv", first_row_is_column_names=True, comment_symbol="#")
@@ -1683,7 +1671,7 @@ if True:
                 # 
                 # cell data
                 #
-                cells = each_line.split(seperator)
+                cells = each_line.split(separator)
                 cells_with_types = []
                 skip_to = 0
                 for index, each_cell in enumerate(cells):
@@ -1703,13 +1691,13 @@ if True:
                             except Exception as error:
                                 cells_with_types.append(stripped)
                         else: # if first_char == '"' or first_char == '[' or first_char == '{'
-                            # this gets complicated because strings/objects/lists could contain an escaped seperator
+                            # this gets complicated because strings/objects/lists could contain an escaped separator
                             remaining_end_indicies = reversed(list(range(index, len(cells))))
                             skip_to = 0
                             for each_remaining_end_index in remaining_end_indicies:
                                 try:
                                     cells_with_types.append(
-                                        json.loads(seperator.join(cells[index:each_remaining_end_index]))
+                                        json.loads(separator.join(cells[index:each_remaining_end_index]))
                                     )
                                     skip_to = each_remaining_end_index
                                     break
@@ -1750,7 +1738,7 @@ if True:
             return comments, file_column_names, rows
 
         @staticmethod
-        def write(path=None, *, rows=tuple(), column_names=tuple(), seperator=",", eol="\n", comment_symbol=None, comments=tuple()):
+        def write(path=None, *, rows=tuple(), column_names=tuple(), separator=",", eol="\n", comment_symbol=None, comments=tuple()):
             import json
             import sys
             assert comment_symbol or len(comments) == 0, "Comments were provided,"
@@ -1761,12 +1749,12 @@ if True:
                     return comment_symbol in string
             
             def element_to_string(element):
-                # strings are checked for seperators, if no seperators or whitespace, then unquoted
+                # strings are checked for separators, if no separators or whitespace, then unquoted
                 if isinstance(element, str):
                     if not (
                         contains_comment_symbol(element) or
                         len(element.strip()) != len(element) or
-                        seperator in element or
+                        separator in element or
                         eol in element or
                         '\n' in element or
                         '\r' in element or 
@@ -1805,7 +1793,7 @@ if True:
                 # 
                 if len(column_names) > 0:
                     the_file.write(
-                        seperator.join(tuple(
+                        separator.join(tuple(
                             element_to_string(str(each)) for each in column_names 
                         ))+eol
                     )
@@ -1821,9 +1809,9 @@ if True:
                             element_to_string(each_cell)
                                 for each_cell in each_row 
                         )
-                        line = seperator.join(row_string_escaped)+eol
+                        line = separator.join(row_string_escaped)+eol
                         the_file.write(
-                            seperator.join(row_string_escaped)+eol
+                            separator.join(row_string_escaped)+eol
                         )
             except Exception as error:
                 # make sure to close the file
