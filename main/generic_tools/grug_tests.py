@@ -156,6 +156,7 @@ class GrugTest:
             def wrapper(*args, **kwargs):
                 grug_is_recording = self.record_io
                 inputs_were_saved = False
+                input_hash = None
                 if grug_is_recording:
                     # 
                     # hash the inputs
@@ -212,14 +213,13 @@ class GrugTest:
                         raise error
                         warn(f"\n\n\nFor a grug test on this function: {repr(function_name)} I tried to seralize the inputs but I wasn't able to.\nHere are the input types:\n    args: {repr(tuple(type(each) for each in args))}\n    kwargs: {repr(tuple(type(each) for each in kwargs.values()))}\nAnd here's the error: {error}", category=None, stacklevel=1, source=source)
                 
-                
                 output, the_error = self.record_output(
                     function_being_wrapped,
                     args,
                     kwargs,
                     path=grug_folder_for_this_func+f"/{input_hash}.output.yaml",
                     function_name=function_name,
-                    avoid_saving_if=inputs_were_saved and grug_is_recording,
+                    avoid_saving_if=not (inputs_were_saved and grug_is_recording),
                 )
                     
                 if the_error != None and not self.replay_inputs:
@@ -251,7 +251,7 @@ class GrugTest:
         # 
         # save output
         # 
-        if avoid_saving_if:
+        if not avoid_saving_if:
             # clear the way
             FS.write(data="", to=path)
             try:
@@ -315,13 +315,14 @@ grug_test = GrugTest(
     project_folder=".",
     test_folder="./tests/grug_tests",
     fully_disable=os.environ.get("PROD")!=None,
+    replay_inputs=True,
     record_io=True,
 )
 
 @grug_test
 def add_nums(a,b):
-    return a + b + 1
+    return a + b
 
-# normal usage
-for a,b in zip(range(10), range(30, 40)):
-    add_nums(a,b)
+# # normal usage
+# for a,b in zip(range(10), range(30, 40)):
+#     add_nums(a,b)
