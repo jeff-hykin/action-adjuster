@@ -16,10 +16,16 @@ intial_cwd = os.getcwd()
 if inital_pwd != intial_cwd:
     initial_cwd = inital_pwd
 
-def write(data, *, to=None, path=None, force=True):
+def normalize(path):
+    return os.path.normpath(path)
+
+def write(data, *, to=None, path=None, force=True, create_parent_folders=True):
     path = to or path
     # make sure the path exists
-    if force: ensure_is_folder(parent_path(path))
+    if create_parent_folders:
+        ensure_is_folder(parent_path(path), force=force)
+    if force and os.path.isdir(path):
+        shutil.rmtree(path)
     with open(path, 'w') as the_file:
         the_file.write(str(data))
 
@@ -341,15 +347,39 @@ def make_relative_path(*, to, coming_from=None):
 def get_cwd():
     return os.getcwd()
 
-def walk_up_until(file_to_find, start_path=None):
-    here = start_path or os.getcwd()
-    if not os.path.isabs(here):
-        here = os.path.join(os.getcwd(), file_to_find)
-    
+def walk_up_until(subpaths, start_path=None, include_basename=False):
+    """
+        Examples:
+            walk_up_until(".git", include_basename=True)
+            # returns f"{something}/.git" or None
+            
+            walk_up_until(".git")
+            # returns f"{something}" or None
+            
+            walk_up_until(".git/config")
+            # also returns f"{something}" or None
+            
+            walk_up_until(["setup.py", "requirements"], include_basename=True)
+            # returns either f"{something1}/setup.py" or f"{something2}/requirements.txt"
+            # depending on which appears closer to the start_path
+    """
+    if not start_path:
+        here = os.getcwd()
+    elif os.path.isabs(start_path):
+        here = start_path
+    else:
+        here = os.path.join(os.getcwd(), start_path)
+    # handle singlton input 
+    if isinstance(subpaths, (str, Path)):
+        subpaths = (subpaths, )
     while 1:
-        check_path = os.path.join(here, file_to_find)
-        if os.path.exists(check_path):
-            return check_path
+        for each in subpaths:
+            check_path = os.path.join(here, subpaths)
+            if os.path.exists(check_path):
+                if include_basename:
+                    return check_path
+                else:
+                    return here
         
         # reached the top
         if here == os.path.dirname(here):
@@ -369,7 +399,27 @@ def local_path(*paths):
         module = inspect.getmodule(frame[0])
         directory = os.path.dirname(module.__file__)
     # if inside a repl (error =>) assume that the working directory is the path
-    except AttributeError as error:
+    except (AttributeError, IndexError) as error:
+        directory = cwd
+    
+    if is_absolute_path(directory):
+        return join(directory, *paths)
+    else:
+        # See note at the top
+        return join(intial_cwd, directory, *paths)
+
+def path_of_caller(*paths, stack_level=1):
+    import os
+    import inspect
+    
+    cwd = os.getcwd()
+    # https://stackoverflow.com/questions/28021472/get-relative-path-of-caller-in-python
+    try:
+        frame = inspect.stack()[1+stack_level]
+        module = inspect.getmodule(frame[0])
+        directory = os.path.dirname(module.__file__)
+    # if inside a repl (error =>) assume that the working directory is the path
+    except (AttributeError, IndexError) as error:
         directory = cwd
     
     if is_absolute_path(directory):
@@ -406,3 +456,31 @@ def get_home():
     # readBytes
     # tempFile
     # tempFolder
+
+# WIP: remove me
+# def caller_id(*paths, anchor_points=["requirements.txt", ".git",]):
+#     import os
+#     import inspect
+    
+#     cwd = os.getcwd()
+#     # https://stackoverflow.com/questions/28021472/get-relative-path-of-caller-in-python
+#     try:
+#         frame = inspect.stack()[1]
+#         module = inspect.getmodule(frame[0])
+#         root_path = walk_up_until(anchor_points, start_path=os.getcwd())
+#         consistent_hash(read(module.__file__))
+#         if root_path != None:
+#             file_id = make_relative_path(to=module.__file__, coming_from=root_path)
+#         else:
+#             file_id = module.__name__
+#         position_in_file = tuple(frame.positions)
+#         return (fild_id, position_in_file)
+#     # if inside a repl (error =>) assume that the working directory is the path
+#     except (AttributeError, IndexError) as error:
+#         directory = cwd
+    
+#     if is_absolute_path(directory):
+#         return join(directory, *paths)
+#     else:
+#         # See note at the top
+#         return join(intial_cwd, directory, *paths)

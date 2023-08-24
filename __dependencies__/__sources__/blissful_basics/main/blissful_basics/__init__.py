@@ -42,7 +42,9 @@ if True:
     import collections.abc
     def is_dict(thing):
         return isinstance(thing, collections.abc.Mapping)
-
+    
+    def is_number(thing):
+        return isinstance(thing, numbers.Number)
 
 # 
 # data structures
@@ -296,8 +298,53 @@ if True:
                     raise error
     # show full stack trace by default instead of just saying "something wrong happened somewhere I guess"
     Warnings.show_full_stack_trace()
-        
+
+#
+# errors
 # 
+    def traceback_to_string(traceback):
+        import traceback as traceback_module
+        from io import StringIO
+        string_stream = StringIO()
+        traceback_module.print_tb(the_traceback, limit=None, file=string_stream)
+        return string_stream.getvalue()
+        
+    class CatchAll:
+        """
+        Example:
+            with CatchAll():
+                # prints error but keeps going
+                raise Exception(f'''Howdy''')
+
+
+            with SuppressAll():
+                # prints nothing and keeps going
+                raise Exception(f'''Howdy''')
+            
+            with CatchAll(suppress_errors=True):
+                # prints error but keeps going
+                raise Exception(f'''Howdy''')
+            
+            print("code gets here")
+        """
+        
+        def __init__(self, *args, suppress_errors=False, **kwargs):
+            self.suppress_errors = suppress_errors
+        
+        def __enter__(self):
+            pass
+        
+        def __exit__(self, _, error, the_traceback):
+            if error is not None:
+                if not self.suppress_errors:
+                    print(
+                        f"CatchAll caught:\n    {repr(error)}\n"+indent(traceback_to_string(the_traceback), by="    ")
+                    )
+            return True
+    
+    SuppressAll = lambda *args, **kwargs: CatchAll(*args, suppress_errors=True, **kwargs)
+            
+#
 # string related
 # 
 if True:
@@ -1066,7 +1113,7 @@ if True:
     import time
     
     def unix_time():
-        return int(time.time()/1000)
+        return int(time.time()*1000)
     
     @singleton
     class Time:
@@ -1074,34 +1121,39 @@ if True:
         
         @property
         def unix(self):
-            return int(time.time()/1000)
+            return int(time.time()*1000)
         
         @property
         def time_since_prev_call(self):
             current = time.time()
-            output = current-prev
+            output = current-Time.prev
             Time.prev = current
             return output
     
     class Timer:
+        """
+        Example:
+            with Timer(name="thing"):
+                do_something()
+        """
         prev = None
         def __init__(self, name="", *, silence=False, **kwargs):
             self.name = name
             self.silence = silence
         
         def __enter__(self):
-            self.start_time = int(time.time()/1000)
+            self.start_time = time.time()
             return self
         
         def __exit__(self, _, error, traceback):
-            self.end_time = int(time.time()/1000)
+            self.end_time = time.time()
             self.duration = self.end_time - self.start_time
             if not self.silence:
-                print(f"{self.name} took {self.duration}ms")
+                print(f"{self.name} took {round(self.duration*1000)}ms")
             Timer.prev = self
             if error is not None:
                 # error cleanup HERE
-                raise error
+                return None
 
 # 
 # colors
@@ -1148,13 +1200,22 @@ if True:
 # print helpers
 # 
 if True:
+    real_print = print
+    def print_to_string(*args, **kwargs):
+        from io import StringIO
+        string_stream = StringIO()
+        # dump to string
+        real_print(*args, **{ "flush": True, **kwargs, "file":string_stream })
+        output_str = string_stream.getvalue()
+        string_stream.close()
+        return output_str
+        
     # 
     # print that can be indented or temporarily disabled
     # 
     
     # FIXME: if there are multiple blissful basics in play, we need to keep their indent count centralized
     #        basically print needs a setter/getter that modifies a global indent value
-    real_print = print
     def print(*args, to_string=False, disable=False, **kwargs): # print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
         prev_end = print.prev_end
         print.prev_end = kwargs.get('end', '\n') or ''
@@ -1202,7 +1263,7 @@ if True:
         
         def __exit__(self, _, error, traceback):
             if error is not None:
-                raise error
+                return None
     with_nothing = WithNothing()
 
     class _Indent(object):
@@ -1226,7 +1287,7 @@ if True:
             print.indent.size = self.indent_before.pop()
             if error is not None:
                 # error cleanup HERE
-                raise error
+                return None
         
         def function(self, function_being_wrapped):
             """
@@ -1357,9 +1418,124 @@ if True:
 # 
 if True:
     # 
+    # bits
+    # 
+    if True:
+        def get_bit(n, bit):
+            return (n >> bit) & 1
+
+        def set_bit(n, bit, value=1):
+            if value:
+                return n | (1 << bit)
+            else:
+                return ~(~n | (1 << bit))
+
+        seven = 7
+        eight = 8
+        def concat_bytes_arrays(arrays):
+            length = sum(len(arr) for arr in arrays)
+            result = bytearray(length)
+            offset = 0
+            for arr in arrays:
+                result[offset:offset+len(arr)] = arr
+                offset += len(arr)
+            return bytes(result)
+
+        def seven_to_eight_bits(seven_bytes):
+            new_bytes = bytearray(eight)
+            index = -1
+            for each in seven_bytes:
+                index += 1
+                new_bytes[index] = set_bit(each, eight - 1, 0)
+                if get_bit(each, eight - 1):
+                    new_bytes[eight - 1] = set_bit(new_bytes[eight - 1], index)
+            return bytes(new_bytes)
+
+        def eight_to_seven_bits(eight_bytes):
+            seven_bytes = eight_bytes[:seven]
+            final_byte = eight_bytes[seven]
+            new_bytes = bytearray(seven)
+            index = -1
+            for each in seven_bytes:
+                index += 1
+                new_bytes[index] = each
+                if get_bit(final_byte, index):
+                    new_bytes[index] = set_bit(new_bytes[index], seven)
+            return bytes(new_bytes)
+
+        def bytes_to_valid_string(bytes):
+            number_of_blocks = (len(bytes) + seven - 1) // seven
+            buffer_size = (number_of_blocks * eight) + 1
+            buffer = bytearray(buffer_size)
+            last_slice = []
+            for index in range(number_of_blocks):
+                new_bytes = seven_to_eight_bits(
+                    last_slice = bytes[index * seven:(index + 1) * seven]
+                )
+                offset = -1
+                for byte in new_bytes:
+                    offset += 1
+                    buffer[(index * eight) + offset] = byte
+            buffer[-1] = seven - len(last_slice)
+            return buffer.decode()
+
+        def valid_string_to_bytes(string):
+            char_count = len(string)
+            ascii_numbers = bytearray(char_count)
+            for i in range(char_count):
+                ascii_numbers[i] = ord(string[i])
+            
+            chunks_of_eight = ascii_numbers[:-1]
+            slice_end = -ascii_numbers[-1]
+            
+            eight = 8
+            number_of_blocks = (len(chunks_of_eight) + eight - 1) // eight
+            arrays = []
+            for index in range(number_of_blocks):
+                arrays.append(
+                    eight_to_seven_bits(
+                        chunks_of_eight[index * eight:(index + 1) * eight]
+                    )
+                )
+            
+            array = concat_bytes_arrays(arrays)
+            if slice_end == 0:
+                slice_end = len(array)
+            
+            return array[:slice_end]
+
+    # 
     # python pickle
     # 
     if True:
+        def to_pickle_bytes(variable):
+            """
+            ~4Gb max value
+            """
+            import pickle
+            bytes_out = pickle.dumps(variable, protocol=4)
+            max_bytes = 2**31 - 1
+            FS.clear_a_path_for(file_path, overwrite=True)
+            with open(file_path, 'wb') as f_out:
+                for idx in range(0, len(bytes_out), max_bytes):
+                    f_out.write(bytes_out[idx:idx+max_bytes])
+        
+        def large_pickle_load(file_path):
+            """
+            This is for loading really big python objects from pickle files
+            ~4Gb max value
+            """
+            import pickle
+            import os
+            max_bytes = 2**31 - 1
+            bytes_in = bytearray(0)
+            input_size = os.path.getsize(file_path)
+            with open(file_path, 'rb') as f_in:
+                for _ in range(0, input_size, max_bytes):
+                    bytes_in += f_in.read(max_bytes)
+            output = pickle.loads(bytes_in)
+            return output
+
         def large_pickle_load(file_path):
             """
             This is for loading really big python objects from pickle files
@@ -1405,7 +1581,7 @@ if True:
         try:
             import pandas as pd
             json.fallback_table[lambda obj: isinstance(obj, pd.DataFrame)] = lambda obj: json.loads(obj.to_json())
-        except ImportError as error:
+        except:
             pass
         
         class Json:
