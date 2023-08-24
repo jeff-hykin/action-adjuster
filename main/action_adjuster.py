@@ -132,7 +132,6 @@ class Transform:
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
-# this class does a little data organization, receives data from the agent, solves, then sends data back the agent (using shared_thread_data)
 class Solver:
     self = None
     def __init__(self, policy, waypoints_list):
@@ -146,84 +145,85 @@ class Solver:
         self.start_timestep             = shared_thread_data.get("timestep", 0)
         self.last_canidate_was_valid    = True # attribute is for logging purposes only
         self.solve_time                 = 0
-        self.objective_func_call_count  = 0
     
     # this function is only called if multithreading is enabled
     @staticmethod
     def thread_solver_loop():
-        while True:
+        while threading.main_thread().is_alive():
             if Solver.self:
                 Solver.self.fit_points()
     
     def fit_points(self):
-        timestep_data = shared_thread_data["timestep_data"][-config.action_adjuster.max_history_size:]
-        sample_size = len(timestep_data)
+        with print.indent: 
+            start_timestep = shared_thread_data["timestep"]
+            timestep_data = shared_thread_data["timestep_data"]
+        
         # not enough data
-        if sample_size < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
+        if len(timestep_data) < (config.action_adjuster.future_projection_length + config.action_adjuster.update_frequency):
             print("not enough data for fit_points() just yet")
             sleep(1)
             return
         
-        # row1 = x, row2 = y, row3 = angle, row4 = velocity, row5 = spin, row6 = time
-        correct_next_spacial_predictions = to_tensor(each.next_spacial_info for each in timestep_data).transpose(0,1)
-        x,y,angle,velocity,spin,*_ = tuple(range(len(correct_next_spacial_predictions[0])))
-        indicies = [x,y,angle,velocity,spin]
-        losses = to_tensor([0]*len(indicies))
         
-        call_count = 0
         duration = 0
-        # create inputs and predictions
+        inputs_for_predictions = timestep_data[-config.action_adjuster.max_history_size:]
+        exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
         def objective_function(numpy_array):
             hypothetical_transform = Transform(numpy_array)
-            predicted_next_spacial_values    = tuple(
-                self.project(
-                    spacial_info_before_action=each.spacial_info_with_noise,
-                    most_recent_action=each.original_reaction,
-                    historic_transform=each.historic_transform,
-                    transform=hypothetical_transform,
-                    action_duration=each.action_duration,
-                )
-                    for each in timestep_data
-            )
-            # available data:
-            #     timestep_data[0].timestep_index
-            #     timestep_data[0].spacial_info
-            #     timestep_data[0].spacial_info_with_noise
-            #     timestep_data[0].observation_from_spacial_info_with_noise
-            #     timestep_data[0].original_reaction
-            #     timestep_data[0].historic_transform
-            #     timestep_data[0].mutated_reaction
-            #     timestep_data[0].next_spacial_info
-            #     timestep_data[0].next_spacial_info_spacial_info_with_noise
-            #     timestep_data[0].next_observation_from_spacial_info_with_noise
-            #     timestep_data[0].reward
-            
-            exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
-            # loss function
             losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-            # Note: len(predicted_spacial_values) should == len(real_spacial_values) + future_projection_length
-            # however, it will be automatically truncated because of the zip behavior
-            with print.indent:
-                for each_actual, each_predicted in zip(correct_next_spacial_predictions, predicted_next_spacial_values):
-                    x1, y1, angle1, velocity1, spin1, *_ = each_actual
-                    x2, y2, angle2, velocity2, spin2, *_ = each_predicted
-                    losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-                    losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-                    losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                    losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-                    losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
-            
-            score = -sum(losses)
-            # if not globals().get("skip", None):
-            #     import code; code.interact(local={**globals(),**locals()})
+            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
+                # each.timestep_index
+                # each.spacial_info
+                # each.spacial_info_with_noise
+                # each.observation_from_spacial_info_with_noise
+                # each.original_reaction
+                # each.historic_transform
+                # each.mutated_reaction
+                # each.next_spacial_info
+                # each.next_spacial_info_spacial_info_with_noise
+                # each.next_observation_from_spacial_info_with_noise
+                # each.reward
                 
-            return score
+                # action + nothing            = predicted_observation -1.0
+                # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
+                # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
+                #                                                               is only there because the historic transform was doing part of the work
+                # so we need to do action - historic_transform + best transform
+                if historic_transform:
+                    # vanilla_action = self.policy(observation_from_spacial_info_with_noise)
+                    recreated_vanilla_action = historic_transform.adjust_action(
+                        action=original_reaction,
+                        mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
+                    )
+                
+                # this part is trying to guess/recreate the advesarial part of the .step() function
+                relative_velocity_action, relative_spin_action = hypothetical_transform.adjust_action(
+                    action=recreated_vanilla_action,
+                    mimic_adversity=True, # we want to undo the adversity when projecting into the future
+                )
+                predicted_next_spacial_info = WarthogEnv.generate_next_spacial_info(
+                    old_spacial_info=spacial_info_with_noise,
+                    relative_velocity=relative_velocity_action,
+                    relative_spin=relative_spin_action,
+                    action_duration=action_duration,
+                )
+                
+                x1, y1, angle1, velocity1, spin1, *_ = next_spacial_info
+                x2, y2, angle2, velocity2, spin2, *_ = predicted_next_spacial_info
+                losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+                losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+                losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+                losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+                losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
+            
+            return -sum(losses)
         
         # 
         # overfitting protection (validate the canidate)
         # 
+        new_data_invalidated_recent_best = None
         if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
-            solutions = list(self.selected_solutions) + [ self.unconfirmed_transform ]
+            solutions = tuple(set(list(self.selected_solutions) + [ self.unconfirmed_transform ]))
             perfect_score = objective_function(perfect_transform_input)
             print("")
             print(f'''perfect objective value: {perfect_score}''')
@@ -237,7 +237,10 @@ class Solver:
             )
             print("evaluating transforms:")
             for each_transform, each_score, each_distance in zip(solutions, scores, distances_from_perfect):
-                print(f'''    objective value: {each_score:.3f}: distance from perfect:{each_distance:.4f}: {each_transform}''')
+                is_active = ""
+                if json.dumps(each_transform) == json.dumps(self.latest_confirmed_transform):
+                    is_active = "[latest_confirmed_transform:True]"
+                print(f'''    objective value: {each_score:.3f}: distance from perfect:{each_distance:.4f}: {each_transform} {is_active}''')
             
             best_with_new_data = bb.arg_maxs(
                 args=solutions,
@@ -247,13 +250,11 @@ class Solver:
             self.last_canidate_was_valid = not new_data_invalidated_recent_best
             # basically overfitting detection
             # reduce stdev, and don't use the canidate
-            print(f'''new_data_invalidated_recent_best: {new_data_invalidated_recent_best}''')
             if new_data_invalidated_recent_best:
                 self.stdev = self.stdev/config.cmaes.reduction_rate
                 # choose the long-term best as the starting point
                 self.latest_confirmed_transform = best_with_new_data[0]
             else:
-                self.stdev += self.stdev * config.cmaes.increase_rate
                 print(f'''canidate passed inspection: {self.unconfirmed_transform}''')
                 print(f'''prev transform            : {self.latest_confirmed_transform}''')
                 print(f'''canidate score: {objective_function(self.unconfirmed_transform.as_numpy)}''')
@@ -261,13 +262,11 @@ class Solver:
                 self.selected_solutions.add(self.unconfirmed_transform)
                 # use the canidate transform as the base for finding new answers
                 self.latest_confirmed_transform = self.unconfirmed_transform
-            
+        
         # 
         # record data
         # 
         if True:
-            # send to agent
-            shared_thread_data["transform_json"] = json.dumps(self.latest_confirmed_transform)
             score_before = objective_function(self.latest_confirmed_transform.as_numpy)
             # kill this process once the limit is reaced
             with print.indent: 
@@ -278,16 +277,16 @@ class Solver:
                 # dont log directly from this thread, send it to the main thread so theres not a race condition on the output file
                 shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(
                     timestep=shared_thread_data["timestep"], # the timestep the computation was finished
-                    timestep_started=self.start_timestep, # the active timestep when the fit_points was called
+                    timestep_started=start_timestep, # the active timestep when the fit_points was called
                     line_fit_score=score_before,
                     last_canidate_was_valid=self.last_canidate_was_valid,
-                    sample_size=sample_size,
-                    call_count=self.objective_func_call_count,
+                    sample_size=len(inputs_for_predictions),
                     fit_points_time_seconds=self.solve_time,
                     distance_to_optimal=mean_squared_error(self.latest_confirmed_transform.as_numpy, perfect_transform_input),
                     latest_confirmed_transform=to_pure(self.latest_confirmed_transform.as_numpy),
                     perfect_transform_input=to_pure(perfect_transform_input),
                 )]
+                shared_thread_data["transform_json"] = json.dumps(self.latest_confirmed_transform)
         
         # 
         # generate new canidate
@@ -303,9 +302,7 @@ class Solver:
                     max_iterations=config.action_adjuster.solver_max_iterations,
                 )
             )
-            # print(f'''call_count = {call_count}''')
-            # print(f'''duration = {duration}''')
-            # print(f'''duration/call = {duration/call}''')
+            
             # canidate is the incremental shift towards next_best
             self.unconfirmed_transform = Transform(
                 shift_towards(
@@ -325,44 +322,58 @@ class Solver:
             if score_after < score_before:
                 self.stdev = self.stdev/config.cmaes.reduction_rate
                 print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
-            
-        
-        self.objective_func_call_count = call_count
     
-    @staticmethod
     def project(
+        self,
+        policy,
         transform,
-        spacial_info_before_action,
-        most_recent_action,
         historic_transform,
+        spacial_info_after_most_recent_action, # whatever action was last executed, this should be the resulting next spacial info
+        observation_from_spacial_info_with_noise_after_most_recent_action, # whatever action was last executed, this should be the resulting next observation
+        closest_index_after_most_recent_action,
         action_duration,
     ):
-        # action + nothing            = predicted_observation -1.0
-        # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
-        # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
-        #                                                               is only there because the historic transform was doing part of the work
-        # so we need to do action - historic_transform + best transform
-        if historic_transform:
-            base_action = historic_transform.adjust_action(
-                action=most_recent_action,
-                mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
+        with print.indent:
+            current_spacial_info   = spacial_info_after_most_recent_action
+            observation            = observation_from_spacial_info_with_noise_after_most_recent_action
+            closest_waypoint_index = closest_index_after_most_recent_action
+            
+            action = policy(observation)
+            
+            # action + nothing            = predicted_observation -1.0
+            # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
+            # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
+            #                                                               is only there because the historic transform was doing part of the work
+            # so we need to do action - historic_transform + best transform
+            if historic_transform:
+                action = historic_transform.adjust_action(
+                    action=action,
+                    mimic_adversity=False, # undo the historic transformation so that the current transformation is doing ALL the work
+                )
+            
+            # this part is trying to guess/recreate the advesarial part of the .step() function
+            relative_velocity_action, relative_spin_action = transform.adjust_action(
+                action=action,
+                mimic_adversity=True, # we want to undo the adversity when projecting into the future
             )
-        
-        # keep
-        # this part is trying to guess/recreate the advesarial part of the .step() function
-        relative_velocity_action, relative_spin_action = transform.adjust_action(
-            action=base_action,
-            mimic_adversity=False, # we want to undo the adversity when projecting into the future
-        )
-        # keep
-        next_spacial_info = WarthogEnv.generate_next_spacial_info(
-            old_spacial_info=spacial_info_before_action,
-            relative_velocity=relative_velocity_action,
-            relative_spin=relative_spin_action,
-            action_duration=action_duration,
-        )
-        # keep
-        return next_spacial_info
+            next_spacial_info = WarthogEnv.generate_next_spacial_info(
+                old_spacial_info=current_spacial_info,
+                relative_velocity=relative_velocity_action,
+                relative_spin=relative_spin_action,
+                action_duration=action_duration,
+            )
+            closest_relative_index, _ = WarthogEnv.get_closest(
+                remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
+                x=next_spacial_info.x,
+                y=next_spacial_info.y,
+            )
+            closest_waypoint_index += closest_relative_index
+            next_observation = WarthogEnv.generate_observation(
+                remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
+                current_spacial_info=next_spacial_info,
+            )
+            
+            return [next_spacial_info]
 
     
 class ActionAdjustedAgent(Skeleton):
@@ -392,13 +403,15 @@ class ActionAdjustedAgent(Skeleton):
         shared_thread_data["timestep"] = 0
         shared_thread_data["timestep_data"] = []
         shared_thread_data["records_to_log"] = []
+        self.thread = None
         self.records_from_the_solver_thread = []
         # create the solver
         self.solver = Solver(policy=policy, waypoints_list=waypoints_list)
         
         if config.action_adjuster.use_threading:
             # start the thread
-            threading.Thread(target=Solver.thread_solver_loop).start()
+            self.thread = threading.Thread(target=Solver.thread_solver_loop)
+            self.thread.start()
 
     def when_mission_starts(self):
         pass
@@ -467,7 +480,7 @@ class ActionAdjustedAgent(Skeleton):
         
         
         if config.action_adjuster.use_threading:
-            sleep(time_slowdown)
+            sleep(time_slowdown) # real life takes time to execute actions
         
         # 
         # receive data from solver thread
@@ -477,6 +490,10 @@ class ActionAdjustedAgent(Skeleton):
             # if not multithreading: run solver manually
             if not config.action_adjuster.use_threading:
                 self.solver.fit_points()
+            # otherwise check on thread task
+            else:
+                if not self.thread.is_alive():
+                    raise Exception(f'''Solver thread died''')
             
             # pull in any records that need logging
             with print.indent: 
