@@ -18,35 +18,8 @@ import json
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
     # fix the problem of tuples getting converted to lists (changes hash) when yamlizing
 
-from ez_yaml import yaml, ruamel
-
-
-        # setup loader (basically options)
-alt_yaml = ruamel.yaml.YAML()
-alt_yaml.indent(mapping=3, sequence=2, offset=0)
-alt_yaml.allow_duplicate_keys = True
-alt_yaml.width = float("Infinity")
-alt_yaml.explicit_start = False
-# show null
-alt_yaml.representer.add_representer(
-    type(None),
-    lambda self, data: self.represent_scalar(u'tag:yaml.org,2002:null', u'null')
-)
-from io import StringIO
-def to_string(obj, options=None):
-    if options == None: options = {}
-    string_stream = StringIO()
-    alt_yaml.dump(obj, string_stream, **options)
-    output_str = string_stream.getvalue()
-    string_stream.close()
-    return output_str
-
-def to_object(string=None, file_path=None, options=None, load_nested_yaml=False):
-    if options == None: options = {}
-    output = alt_yaml.load(string, **options)
-    if load_nested_yaml:
-        output = eval_load_yaml_file_tag(output, original_file_path=":<inline-string>:") 
-    return output
+from ez_yaml import yaml
+yaml.width = float("Infinity")
 
 @yaml.register_class
 class YamlPickled:
@@ -58,7 +31,7 @@ class YamlPickled:
     
     @classmethod
     def from_yaml(cls, constructor, node):
-        string = to_object(node.value)[node.value.index(YamlPickled.delimiter)+1:]
+        string = node.value[node.value.index(YamlPickled.delimiter)+1:]
         # node.value is the python-value
         return pickle.loads(valid_string_to_bytes(string))
     
@@ -67,14 +40,14 @@ class YamlPickled:
         prefix = f"{type(data.value)}".replace(YamlPickled.delimiter, "")
         if prefix.startswith("<class '") and prefix.endswith("'>"):
             prefix = prefix[8:-2]
-        
+            
         # value needs to be a string (or some other yaml-primitive)
         return representer.represent_scalar(
             tag=cls.yaml_tag,
-            value=to_string(prefix + YamlPickled.delimiter + bytes_to_valid_string(
+            value=prefix + YamlPickled.delimiter + bytes_to_valid_string(
                 pickle.dumps(data.value, protocol=4)
-            )),
-            # style="|",
+            ),
+            style=None,
             anchor=None
         )
 
