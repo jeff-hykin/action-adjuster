@@ -38,6 +38,10 @@ def repeat(a,times):
 
 # Q&A
 
+Does this work with `@staticmethod`?
+
+- Yes but you have to put the decorator it on the line BELOW the `@staticmethod`
+
 Does this work with ANY pure function?
 
 - Almost, the arguments need to be seralizable. For example, if you pass a lambda function as an argument then grug_test can't really save/load that lambda function when `replay_inputs=True`. However, you can make almost any normal class seralizable, just checkout a tutorial on making a class work with python-pickle, or (even better) do `from grug_test import yaml` and make your class be yaml-seralizable (tutorial/example [here](https://github.com/jeff-hykin/ez_yaml/blob/8b4dce8bf495484feb50f84468ffc6f776c357d4/README.md#custom-yaml-tags-example))

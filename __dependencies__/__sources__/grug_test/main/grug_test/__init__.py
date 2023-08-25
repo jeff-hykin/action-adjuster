@@ -279,7 +279,6 @@ class GrugTest:
                             )
                         input_files.append(input_file_path)
                 except Exception as error:
-                    raise error
                     warn(f"\n\n\nFor a grug test on this function: {repr(function_name)} I tried to seralize the inputs but I wasn't able to.\nHere are the input types:\n    args: {repr(tuple(type(each) for each in args))}\n    kwargs: {repr(tuple(type(each) for each in kwargs.values()))}\nAnd here's the error: {error}", category=None, stacklevel=1, source=source)
                     # run function like normal
                     return function_being_wrapped(*args, **kwargs)
