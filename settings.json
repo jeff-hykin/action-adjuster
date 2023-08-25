@@ -14,7 +14,7 @@
         },
         "grug_test": {
             "git_url": "git@github.com:jeff-hykin/grug_test_py.git",
-            "path": "__sources__/grug_test_py/main/grug_test"
+            "path": "__sources__/grug_test/main/grug_test"
         },
         "trivial_torch_tools": {
             "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
