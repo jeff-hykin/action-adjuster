@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/grug_test_py.git
+	branch = master
+	commit = 3c0f38ffa62a569578d7926af19167f627e5c515
+	parent = dc306c6f963569ce92f7be7ac7ebf2f9ca0d0859
+	method = merge
+	cmdver = 0.4.1

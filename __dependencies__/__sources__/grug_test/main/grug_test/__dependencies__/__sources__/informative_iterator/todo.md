@@ -1,0 +1,3 @@
+- use sys.stdout.isatty() to check if output is going to a file or not (and change caridge return accordingly)
+- hook into sys.stdout, sys.stderr in order to print normal output above the progress bar instead of overwriting it
+    - see: https://github.com/rsalmei/alive-progress/blob/1e1aa78e71219f6246cbabfeeeba2ae25ad5266b/alive_progress/core/hook_manager.py#L55

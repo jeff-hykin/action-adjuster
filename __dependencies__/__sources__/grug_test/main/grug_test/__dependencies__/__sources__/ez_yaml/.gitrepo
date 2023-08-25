@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/ez_yaml.git
+	branch = master
+	commit = 8b4dce8bf495484feb50f84468ffc6f776c357d4
+	parent = a2be435e2c6bf26b5e5a3bf8fd695a5650bdba6d
+	method = merge
+	cmdver = 0.4.1
