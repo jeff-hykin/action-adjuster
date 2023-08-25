@@ -1,6 +1,9 @@
+import os
+
 from generic_tools.notifier import setup_notifier_if_possible
 from __dependencies__.quik_config import find_and_load
 from __dependencies__.blissful_basics import FS, LazyDict
+from __dependencies__.grug_test import GrugTest
 
 info = find_and_load(
     "main/config.yaml",
@@ -22,6 +25,13 @@ FS.copy(item="config.yaml", to=config.output_folder, new_name=None)
 import subprocess
 commit_hash = subprocess.check_output(['git', 'rev-parse', "HEAD"]).decode('utf-8')[0:-1]
 FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
+
+grug_test = GrugTest(
+    project_folder=".",
+    test_folder="./tests/grug_tests",
+    fully_disable=os.environ.get("PROD")!=None,
+    record_io=True,
+)
 
 send_notification = setup_notifier_if_possible(
     disable=not secrets.get("send_notification", False),

@@ -14,16 +14,17 @@ import __dependencies__.blissful_basics as bb
 from __dependencies__.super_hash import super_hash
 from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip, countdown
 
-from config import config, path_to
+from config import config, path_to, grug_test
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 
-bb.Warnings.disable()
+# bb.Warnings.disable()
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
 class Unknown:
     pass
 
+@grug_test(func_name="scaled_sigmoid", max_io=100, record_io=None, additional_io_per_run=None)
 def scaled_sigmoid(x):
     # normally sigmoid(10) = 0.9999092042625952
     # normally sigmoid(100) = 1.0
@@ -367,6 +368,7 @@ class WarthogEnv(gym.Env):
         return next_spacial_info
     
     @staticmethod
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
     def get_closest(remaining_waypoints, x, y):
         """
             Note:
@@ -384,6 +386,7 @@ class WarthogEnv(gym.Env):
         return closest_index, closest_distance
     
     @staticmethod
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
     def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index,):
         x_diff     = closest_waypoint.x - spacial_info.x
         y_diff     = closest_waypoint.y - spacial_info.y
@@ -430,6 +433,7 @@ class WarthogEnv(gym.Env):
         return running_reward, velocity_error, crosstrack_error, phi_error
     
     @staticmethod
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
     def almost_original_reward_function(**kwargs):
         closest_relative_index = kwargs["closest_relative_index"]
         running_reward, *other = WarthogEnv.original_reward_function(**kwargs)
@@ -769,7 +773,7 @@ class WarthogEnv(gym.Env):
         self.ax.plot(x, y, "+r")
 
     def _read_waypoint_file_path(self, filename):
-        comments, column_names, rows = Csv.read(filename, seperator=",", first_row_is_column_names=True, skip_empty_lines=True)
+        comments, column_names, rows = Csv.read(filename, separator=",", first_row_is_column_names=True, skip_empty_lines=True)
         for row in rows:
             self.desired_velocities.append(row.velocity)
             self.waypoints_list.append(
@@ -789,3 +793,7 @@ class WarthogEnv(gym.Env):
         assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
         final_waypoint = self.waypoints_list[index + 1]
         final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
+
+SpacialInformation = WarthogEnv.SpacialInformation
+ReactionClass = WarthogEnv.ReactionClass
+WaypointGap = WarthogEnv.WaypointGap
