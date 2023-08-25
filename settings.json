@@ -5,10 +5,16 @@
             "path": "__sources__/blissful_basics/main/blissful_basics"
         },
         "cool_cache": {
+            "git_url": "git@github.com:jeff-hykin/cool_cache.git",
             "path": "__sources__/cool_cache/main/cool_cache"
         },
         "rigorous_recorder": {
+            "git_url": "git@github.com:jeff-hykin/rigorous_recorder.git",
             "path": "__sources__/rigorous_recorder/main/rigorous_recorder"
+        },
+        "grug_test": {
+            "git_url": "git@github.com:jeff-hykin/grug_test.git",
+            "path": "__sources__/grug_test/main/grug_test"
         },
         "trivial_torch_tools": {
             "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
@@ -18,13 +24,12 @@
             "git_url": "git@github.com:jeff-hykin/informative-iterator.git",
             "path": "__sources__/informative_iterator/main/informative_iterator"
         },
-        "elegant_events": {
-            "path": "__sources__/elegant_events/main/elegant_events"
-        },
         "super_hash": {
+            "git_url": "git@github.com:jeff-hykin/super_hash.git",
             "path": "__sources__/super_hash/main/super_hash"
         },
         "quik_config": {
+            "git_url": "git@github.com:jeff-hykin/quik_config.git",
             "path": "__sources__/quik_config/main/quik_config"
         }
     }
