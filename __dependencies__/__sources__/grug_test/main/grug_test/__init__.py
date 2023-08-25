@@ -7,7 +7,7 @@ import functools
 
 from .__dependencies__.ez_yaml import yaml
 from .__dependencies__ import ez_yaml
-from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent, super_hash, print, randomly_pick_from
+from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent, super_hash, print, randomly_pick_from, stringify, to_pure
 from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
@@ -54,6 +54,94 @@ class YamlPickled:
             style=None,
             anchor=None
         )
+# 
+# add yaml representations for numpy values if possible
+# 
+try:
+    import numpy
+    ez_yaml.yaml.Representer.add_representer(
+        numpy.ndarray,
+        lambda dumper, data: dumper.represent_sequence(tag='python/numpy/ndarray', sequence=data.tolist()), 
+    )
+    ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+        'python/numpy/ndarray',
+        lambda loader, node: numpy.array(loader.construct_sequence(node, deep=True)),
+    )
+    
+    # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
+    for each in [
+        "float",
+        'double',
+        # "cfloat",
+        # 'cdouble',
+        'float8',
+        'float16',
+        'float32',
+        'float64',
+        # 'float128',
+        # 'float256',
+        # "longdouble",
+        # "longfloat",
+        # "clongdouble",
+        # "clongfloat",
+    ]:
+        the_type = getattr(numpy, each, None)
+        if the_type:
+            the_tag = f'python/numpy/{each}'
+            ez_yaml.yaml.Representer.add_representer(
+                the_type,
+                lambda dumper, data: dumper.represent_scalar(
+                    tag=the_tag,
+                    value=str(float(data)),
+                    style=None,
+                    anchor=None
+                ),
+            )
+            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+                the_tag,
+                lambda loader, node: the_type(node.value),
+            )
+
+    for each in [
+        # "intp",
+        # "uintp",
+        # "intc",
+        # "uintc",
+        # "longlong",
+        # "ulonglong",
+        "int",
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+        "uint128",
+        "uint256",
+        "int",
+        "int8",
+        "int16",
+        "int32",
+        "int64",
+        "int128",
+        "int256",
+    ]:
+        the_type = getattr(numpy, each, None)
+        if the_type:
+            the_tag = f'python/numpy/{each}'
+            ez_yaml.yaml.Representer.add_representer(
+                the_type,
+                lambda dumper, data: dumper.represent_scalar(
+                    tag=the_tag,
+                    value=str(int(data)),
+                    style=None,
+                    anchor=None
+                ),
+            )
+            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+                the_tag,
+                lambda loader, node: the_type(node.value),
+            )
+except Exception as error:
+    pass
 
 class GrugTest:
     """
@@ -94,6 +182,7 @@ class GrugTest:
         self.replay_inputs   = replay_inputs
         self.record_io       = record_io
         self.verbose         = verbose
+        self.overflow_strat  = overflow_strat
         self.max_io_per_func = max_io_per_func if max_io_per_func != None else math.inf
         self.project_folder  = project_folder
         self.test_folder     = test_folder
@@ -204,6 +293,12 @@ class GrugTest:
                 if decorator.replaying_inputs or not decorator.record_io:
                     return function_being_wrapped(*args, **kwargs)
                 
+                # when overflowing, with 'keep_old' just avoid saving io (even though technically we might want to update the output of an existing one)
+                is_overflowing = len(input_files) >= max_io
+                shouldnt_save_new_io = and is_overflowing and self.overflow_strat == 'keep_old'
+                if shouldnt_save_new_io:
+                    return function_being_wrapped(*args, **kwargs)
+                
                 # 
                 # hash the inputs
                 #
@@ -212,7 +307,7 @@ class GrugTest:
                     arg = (args, kwargs)
                     input_hash = super_hash(arg)[0:12] # 12 chars is plenty for being unique 
                 except Exception as error:
-                    error_message = f"\n\n\nFor a grug test on this function: {repr(function_name)} I tried to hash the inputs but I wasn't able to.\nHere are the input types:\n    args: {repr(tuple(type(each) for each in args))}\n    kwargs: {repr(tuple(type(each) for each in kwargs.values()))}\nAnd here's the error: {error}"
+                    error_message = f"\n\n\nFor a grug test on this function: {repr(function_name)}\n" + indent(f"I tried to hash the inputs but I wasn't able to.\nHere are the input types:\n    args: {indent(stringify(tuple(type(each) for each in args)))}\n    kwargs: {indent(stringify({ key: type(value) for key, value in kwargs.items()}))}\n\nAnd here's the error:\n{indent(error)}\n")
                     warn(error_message, category=None, stacklevel=1, source=source)
                     # run function like normal
                     return function_being_wrapped(*args, **kwargs)
@@ -220,17 +315,11 @@ class GrugTest:
                 input_file_path  = grug_folder_for_this_func+f"/{input_hash}{self.input_file_extension}"
                 output_file_path = grug_folder_for_this_func+f"/{input_hash}{self.output_file_extension}"
                 
-                # check for effectively normal run
-                input_already_existed = FS.is_file(input_file_path)
-                is_overflowing = len(input_files) >= max_io
-                shouldnt_save_new_io = not input_already_existed and is_overflowing and self.overflow_strat == 'keep_old'
-                if shouldnt_save_new_io:
-                    return function_being_wrapped(*args, **kwargs)
-                
                 try:
                     # 
                     # input limiter
                     # 
+                    input_already_existed = FS.is_file(input_file_path)
                     if is_overflowing and not input_already_existed and self.overflow_strat == 'delete_random':
                         input_to_delete  = randomly_pick_from(input_files)
                         output_to_delete = input_to_delete[0:-len(self.input_file_extension)]+self.output_file_extension
@@ -242,17 +331,18 @@ class GrugTest:
                     # save the inputs
                     # 
                     if not input_already_existed:
-                        # clear the way (create parent folders)
-                        FS.write(data="", to=input_file_path)
+                        FS.ensure_is_folder(FS.parent_path(input_file_path))
+                        # encase its a folder for some reason
+                        FS.remove(input_file_path)
                         # if all the args are yaml-able this will work
                         try:
                             ez_yaml.to_file(
+                                file_path=input_file_path,
                                 obj=dict(
                                     args=args,
                                     kwargs=kwargs,
                                     pickled_args_and_kwargs=YamlPickled(arg),
                                 ),
-                                file_path=input_file_path,
                             )
                         except Exception as error:
                             # if all the args are at least pickle-able, this will work
@@ -260,26 +350,26 @@ class GrugTest:
                             converted_kwargs = dict(kwargs)
                             for index,each in enumerate(converted_args):
                                 try:
-                                    yaml.to_string(each)
+                                    ez_yaml.to_string(each)
                                 except Exception as error:
                                     converted_args[index] = YamlPickled(each)
                             for each_key, each_value in converted_kwargs.items():
                                 try:
-                                    yaml.to_string(each_value)
+                                    ez_yaml.to_string(each_value)
                                 except Exception as error:
                                     converted_kwargs[each_key] = YamlPickled(each_value)
-                            
                             ez_yaml.to_file(
+                                file_path=input_file_path,
                                 obj=dict(
                                     args=converted_args,
                                     kwargs=converted_kwargs,
                                     pickled_args_and_kwargs=YamlPickled(arg),
-                                ),
-                                file_path=input_file_path,
+                                )
                             )
                         input_files.append(input_file_path)
                 except Exception as error:
-                    warn(f"\n\n\nFor a grug test on this function: {repr(function_name)} I tried to seralize the inputs but I wasn't able to.\nHere are the input types:\n    args: {repr(tuple(type(each) for each in args))}\n    kwargs: {repr(tuple(type(each) for each in kwargs.values()))}\nAnd here's the error: {error}", category=None, stacklevel=1, source=source)
+                    FS.remove(input_file_path)
+                    warn(f"\n\n\nFor a grug test on this function: {repr(function_name)}\n"+indent(f"I tried to seralize the inputs but I wasn't able to.\nHere are the input types:\n    args: {indent(stringify(tuple(type(each) for each in args)))}\n    kwargs: {indent(stringify({ key: type(value) for key, value in kwargs.items()}))}\n\nAnd here's the error:\n{indent(error)}\n"), category=None, stacklevel=1, source=source)
                     # run function like normal
                     return function_being_wrapped(*args, **kwargs)
                 
@@ -323,40 +413,46 @@ class GrugTest:
             the_error = error
         
         # clear the way (generates parent folders if needed)
-        FS.write(data="", to=path, force=True)
+        FS.ensure_is_folder(FS.parent_path(path))
+        # encase its a folder for some reason
+        FS.remove(path)
         try:
-            # write the output
             ez_yaml.to_file(
+                file_path=path,
                 obj={
                     "error_output": repr(the_error),
                     "normal_output": output,
                 },
-                file_path=path,
             )
         except Exception as error:
             try:
                 # try to be informative if possible
                 if type(output) == tuple:
+                    new_output = list(output)
+                    for index, each in enumerate(output):
+                        try:
+                            ez_yaml.to_string(each)
+                        except Exception as error:
+                            new_output[index] = YamlPickled(each)
+                                    
                     ez_yaml.to_file(
+                        file_path=path,
                         obj={
                             "error_output": repr(the_error),
-                            "normal_output": tuple(
-                                YamlPickled(each)
-                                    for each in output
-                            ),
+                            "normal_output": new_output,
                         },
-                        file_path=path,
                     )
                 else:
                     ez_yaml.to_file(
+                        file_path=path,
                         obj={
                             "error_output": repr(the_error),
                             "normal_output": YamlPickled(output),
                         },
-                        file_path=path
                     )
             except Exception as error:
-                warn(f"\n\n\nFor a grug test on this function: {repr(function_name)} I tried to seralize the output but I wasn't able to.\nHere is the output type:\n    output: {type(output)}\nAnd here's the error: {error}", category=None, stacklevel=1, source=source)
+                FS.remove(path)
+                warn(f"\n\n\nFor a grug test on this function: {repr(function_name)}\n"+ indent(f"I tried to seralize the output but I wasn't able to.\nHere is the output type:\n    output: {type(output)}\nAnd here's the error: {indent(error)}\n"), category=None, stacklevel=1, source=source)
     
         return output, the_error
         

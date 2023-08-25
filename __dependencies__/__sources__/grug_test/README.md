@@ -21,7 +21,7 @@ grug_test = GrugTest(
 )
 
 # 2. slap @grug_test on any of your pure-functions
-@grug_test
+@grug_test(max_io=100)
 def repeat(a,times):
     for _ in range(times):
         a += f"{a}"
