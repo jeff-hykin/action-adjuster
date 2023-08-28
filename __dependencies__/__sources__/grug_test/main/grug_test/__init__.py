@@ -295,7 +295,7 @@ class GrugTest:
                 
                 # when overflowing, with 'keep_old' just avoid saving io (even though technically we might want to update the output of an existing one)
                 is_overflowing = len(input_files) >= max_io
-                shouldnt_save_new_io = and is_overflowing and self.overflow_strat == 'keep_old'
+                shouldnt_save_new_io = is_overflowing and self.overflow_strat == 'keep_old'
                 if shouldnt_save_new_io:
                     return function_being_wrapped(*args, **kwargs)
                 
