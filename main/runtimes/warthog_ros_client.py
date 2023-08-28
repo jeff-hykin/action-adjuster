@@ -42,6 +42,10 @@ class RosRuntime:
         )
         self.first_observation_loaded = False
         
+        
+        # 
+        # ROS
+        # 
         rospy.init_node(config.ros_runtime.main_node_name)
         self.controller_publisher = rospy.Publisher(
             rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic),
@@ -49,12 +53,17 @@ class RosRuntime:
             queue_size=20,
         )
         self.odom_subscriber = message_filters.Subscriber(
-            rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic),
+            rospy.get_param('~odom_topic', config.ros_runtime.odometry_topic), # 'warthog_velocity_controller/odom'
             Odometry,
+        )
+        self.gps_odom_topic = message_filters.Subscriber(
+            rospy.get_param('~gps_topic', config.ros_runtime.gps_topic),
+            Twist,
         )
         self.time_synchonizer = message_filters.ApproximateTimeSynchronizer(
             [
                 self.odom_subscriber,
+                self.gps_odom_topic,
             ],
             config.ros_runtime.time_sync_size,
             1,
@@ -87,54 +96,59 @@ class RosRuntime:
             self.controller_publisher.publish(message)
             debug and print("published control")
     
-    def when_data_arrives(self, odom_msg):
-        debug and print(f'''got odom_msg''')
-        x        = odom_msg.pose.pose.position.x
-        y        = odom_msg.pose.pose.position.y
-        angle    = odom_msg.pose.pose.position.z
-        velocity = odom_msg.twist.twist.linear.x
-        spin     = odom_msg.twist.twist.angular.x
-        
-        # velocity = odom_msg.twist.twist.linear.x 
-        # spin     = odom_msg.twist.twist.angular.z 
-        # x        = odom_msg.pose.pose.position.x
-        # y        = odom_msg.pose.pose.position.y
-        # temp_y   = odom_msg.pose.pose.orientation.z
-        # temp_x   = odom_msg.pose.pose.orientation.w
-        # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
-        
-        new_spacial_info = self.env.SpacialInformation( x, y, angle, velocity, spin, math.inf )
-        
-        env   = self.env
-        agent = self.agent
-        
-        # initalize on first run
-        if not self.first_observation_loaded:
-            agent.next_timestep.observation = env.reset(override_next_spacial_info=new_spacial_info)
-            debug and config.ros_runtime.is_client and print(f'''first_observation = {stringify(agent.next_timestep.observation)}''')
-            agent.when_episode_starts()
-        
-            self.first_observation_loaded = True
-        else:
-            # previous reaction was based on previous observation, but we can't call env.step until after we have the NEXT observation (e.g. this func call is that "NEXT")
-            observation, reward, is_last_step, agent.timestep.hidden_info = env.step(self.previous_action, override_next_spacial_info=new_spacial_info)
-            agent.next_timestep.observation = deepcopy(observation)
-            agent.timestep.reward           = deepcopy(reward)
-            agent.timestep.is_last_step     = deepcopy(is_last_step)
-            agent.when_timestep_ends()
-        
-        agent.previous_timestep = agent.timestep
-        agent.timestep          = agent.next_timestep
-        agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
-        
-        # always compute the reaction to the data that arrived
-        agent.when_timestep_starts()
-        reaction = agent.timestep.reaction
-        debug and config.ros_runtime.is_client and print(f'''reaction = {reaction}''')
-        if type(reaction) == type(None):
-            reaction = env.action_space.sample()
-        self.publish_action(reaction)
-        self.previous_action = reaction
+    def when_data_arrives(self, odom_msg, gps_odom, *args):
+        try:
+            debug and print(f'''got odom_msg''')
+            x        = gps_odom.pose.pose.position.x
+            y        = gps_odom.pose.pose.position.y
+            angle    = gps_odom.pose.pose.position.z
+            
+            velocity = odom_msg.twist.twist.linear.x
+            spin     = odom_msg.twist.twist.angular.z
+            
+            # velocity = odom_msg.twist.twist.linear.x 
+            # spin     = odom_msg.twist.twist.angular.z 
+            # x        = odom_msg.pose.pose.position.x
+            # y        = odom_msg.pose.pose.position.y
+            # temp_y   = odom_msg.pose.pose.orientation.z
+            # temp_x   = odom_msg.pose.pose.orientation.w
+            # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
+            
+            new_spacial_info = self.env.SpacialInformation( x, y, angle, velocity, spin, math.inf )
+            
+            env   = self.env
+            agent = self.agent
+            
+            # initalize on first run
+            if not self.first_observation_loaded:
+                agent.next_timestep.observation = env.reset(override_next_spacial_info=new_spacial_info)
+                debug and config.ros_runtime.is_client and print(f'''first_observation = {stringify(agent.next_timestep.observation)}''')
+                agent.when_episode_starts()
+            
+                self.first_observation_loaded = True
+            else:
+                # previous reaction was based on previous observation, but we can't call env.step until after we have the NEXT observation (e.g. this func call is that "NEXT")
+                observation, reward, is_last_step, agent.timestep.hidden_info = env.step(self.previous_action, override_next_spacial_info=new_spacial_info)
+                agent.next_timestep.observation = deepcopy(observation)
+                agent.timestep.reward           = deepcopy(reward)
+                agent.timestep.is_last_step     = deepcopy(is_last_step)
+                agent.when_timestep_ends()
+            
+            agent.previous_timestep = agent.timestep
+            agent.timestep          = agent.next_timestep
+            agent.next_timestep     = Timestep(index=agent.next_timestep.index+1)
+            
+            # always compute the reaction to the data that arrived
+            agent.when_timestep_starts()
+            reaction = agent.timestep.reaction
+            debug and config.ros_runtime.is_client and print(f'''reaction = {reaction}''')
+            if type(reaction) == type(None):
+                reaction = env.action_space.sample()
+            self.publish_action(reaction)
+            self.previous_action = reaction
+        except Exception as error:
+            print(f'''Error inside ros_runtime.when_data_arrives(self, odom_msg, *args): {error}''')
+            import code; code.interact(local={**globals(),**locals()})
         
     def __del__(self):
         self.agent.when_episode_ends()
