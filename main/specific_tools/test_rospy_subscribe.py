@@ -1,3 +1,8 @@
+import sys
+try: # get rid of builtin rospy on warthog
+    sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+except Exception as error:
+    pass
 import rospy
 from geometry_msgs.msg import Twist
 import message_filters

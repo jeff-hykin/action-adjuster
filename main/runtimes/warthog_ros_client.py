@@ -3,6 +3,11 @@ import itertools
 import math
 import numpy
 
+import sys
+try: # get rid of builtin rospy on warthog
+    sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
+except Exception as error:
+    pass
 import rospy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
@@ -155,7 +160,6 @@ class RosRuntime:
 # warthog ros fake server 
 # 
 if __name__ == "__main__":
-    import rospy
     from geometry_msgs.msg import Twist
     from nav_msgs.msg import Odometry
     import message_filters
