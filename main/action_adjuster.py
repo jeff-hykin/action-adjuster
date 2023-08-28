@@ -34,6 +34,7 @@ pprint = lambda *args, **kwargs: bb.print(*(stringify(each) for each in args), *
 if True:
     recorder_path = f"{config.output_folder}/recorder.yaml" 
     time_slowdown = config.simulator.action_duration # the bigger this is, the more iterations the solver will complete before the episode is over
+    time_slowdown = 0 # FIXME: debugging only
                     # (solver runs as fast as possible, so slowing down the main thread makes it complete relatively more iterations)
     shared_thread_data = None
         # ^ will contain
@@ -286,12 +287,12 @@ class Solver:
                 mean_squared_error(each_transform.as_numpy, perfect_transform_input)
                     for each_transform in solutions
             )
-            print("evaluating transforms:")
+            # print("evaluating transforms:")
             for each_transform, each_score, each_distance in zip(solutions, scores, distances_from_perfect):
                 is_active = ""
                 if json.dumps(each_transform) == json.dumps(self.latest_confirmed_transform):
                     is_active = "[latest_confirmed_transform:True]"
-                print(f'''    objective value: {each_score:.3f}: distance from perfect:{each_distance:.4f}: {each_transform} {is_active}''')
+                # print(f'''    objective value: {each_score:.3f}: distance from perfect:{each_distance:.4f}: {each_transform} {is_active}''')
             
             best_with_new_data = bb.arg_maxs(
                 args=solutions,
@@ -412,16 +413,6 @@ class Solver:
                 relative_velocity=relative_velocity_action,
                 relative_spin=relative_spin_action,
                 action_duration=action_duration,
-            )
-            closest_relative_index, _ = WarthogEnv.get_closest(
-                remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
-                x=next_spacial_info.x,
-                y=next_spacial_info.y,
-            )
-            closest_waypoint_index += closest_relative_index
-            next_observation = WarthogEnv.generate_observation(
-                remaining_waypoints=self.waypoints_list[closest_waypoint_index:],
-                current_spacial_info=next_spacial_info,
             )
             
             return [next_spacial_info]

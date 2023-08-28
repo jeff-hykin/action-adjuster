@@ -141,10 +141,11 @@
                 main_node_name: 'warthog_faker'
             
             simulator:
-                starting_waypoint: 0 # integer or 'random' <- a string
+                starting_waypoint: 10 # integer or 'random' <- a string
+                waypoint_radius: 3 # meters
                 save_data: True
                 should_render: True
-                render_rate: 10 # timesteps
+                render_rate: 1 # timesteps
                 max_velocity: 4
                 action_length: 2
                 action_space:
@@ -166,8 +167,8 @@
                 # 
                 # random start
                 # 
-                random_start_position_offset: 0.0 # TODO: units?
-                random_start_angle_offset: 0.00 # TODO: units?
+                random_start_position_offset: 0.1 # TODO: units?
+                random_start_angle_offset: 0.10 # TODO: units?
                 
                 # 
                 # action adversity
@@ -212,7 +213,7 @@
                 parameters:
                     seed: 0
                     buff_size: 4000
-                    train_time_steps: 10000000
+                    train_time_steps: 10_000_000
                     gamma: 0.99
                     clip_ratio: 0.2
                     lr_pi: 3.0e-5
@@ -243,7 +244,7 @@
                 controller_max_spin: 2.5 # radians
             
             grug_test:
-                disable: False
+                disable: True
         WARTHOG:
             vehicle:
                 name: Warthog
