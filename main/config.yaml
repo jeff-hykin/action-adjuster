@@ -128,7 +128,7 @@
                 increase_rate: 0.001 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
             
             ros_runtime:
-                main_node_name: 'warthog_listener'
+                main_node_name: 'warthog_policy'
                 controller_topic: '/warthog_velocity_controller/cmd_vel'
                 odometry_topic: 'odometry/filtered'
                 gps_topic: 'odometry/filtered2'
@@ -136,7 +136,7 @@
                 is_client: True
             
             ros_faker:
-                enable: True
+                enable: False
                 main_node_name: 'warthog_faker'
             
             simulator:
@@ -251,6 +251,15 @@
                 controller_max_velocity: 4 # meters per second
                 controller_max_spin: 2.5 # radians
         
+        ADVERSITY=NONE:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0
+            spin_offset: 0
+            battery_adversity_enabled: False
+            sudden_flat_tire_enabled: False
+            
         ADVERSITY=WEAK:
             # 
             # action offset 
@@ -367,3 +376,57 @@
                 default_to_perfect: True
                 always_perfect: True
                 use_transform: True
+        
+        WARTHOG_IRL_BASELINE:
+            should_use_ros: True
+            ros_faker:
+                enable: False
+            ros_runtime:
+                main_node_name: 'warthog_policy'
+                controller_topic: '/warthog_velocity_controller/cmd_vel'
+                odometry_topic: 'odometry/filtered'
+                gps_topic: 'odometry/filtered2'
+                time_sync_size: 10 # TODO: I don't actually know what this 10 does
+                is_client: True
+            
+            # POLICY
+            policy:
+                name: 'retrained' # 'bicycle' or 'dummy' or 'retrained'
+                
+            # NO_ADJUSTER
+            action_adjuster:
+                disabled: True
+                use_transform: False
+        
+            # ADVERSITY=NONE:
+            velocity_offset: 0
+            spin_offset: 0
+            battery_adversity_enabled: False
+            sudden_flat_tire_enabled: False
+            
+            # NOISE=NONE
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: False
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.00001 # meters per second
+                    spin_action:
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: False
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.00001 # meters
+                    "y":
+                        standard_deviation: 0.00001 # meters
+                    "angle":
+                        standard_deviation: 0.00001 # radians
+                    "velocity":
+                        standard_deviation: 0.00001 # meters per second
+                    "spin":
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)

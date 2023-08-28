@@ -63,7 +63,7 @@ class RosRuntime:
         self.time_synchonizer.registerCallback(self.when_data_arrives)
         if config.ros_faker.enable:
             import subprocess
-            from blissful_basics import FS
+            from __dependencies__.blissful_basics import FS, print, LazyDict
             import sys
             debugging = True
             _process = subprocess.Popen(
