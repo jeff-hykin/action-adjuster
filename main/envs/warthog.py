@@ -268,7 +268,7 @@ class WarthogEnv(gym.Env):
         mutated_absolute_spin     = current_spacial_info.spin
         
         observation = []
-        closest_index, closest_distance = WarthogEnv.get_closest(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
+        closest_index, closest_distance = WarthogEnv.get_closest_next(remaining_waypoints, current_spacial_info.x, current_spacial_info.y)
         for horizon_index in range(0, config.simulator.horizon):
             waypoint_index = horizon_index + closest_index
             if waypoint_index < len(remaining_waypoints):
@@ -369,7 +369,7 @@ class WarthogEnv(gym.Env):
     
     @staticmethod
     @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
-    def get_closest(remaining_waypoints, x, y):
+    def get_closest_next(remaining_waypoints, x, y):
         """
             Note:
                 A helper for .generate_next_observation() and .reset()
@@ -383,6 +383,24 @@ class WarthogEnv(gym.Env):
                 closest_index = index
             else:
                 break
+        return closest_index, closest_distance
+    
+    @staticmethod
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    def get_closest(remaining_waypoints, x, y):
+        """
+            Note:
+                A helper for .generate_next_observation() and .reset()
+        """
+        closest_index = 0
+        closest_distance = math.inf
+        print("distances")
+        for index, waypoint in enumerate(remaining_waypoints):
+            distance = get_distance(waypoint.x, waypoint.y, x, y)
+            if distance <= closest_distance:
+                closest_distance = distance
+                closest_index = index
+            print(f'''    waypoint index:{index}, distance: {distance}''')
         return closest_index, closest_distance
     
     @staticmethod
@@ -585,13 +603,15 @@ class WarthogEnv(gym.Env):
         if True:
             previous_remaining_waypoints = self.waypoints_list[self.closest_index:]
             self.prev_closest_index = self.closest_index
-            closest_relative_index, self.closest_distance = WarthogEnv.get_closest(
+            closest_relative_index, self.closest_distance = WarthogEnv.get_closest_next(
                 remaining_waypoints=self.waypoints_list[self.closest_index:],
                 x=self.spacial_info.x,
                 y=self.spacial_info.y,
             )
             self.closest_index += closest_relative_index
             oracle_closest_waypoint = self.waypoints_list[self.closest_index]
+            print(f'''self.closest_index = {self.closest_index}''')
+            print(f'''oracle_closest_waypoint = {oracle_closest_waypoint}''')
         
         # 
         # Reward Calculation
@@ -636,7 +656,7 @@ class WarthogEnv(gym.Env):
         # 
         # render
         # 
-        if self.should_render():
+        if self.should_render and self.should_render():
             self.render()
         
         additional_info = WarthogEnv.AdditionalInfo(

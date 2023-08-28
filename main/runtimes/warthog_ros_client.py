@@ -13,12 +13,14 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from pyquaternion import Quaternion as qut
 import message_filters
-from __dependencies__.blissful_basics import print, LazyDict, stringify
+from __dependencies__.blissful_basics import LazyDict, stringify, Warnings, print
 
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
 
-debug = False
+Warnings.disable()
+
+debug = True
 config.ros_runtime.is_client = True
 
 # 
@@ -52,7 +54,6 @@ class RosRuntime:
         # 
         # ROS
         # 
-        rospy.init_node(config.ros_runtime.main_node_name)
         self.controller_publisher = rospy.Publisher(
             rospy.get_param("~cmd_topic", config.ros_runtime.controller_topic),
             Twist,
@@ -64,7 +65,7 @@ class RosRuntime:
         )
         self.gps_odom_topic = message_filters.Subscriber(
             rospy.get_param('~gps_topic', config.ros_runtime.gps_topic),
-            Twist,
+            Odometry,
         )
         self.time_synchonizer = message_filters.ApproximateTimeSynchronizer(
             [
@@ -75,10 +76,10 @@ class RosRuntime:
             1,
             allow_headerless=True
         )
+        print(f'''registering subscriber to {config.ros_runtime.odometry_topic} and {config.ros_runtime.gps_topic}''')
         self.time_synchonizer.registerCallback(self.when_data_arrives)
         if config.ros_faker.enable:
             import subprocess
-            from __dependencies__.blissful_basics import FS, print, LazyDict
             import sys
             debugging = True
             _process = subprocess.Popen(
@@ -90,7 +91,6 @@ class RosRuntime:
                 # stderr=subprocess.STDOUT,
             )
         debug and print("waiting for odom message")
-        rospy.spin()
     
     def publish_action(self, action):
         velocity, spin = action
@@ -102,7 +102,7 @@ class RosRuntime:
             self.controller_publisher.publish(message)
             debug and print("published control")
     
-    def when_data_arrives(self, odom_msg, gps_odom, *args):
+    def when_data_arrives(self, odom_msg, gps_odom):
         try:
             debug and print(f'''got odom_msg''')
             
@@ -150,7 +150,8 @@ class RosRuntime:
             self.previous_action = reaction
         except Exception as error:
             print(f'''Error inside ros_runtime.when_data_arrives(self, odom_msg, *args): {error}''')
-            import code; code.interact(local={**globals(),**locals()})
+            # import code; code.interact(local={**globals(),**locals()})
+            raise error
         
     def __del__(self):
         self.agent.when_episode_ends()
@@ -170,7 +171,7 @@ if __name__ == "__main__":
     import torch
     from rigorous_recorder import RecordKeeper
     from stable_baselines3 import PPO
-    from __dependencies__.blissful_basics import FS, print, LazyDict
+    from __dependencies__.blissful_basics import LazyDict
 
     from envs.warthog import WarthogEnv
     from config import config, path_to

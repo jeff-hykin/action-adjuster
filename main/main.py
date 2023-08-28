@@ -62,8 +62,11 @@ agent = ActionAdjustedAgent(
 # 
 with print.indent:
     if config.should_use_ros:
-        from runtimes.warthog_ros_client import RosRuntime
-        RosRuntime(agent=agent, env=env)
+        from runtimes.warthog_ros_client import RosRuntime, rospy
+        if __name__ == '__main__':
+            rospy.init_node(config.ros_runtime.main_node_name)
+            RosRuntime(agent=agent, env=env)
+            rospy.spin()
     else:
         # basic runtime
         for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=config.simulator.max_number_of_timesteps_per_episode):
