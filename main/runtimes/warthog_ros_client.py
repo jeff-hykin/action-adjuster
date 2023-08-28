@@ -1,6 +1,7 @@
 from copy import deepcopy
 import itertools
 import math
+import numpy
 
 import rospy
 from geometry_msgs.msg import Twist
@@ -99,22 +100,18 @@ class RosRuntime:
     def when_data_arrives(self, odom_msg, gps_odom, *args):
         try:
             debug and print(f'''got odom_msg''')
+            
+            velocity = odom_msg.twist.twist.linear.x 
+            spin     = odom_msg.twist.twist.angular.z 
+            
             x        = gps_odom.pose.pose.position.x
             y        = gps_odom.pose.pose.position.y
-            angle    = gps_odom.pose.pose.position.z
-            
-            velocity = odom_msg.twist.twist.linear.x
-            spin     = odom_msg.twist.twist.angular.z
-            
-            # velocity = odom_msg.twist.twist.linear.x 
-            # spin     = odom_msg.twist.twist.angular.z 
-            # x        = odom_msg.pose.pose.position.x
-            # y        = odom_msg.pose.pose.position.y
-            # temp_y   = odom_msg.pose.pose.orientation.z
-            # temp_x   = odom_msg.pose.pose.orientation.w
-            # angle = qut((temp_x, 0, 0, temp_y)).radians*numpy.sign(temp_y)
+            temp_y   = gps_odom.pose.pose.orientation.z
+            temp_x   = gps_odom.pose.pose.orientation.w
+            angle = ( qut((temp_x, 0, 0, temp_y)).radians )*numpy.sign(temp_y)
             
             new_spacial_info = self.env.SpacialInformation( x, y, angle, velocity, spin, math.inf )
+            print(f'''new_spacial_info = {new_spacial_info}''')
             
             env   = self.env
             agent = self.agent
