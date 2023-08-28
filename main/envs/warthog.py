@@ -529,7 +529,7 @@ class WarthogEnv(gym.Env):
             # 
             if True:
                 # battery adversity
-                if config.simulator.dynamic_adversity == 'battery':
+                if config.simulator.battery_adversity_enabled:
                     self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
                     self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
                     self.recorder.commit()

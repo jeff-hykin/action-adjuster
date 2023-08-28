@@ -169,9 +169,11 @@
                 random_start_angle_offset: 0.00 # TODO: units?
                 
                 # 
-                # action offset 
+                # action adversity
                 # 
-                dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
+                sudden_flat_tire_enabled: True
+                sudden_flat_tire_on_timestep: 500
+                battery_adversity_enabled: False # Battery performs linearly decreasing velocity
                 battery_decay_rate: 0.0006 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
