@@ -1,4 +1,7 @@
-import requests
+try:
+    import requests
+except Exception as error:
+    pass
 
 class TelegramNotifier:
     def __init__(self, token: str, parse_mode: str = None, chat_id: str = None):
