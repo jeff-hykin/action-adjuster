@@ -29,7 +29,7 @@ FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
 grug_test = GrugTest(
     project_folder=".",
     test_folder="./tests/grug_tests",
-    fully_disable=os.environ.get("PROD")!=None,
+    fully_disable=config.grug_test.disable,
     record_io=True,
 )
 

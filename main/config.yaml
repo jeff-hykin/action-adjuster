@@ -6,8 +6,9 @@
         records: "./records/"
         main: "./main.py"
         waypoints_folder: "./waypoint_paths/"
-        default_waypoints: "./waypoint_paths/real1.csv"
+        # default_waypoints: "./waypoint_paths/real1.csv"
         # default_waypoints: "./waypoint_paths/straight_line.csv"
+        default_waypoints: "./waypoint_paths/concrete1.csv"
         saved_policies: "./saved_policies"
         default_output_folder: "./output.ignore/"
         temp_policy_folder: "./saved_policies/temp.ignore/"
@@ -240,7 +241,9 @@
                 render_width: 0.5
                 controller_max_velocity: 4 # meters per second
                 controller_max_spin: 2.5 # radians
-        
+            
+            grug_test:
+                disable: False
         WARTHOG:
             vehicle:
                 name: Warthog
@@ -384,6 +387,7 @@
             ros_runtime:
                 main_node_name: 'warthog_policy'
                 controller_topic: '/warthog_velocity_controller/cmd_vel'
+                # odometry_topic: 'odometry/filtered'
                 odometry_topic: '/warthog_velocity_controller/odom'
                 gps_topic: '/odometry/filtered2'
         
@@ -398,11 +402,16 @@
                 odometry_topic: '/warthog_velocity_controller/odom'
                 gps_topic: '/odometry/filtered2'
         
-        WARTHOG_IRL_BASELINE:
+        IRL:
+            grug_test:
+                disable: True
             # POLICY
             policy:
                 name: 'retrained' # 'bicycle' or 'dummy' or 'retrained'
                 
+            simulator:
+                should_render: False
+            
             # NO_ADJUSTER
             action_adjuster:
                 disabled: True
