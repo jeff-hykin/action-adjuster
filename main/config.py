@@ -33,6 +33,7 @@ grug_test = GrugTest(
     project_folder=project_folder,
     test_folder=f"{project_folder}/tests/grug_tests",
     fully_disable=config.grug_test.disable,
+    replay_inputs=config.grug_test.replay_inputs,
     record_io=True,
 )
 
