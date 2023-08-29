@@ -1,0 +1,4 @@
+error_output: None
+normal_output: !<python/numpy/ndarray>
+- 0.6629354357719421
+- -0.18805289268493652

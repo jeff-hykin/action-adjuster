@@ -1,0 +1,39 @@
+args: []
+kwargs:
+   spacial_info: !python/pickled "envs.warthog.SpacialInformation:\0\x04\x15Q\0\0\0\
+      \r\0\0\0\0\f\fe\x10nvs.war\0thog\x14\f\x120Spacial\0Informa\0tion\x14\x13\x14\
+      p(\f\x15nump\x02y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\x05\
+      nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\
+      \x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\bP\x0E\f\x0F\
+      p,z\x05@\x14\x06\x14R\x14\\h\x05h\vC\b'\0\x12\x1Eq\x1E{\x10@\x03\x14\x06\x14\
+      R\x14h\x05\x17h\vC\bRuH0:a\f}?\x14\x06h\x14R\x14K\0h\x05\x05h\vC\b\0\0\0\0<\x04\
+      A^?\x14\x06l\x14R\x14KLt\x14E\x01\x14.\0\0\0\0\x03\x04"
+   closest_distance: 0.6910459634247914
+   relative_velocity: 0
+   prev_relative_velocity: !<python/numpy/int64> 0.4721796214580536
+   relative_spin: !<python/numpy/int64> 0.19221231788396836
+   prev_relative_spin: !<python/numpy/int64> -0.28915517330169677
+   closest_waypoint: !python/pickled "envs.warthog.Waypoint:\0\x04\x156\0\0\0\r\0\0\
+      \0\0\f\x15n\x10umpy.co\0re.mult\0iarray\x14@\f\f_reco\x01nstruct\0\x14\x13\x14\
+      \f\fen\x0Fvs.wart\0hog\x14\f\bW\x18aypoint\0\x14\x13\x14K\0\x05\x14gC\x01b\x14\
+      \a\x14R8\x14(K\x01K\x04\x05A\x14\f\x05nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\
+      \f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\
+      \x7Fw\x7FK\0t\x14b\tQC xbAc[(3\v@\x02\rP>\03b\x10@NL\f1NZ%\0@\0\0\x02\0 \x03\
+      \x16\0@\x14Bt\x14b.\0\0\0\x02\x03"
+   closest_relative_index: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15\x1C\x02\0\0\x05\0\0\0\0\
+   )}\x14@(\f\fspac\x02ial_inf\0o\x14\f\fenv\x06s.warth\0og\x14\f\x12Sp\facialIn\0\
+   formati\0on\x14\x13\x14(\f\\\x15numpy.\0core.mu\0ltiarra\0y\x14\f\x06sca\x06lar\x14\
+   \x13\x14\fx\x05numpy\x14@\f\x05dtype\x01\x14\x13\x14\f\x02f8\x0F\x14\t\b\a\x14\
+   R\x14_(K\x03\f\x01<\x14HNNNJ\x7F\x7F\x7Fp\x7FJ\x7F\x7F\x7F\x7FK=\0t\x14bC\bPD\x0E\
+   \f\x0Fp,\x05@\x1E\x14\x06\x14R\x14h\a\x17h\rC\b'\x12\x1E`q\x1E{\x10@\x14\x06`\x14\
+   R\x14h\ah\r\x05C\bRuH:a\f\f}?\x14\x06\x14R:\x14K\0h\ah\r\x01C\b\0\0\0<\x04\0A^?\x14\
+   \x06\x14R;\x14KLt\x14\x01\x14q\f\x10close\x01st_dist\0ance\x14G?\x10f\x1D\fl\x1E\
+   '@\x11\f\x11relat\x01ive_vel\0ocity\x14K \0\f\x16prev\x02_relati\0ve_velo\0city\x14\
+   h\a\x10h\rC\b\0\0\0\0`08^?\x14\x06i\x14R\x14\f\rre\rlative_\0spin\x14h\a\x10h\r\
+   C\b\x1A\x19\x19pIi\x1AH?\x14\x06m\x14R\x14\f\x12pr\rev_rela\0tive_sp\0in\x14h\a\
+   h\r\x04C\b3333\x04`\x01R?\x14\x06\x14R?\x14\f\x10clos\x03est_way\0point\x14h \x05\
+   \f\f_rec\x02onstruc\0t\x14\x13\x14h\x02\fN\bWaypoi\0nt\x14\x13\x14K\0\x1C\x05\x14\
+   C\x01b\x14\ac\x14R\x14(K\x01K\x05\x04\x05\x14h\r\tC& xbAc[3\x14\v@\x02\rP>3@b\x10\
+   @NL\fN\x18Z%\0@\0\0\0\x01 \x03\x16\0@\x14t!\x14b\f\x16clo\x05sest_re\0lative_\0\
+   index\x14K \x01u\x06\x14.\0\0\f\x02"

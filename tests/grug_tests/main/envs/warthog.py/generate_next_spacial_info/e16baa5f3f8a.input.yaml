@@ -1,0 +1,42 @@
+args: []
+kwargs:
+   old_spacial_info: !python/pickled "envs.warthog.SpacialInformation:\0\x04\x15b\0\
+      \0\0\r\0\0\0\0\f\fe\x10nvs.war\0thog\x14\f\x120Spacial\0Informa\0tion\x14\x13\
+      \x14p(\f\x15nump\x02y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\
+      \x05nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\
+      \f\x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\b\x1DL~\x19\
+      \x02\x1DjO?\x14\x06\x14R\x14]h\x05h\vC\b\x02@e\x11$hD>?,\x14\x06\x14R\x14h\x05\
+      \x17h\vC\b\x1E\x05k`q)\aJ?\x14\x06l\x14R\x14h\x05h\v\x05C\b\0\0\0\0b\0(^?\x14\
+      \x06\x14R:\x14h\x05h\vC\b\x01\0\0\0`C}vP?\x14\x06\x14R\x14K.\x02t\x14\x01\x14\
+      .\0\x1C\x01"
+   relative_velocity: !<python/numpy/int64> 0.8146830201148987
+   relative_spin: !<python/numpy/int64> 0.31685288697481157
+   action_duration: !python/pickled "__dependencies__.quik_config.__dependencies__.ez_yaml.__dependencies__.ruamel.yaml.scalarfloat.ScalarFloat:\0\
+      \x04\x15x\x01\0\0\x05\0\0\0\0\f^_\x10_depend\0encies_\0_.quik_\0config.\0__depen\0\
+      dencies\0__.ez_y\0aml.__d\0ependen\0cies__.\0ruamel.\0yaml.sc\0alarflo\0at\x14\
+      \f\vSc\falarFlo\0at\x14\x13\x14G?\x1C.8Qk\x05\x1E8[\x05\x14\x01\x14}\x14(/\f\
+      \x06_widt\x01h\x14K\x04\f\x05_\x12prec\x14K\x01\x10\f\a_m_si\x01gn\x14\t\f\b\
+      _\x1Cm_lead0\0\x14K\x02\f\x04_e\txp\x14N\f\b_\x14e_width\0\x14N\f\a_e_\x05sign\x14\
+      N\fP\v_under\0score\x14N \f\f_yaml\x01_anchor\0\x14\fY__de\x03pendenc\0ies__.q\0\
+      uik_con\0fig.__d\0ependen\0cies__.\0ez_yaml\0.__depe\0ndencie\0s__.rua\0mel.yam\0\
+      l.ancho\0r\x14\f\x06Anc\x06hor\x14\x13\x14)8\x01\x14N}\x14(\fS\x05value\x14\
+      @N\f\valwa\x02ys_dump\0\x14\tu\x06\x14bu\eb.\0\0\0\0\0\0\x05"
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15O\x02\0\0\r\0\0\0\0)}\x14\
+   @(\f\x10old_\x02spacial\0_info\x14\f`\fenvs.w\0arthog\x14@\f\x12Spaci\x01alInfor\0\
+   mation\x14@\x13\x14(\f\x15nu\vmpy.cor\0e.multi\0array\x14\f`\x06scalar\0\x14\x13\
+   \x14\f\x05nu\x0Fmpy\x14\f\x05d\x18type\x14\x13\x14p\f\x02f8\x14\t\bq\a\x14R\x14\
+   (K\x03\v\f\x01<\x14NNN\tJ\x7F\x7F\x7F\x7FJ\x7F^\x7F\x7F\x7FK\0t\x14GbC\b\x1DL~\x19\
+   (\x02\x1DO?\x14\x06\x14wR\x14h\ah\rC\x02\b\x02e\x11$hD2>?\x14\x06\x14R\x14]h\a\
+   h\rC\b\x1E\0\x05kq)\aJ?3\x14\x06\x14R\x14h\a\x17h\rC\b\0\0\0\0\0b(^?\x14\x06h\x14\
+   R\x14h\ah\r\x05C\b\0\0\0`C@}v?\x14\x06\x14R:\x14K\x02t\x14\x01\x14q\f\x11relat\x01\
+   ive_vel\0ocity\x14h \ah\rC\b\0\0\0\0 b\x11j?\x14T\x06\x14R\x14\f\rr\eelative\0\
+   _spin\x14h \ah\rC\bML`LTQGT?\x14Q\x06\x14R\x14\f\x0Fa\ection_d\0uration\0\x14\f\
+   ^__de\x03pendenc\0ies__.q\0uik_con\0fig.__d\0ependen\0cies__.\0ez_yaml\0.__depe\0\
+   ndencie\0s__.rua\0mel.yam\0l.scala\0rfloat\x14@\f\vScala\x01rFloat\x14@\x13\x14\
+   G?.8Q3k\x05\x1E8\x05\x14\x01{\x14}\x14(\f\x06_\x15width\x14K \x04\f\x05_pre\x02\
+   c\x14K\x01\f\a_\x12m_sign\x14@\t\f\b_m_l\x03ead0\x14K\x02\x10\f\x04_exp\x14AN\f\
+   \b_e_w\x02idth\x14N\fP\a_e_sig\0n\x14N\f\v_u\nndersco\0re\x14N\f\f_\x14yaml_an\0\
+   chor\x14\fY0__depen\0dencies\0__.quik\0_config\0.__depe\0ndencie\0s__.ez_\0yaml.__\0\
+   depende\0ncies__\0.ruamel\0.yaml.a\0nchor\x14\f`\x06Anchor\0\x14\x13\x14)\x01\x14\
+   N7}\x14(\f\x05va\nlue\x14N\f\v(always_\0dump\x14\tu0\x06\x14bubu\x06C\x14.\0\0\0\
+   \0\0\x01\x05"
