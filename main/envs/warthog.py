@@ -282,7 +282,7 @@ class WarthogEnv(gym.Env):
             
     @staticmethod
     @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
-    def generate_observation(remaining_waypoints, current_spacial_info):
+    def generate_observation(closest_index, remaining_waypoints, current_spacial_info):
         """
             Note:
                 This function should be fully deterministic.
@@ -290,24 +290,31 @@ class WarthogEnv(gym.Env):
         mutated_absolute_velocity = current_spacial_info.velocity
         mutated_absolute_spin     = current_spacial_info.spin
         
-        feature_size = 4 # = len([gap_of_distance, gap_of_angle_directly_towards_next, gap_of_desired_angle_at_next, gap_of_velocity])
-        
-        observation = [0]*(config.simulator.horizon * feature_size)
-        for waypoint in remaining_waypoints[0:config.simulator.horizon]:
-            x_diff = waypoint.x - current_spacial_info.x
-            y_diff = waypoint.y - current_spacial_info.y
-            angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
-            current_angle       = zero_to_2pi(current_spacial_info.angle)
-            
-            gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
-            gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
-            gap_of_desired_angle_at_next       = pi_to_pi(zero_to_2pi(waypoint.angle)      - current_angle)
-            gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
-            
-            observation.append(gap_of_distance)
-            observation.append(gap_of_angle_directly_towards_next)
-            observation.append(gap_of_desired_angle_at_next)
-            observation.append(gap_of_velocity)
+        observation = []
+        for horizon_index in range(0, config.simulator.horizon):
+            waypoint_index = horizon_index + closest_index
+            if waypoint_index < len(remaining_waypoints):
+                waypoint = remaining_waypoints[waypoint_index]
+                
+                x_diff = waypoint.x - current_spacial_info.x
+                y_diff = waypoint.y - current_spacial_info.y
+                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+                current_angle       = zero_to_2pi(current_spacial_info.angle)
+                
+                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
+                gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
+                
+                observation.append(gap_of_distance)
+                observation.append(gap_of_angle_directly_towards_next)
+                observation.append(gap_of_desired_angle_at_next)
+                observation.append(gap_of_velocity)
+            else:
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
+                observation.append(0.0)
         
         observation.append(mutated_absolute_velocity)
         observation.append(mutated_absolute_spin)
@@ -600,6 +607,7 @@ class WarthogEnv(gym.Env):
         # increment waypoints
         # 
         if True:
+            closest_relative_index = 0
             next_waypoint              = self.waypoints_list[self.next_waypoint_index]
             if len(self.waypoints_list) > 1:
                 next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
@@ -608,7 +616,7 @@ class WarthogEnv(gym.Env):
                 was_within_waypoint_radius = min(distance_to_waypoint, self.closest_distance) < config.simulator.waypoint_radius
                 # went past waypoint? increment the index
                 if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
-                    self.next_waypoint_index += 1
+                    closest_relative_index  = 1
                     next_waypoint = self.waypoints_list[self.next_waypoint_index]
                 # went past waypoint, but edgecase of getting further away:
                 elif was_within_waypoint_radius:
@@ -619,9 +627,11 @@ class WarthogEnv(gym.Env):
                     )
                     we_passed_the_waypoint = waypoint_arm_angle < abs(math.degrees(90))
                     if we_passed_the_waypoint:
-                        self.next_waypoint_index += 1
-                        next_waypoint = self.waypoints_list[self.next_waypoint_index]
-                    
+                        closest_relative_index  = 1
+                        
+            if closest_relative_index > 0:
+                self.next_waypoint_index += 1
+                next_waypoint = self.waypoints_list[self.next_waypoint_index]
             self.closest_distance = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
         
         # 
@@ -634,7 +644,7 @@ class WarthogEnv(gym.Env):
             prev_relative_velocity=self.prev_mutated_relative_velocity,
             relative_spin=self.mutated_relative_spin,
             prev_relative_spin=self.prev_mutated_relative_spin,
-            closest_waypoint=oracle_closest_waypoint,
+            closest_waypoint=next_waypoint,
             closest_relative_index=closest_relative_index,
         )
         
@@ -660,6 +670,7 @@ class WarthogEnv(gym.Env):
             # generate observation off potentially incorrect spacial info
             self.prev_observation = self.observation
             self.observation = WarthogEnv.generate_observation(
+                closest_index=self.next_waypoint_index,
                 remaining_waypoints=self.waypoints_list[self.prev_closest_index:],
                 current_spacial_info=self.spacial_info_with_noise,
             )
@@ -750,6 +761,7 @@ class WarthogEnv(gym.Env):
         self.prev_closest_index = self.next_waypoint_index
         
         self.prev_observation = WarthogEnv.generate_observation(
+            closest_index=self.next_waypoint_index,
             remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
             current_spacial_info=self.spacial_info,
         )

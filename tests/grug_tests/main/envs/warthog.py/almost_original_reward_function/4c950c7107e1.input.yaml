@@ -1,0 +1,40 @@
+args: []
+kwargs:
+   spacial_info: !python/pickled "envs.warthog.SpacialInformation:\0\x04\x15b\0\0\0\
+      \r\0\0\0\0\f\fe\x10nvs.war\0thog\x14\f\x120Spacial\0Informa\0tion\x14\x13\x14\
+      p(\f\x15nump\x02y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\x05\
+      nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\
+      \x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\b#\x02\x02\
+      LZ$x&A\x14\x06\x14R\x14\\h\x05h\vC\bV@\x19-\x13@`IA\x17\x14\x06\x14R\x14h\x05\
+      \x17h\vC\bQ{\a Sc\x01\a@\x14\x06c\x14R\x14h\x05h\v\x05C\b\0\0\0@C@Su?\x14\x06\
+      \x14R;\x14h\x05h\vC\b\x01\0\0\0\bASwx?\x14\x06\x14R\x14K.\x01t\x14\x01\x14.\0\
+      \x1C\x01"
+   closest_distance: 0.5238749704591268
+   relative_velocity: !<python/numpy/int64> 0.3410499691963196
+   prev_relative_velocity: 0
+   relative_spin: !<python/numpy/int64> 0.5956792950630188
+   prev_relative_spin: 0
+   closest_waypoint: !python/pickled "envs.warthog.WarthogEnv.Waypoint:\0\x04\x15\
+      A\0\0\0\r\0\0\0\0\f\x15n\x10umpy.co\0re.mult\0iarray\x14@\f\f_reco\x01nstruct\0\
+      \x14\x13\x14\f\fen\x0Fvs.wart\0hog\x14\f\x13W\x18arthogE\0nv.Wayp\0oint\x14\x13\
+      \x14pK\0\x05\x14C\x01b\f\x14\a\x14R\x14(K\x17\x01K\x04\x05\x14\f\x058numpy\x14\
+      \f`\x05dtype\x14@\x13\x14\f\x02f8\x14G\t\b\a\x14R\x14(/K\x03\f\x01<\x14N$NNJ\x7F\
+      \x7F\x7F\x7FxJ\x7F\x7F\x7F\x7FK\0\x1Et\x14b\tC KJh-EY$&A\x1C\x055m @`I+AN!a\x15\
+      cc>\x05@\x1Cz:x'8'\x02@\x14t\x14b).\0\0\0\0\0\0\0\x06"
+   closest_relative_index: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15'\x02\0\0\x05\0\0\0\0)}\x14\
+   @(\f\fspac\x02ial_inf\0o\x14\f\fenv\x06s.warth\0og\x14\f\x12Sp\facialIn\0formati\0\
+   on\x14\x13\x14(\f\\\x15numpy.\0core.mu\0ltiarra\0y\x14\f\x06sca\x06lar\x14\x13\x14\
+   \fx\x05numpy\x14@\f\x05dtype\x01\x14\x13\x14\f\x02f8\x0F\x14\t\b\a\x14R\x14_(K\x03\
+   \f\x01<\x14HNNNJ\x7F\x7F\x7Fp\x7FJ\x7F\x7F\x7F\x7FK=\0t\x14bC\b#\x04\x02\x02LZ$&A\x1E\
+   \x14\x06\x14R\x14h\a\x17h\rC\bV\x19-p\x13@`IA\x14\x06e\x14R\x14h\ah\r\x05C\bQ{\a\
+   Sch\x01\a@\x14\x06\x14R8\x14h\ah\rC\b\x01\0\0\0@CSup?\x14\x06\x14R\x14h.\ah\rC\b\
+   \0\0\0\0\bASw?\x14^\x06\x14R\x14K\x01t\v\x14\x01\x14\f\x10cl\x0Fosest_d\0istance\0\
+   \x14G?`C\x15q9*\x13J\f\x11re\flative_\0velocit\0y\x14h\ah\rC\x02\b\0\0\0@CS`U?\x14\
+   \x06\x14R\x14]\f\x16prev_\x01relativ\0e_veloc\0ity\x14K\0\fH\rrelati\0ve_spin\0\
+   \x14h\ah\rC\b\x01fff\x06N\x0FcP?\x14\x06\x14R\x14\fn\x12prev_r\0elative\0_spin\x14\
+   K \0\f\x10clos\x02est_way\0point\x14h \x05\f\f_rec\x02onstruc\0t\x14\x13\x14h\x02\
+   \fN\x13Wartho\0gEnv.Wa\0ypoint\x14@\x13\x14K\0\x05\x14C3\x01b\x14\a\x14R\x14\\\
+   (K\x01K\x04\x05\x14`h\r\tC Kh$-EY$&A\x05N5m @`IA\x15N!a\x15cc\x05\x1F@\x1Cz:x''\\\
+   \x02@\x14t\x14b\fT\x16closes\0t_relat\0ive_ind\0ex\x14K\x01u\x06D\x14.\0\0\0\0\0\
+   \x01\x05"
