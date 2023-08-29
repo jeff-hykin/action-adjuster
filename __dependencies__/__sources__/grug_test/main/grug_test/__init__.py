@@ -23,7 +23,7 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
-yaml.width = float("Infinity")
+yaml.width = 999999999999999
 
 @yaml.register_class
 class YamlPickled:
@@ -70,7 +70,7 @@ try:
     
     # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
     for each in [
-        "float",
+        # "float",
         'double',
         # "cfloat",
         # 'cdouble',
@@ -109,14 +109,14 @@ try:
         # "uintc",
         # "longlong",
         # "ulonglong",
-        "int",
+        "uint",
         "uint8",
         "uint16",
         "uint32",
         "uint64",
         "uint128",
         "uint256",
-        "int",
+        # "int",
         "int8",
         "int16",
         "int32",

@@ -7,12 +7,13 @@ from __dependencies__.blissful_basics import FS, print, stringify, run_in_main
 from __dependencies__.super_hash import super_hash
 from __dependencies__.trivial_torch_tools.misc import DeterministicTorchRng
 
-from config import config, path_to, absolute_path_to, debug
+from config import config, path_to, absolute_path_to, debug, grug_test
 from specific_tools.train_ppo import PolicyNetworkGauss, device
 
 pi = None # load policy dynamically because the main thread needs to 
 deterministic = True
 
+@grug_test(max_io=100, record_io=None, additional_io_per_run=None)
 def policy(observation):
     global pi
     pi = pi or torch.load(path_to.saved_policies+ "/manaul_ppo_10000000.pt")

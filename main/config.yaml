@@ -244,7 +244,7 @@
                 controller_max_spin: 2.5 # radians
             
             grug_test:
-                disable: True
+                disable: False
         WARTHOG:
             vehicle:
                 name: Warthog
