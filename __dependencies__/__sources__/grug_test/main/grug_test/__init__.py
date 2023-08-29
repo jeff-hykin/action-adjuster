@@ -283,7 +283,7 @@ class GrugTest:
                                 source=source,
                             )
                         except Exception as error:
-                            warn(error)
+                            warn(f"corrupted_input: {path}\n    {error}")
                     decorator.replaying_inputs = False
                     self.has_been_tested[function_id] = True
             

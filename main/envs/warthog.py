@@ -56,136 +56,6 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
-    # 
-    # support classes (mostly wrappers around lists to make debugging easier)
-    # 
-    SpacialInformation = namedtuple(
-        "SpacialInformation",
-        [ "x", "y", "angle", "velocity", "spin", "timestep" ]
-    )
-    ReactionClass = namedtuple(
-        "ReactionClass",
-        [ "relative_velocity", "relative_spin", ]
-    )
-    WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
-    class Waypoint(numpy.ndarray):
-        keys = [ "x", "y", "angle", "velocity" ]
-        
-        def __new__(cls, data):
-            # note: https://stackoverflow.com/questions/7342637/how-to-subclass-a-subclass-of-numpy-ndarray?rq=4
-            return numpy.asarray(data).view(cls)
-            
-        @property
-        def x(self): return self[0]
-        @x.setter
-        def x(self, value): self[0] = value
-        
-        @property
-        def y(self): return self[1]
-        @y.setter
-        def y(self, value): self[1] = value
-        
-        @property
-        def angle(self): return self[2]
-        @angle.setter
-        def angle(self, value): self[2] = value
-        
-        @property
-        def velocity(self): return self[3]
-        @velocity.setter
-        def velocity(self, value): self[3] = value
-        
-        def __repr__(self):
-            return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''
-
-    @yaml.register_class
-    class Observation:
-        yaml_tag = "!python/warthog/Observation"
-        
-        def __init__(self, values=None):
-            self.timestep = None
-            self.absolute_velocity = None
-            self.absolute_spin     = None
-            self.waypoint_gaps = []
-            if bb.is_iterable(values):
-                values = list(values)
-                self.timestep = values.pop(-1)
-                self.absolute_velocity = values.pop(-1)
-                self.absolute_spin     = values.pop(-1)
-                while len(values) > 0:
-                    waypoint_gap = []
-                    for index in range(len(WarthogEnv.WaypointGap.names_to_index)):
-                        waypoint_gap.append(values.pop(-1))
-                    self.waypoint_gaps.append(
-                        WarthogEnv.WaypointGap(
-                            reversed(waypoint_gap)
-                        )
-                    )
-            else:
-                raise Exception(f'''Observation() got non-iterable argument''')
-        
-        def __iter__(self):
-            return iter(self.to_numpy())
-        
-        def __json__(self):
-            output = []
-            for each_waypoint_gap in self.waypoint_gaps:
-                for each_value in each_waypoint_gap:
-                    output.append(each_value)
-            output.append(self.absolute_velocity)
-            output.append(self.absolute_spin)
-            output.append(self.timestep)
-            return output
-        
-        def to_numpy(self):
-            as_list = self.__json__()
-            as_list.pop(-1)
-            return numpy.array(as_list)
-        
-        def __hash__(self):
-            return super_hash(self.__repr__())
-        
-        def __repr__(self):
-            """
-                Note:
-                    this function is used in the hash method, so the number of decimals printed does matter significantly for determining equality
-            """
-            return f"""Observation(timestep={self.timestep}, absolute_velocity={f"{self.absolute_velocity:0.7f}".ljust(9,"0")}, absolute_spin={f"{self.absolute_spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
-        
-        @classmethod
-        def from_yaml(cls, constructor, node):
-            return cls(json.loads(node.value))
-        
-        @classmethod
-        def to_yaml(cls, representer, object_of_this_class):
-            representation = json.dumps(object_of_this_class)
-            # ^ needs to be a string (or some other yaml-primitive)
-            return representer.represent_scalar(
-                tag=cls.yaml_tag,
-                value=representation,
-                style=None,
-                anchor=None
-            )
-    
-    AdditionalInfo = namedtuple(
-        "AdditionalInfo",
-        [
-            # chronologically
-            "timestep_index",
-            "action_duration",
-            "spacial_info",
-            "spacial_info_with_noise",
-            "observation_from_spacial_info_with_noise",
-            "historic_transform",
-            "original_reaction",
-            "mutated_reaction",
-            "next_spacial_info",
-            "next_spacial_info_spacial_info_with_noise",
-            "next_observation_from_spacial_info_with_noise",
-            "next_closest_index",
-            "reward",
-        ]
-    )
     def __init__(self, waypoint_file_path, trajectory_output_path, recorder):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
@@ -837,6 +707,141 @@ class WarthogEnv(gym.Env):
         final_waypoint = self.waypoints_list[index + 1]
         final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
 
-SpacialInformation = WarthogEnv.SpacialInformation
-ReactionClass = WarthogEnv.ReactionClass
-WaypointGap = WarthogEnv.WaypointGap
+# 
+# support classes (mostly wrappers around lists to make debugging easier)
+# 
+SpacialInformation = namedtuple(
+    "SpacialInformation",
+    [ "x", "y", "angle", "velocity", "spin", "timestep" ]
+)
+ReactionClass = namedtuple(
+    "ReactionClass",
+    [ "relative_velocity", "relative_spin", ]
+)
+WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
+class Waypoint(numpy.ndarray):
+    keys = [ "x", "y", "angle", "velocity" ]
+    
+    def __new__(cls, data):
+        # note: https://stackoverflow.com/questions/7342637/how-to-subclass-a-subclass-of-numpy-ndarray?rq=4
+        return numpy.asarray(data).view(cls)
+        
+    @property
+    def x(self): return self[0]
+    @x.setter
+    def x(self, value): self[0] = value
+    
+    @property
+    def y(self): return self[1]
+    @y.setter
+    def y(self, value): self[1] = value
+    
+    @property
+    def angle(self): return self[2]
+    @angle.setter
+    def angle(self, value): self[2] = value
+    
+    @property
+    def velocity(self): return self[3]
+    @velocity.setter
+    def velocity(self, value): self[3] = value
+    
+    def __repr__(self):
+        return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''
+
+@yaml.register_class
+class Observation:
+    yaml_tag = "!python/warthog/Observation"
+    
+    def __init__(self, values=None):
+        self.timestep = None
+        self.absolute_velocity = None
+        self.absolute_spin     = None
+        self.waypoint_gaps = []
+        if bb.is_iterable(values):
+            values = list(values)
+            self.timestep = values.pop(-1)
+            self.absolute_velocity = values.pop(-1)
+            self.absolute_spin     = values.pop(-1)
+            while len(values) > 0:
+                waypoint_gap = []
+                for index in range(len(WarthogEnv.WaypointGap.names_to_index)):
+                    waypoint_gap.append(values.pop(-1))
+                self.waypoint_gaps.append(
+                    WarthogEnv.WaypointGap(
+                        reversed(waypoint_gap)
+                    )
+                )
+        else:
+            raise Exception(f'''Observation() got non-iterable argument''')
+    
+    def __iter__(self):
+        return iter(self.to_numpy())
+    
+    def __json__(self):
+        output = []
+        for each_waypoint_gap in self.waypoint_gaps:
+            for each_value in each_waypoint_gap:
+                output.append(each_value)
+        output.append(self.absolute_velocity)
+        output.append(self.absolute_spin)
+        output.append(self.timestep)
+        return output
+    
+    def to_numpy(self):
+        as_list = self.__json__()
+        as_list.pop(-1)
+        return numpy.array(as_list)
+    
+    def __hash__(self):
+        return super_hash(self.__repr__())
+    
+    def __repr__(self):
+        """
+            Note:
+                this function is used in the hash method, so the number of decimals printed does matter significantly for determining equality
+        """
+        return f"""Observation(timestep={self.timestep}, absolute_velocity={f"{self.absolute_velocity:0.7f}".ljust(9,"0")}, absolute_spin={f"{self.absolute_spin:0.7f}".ljust(9,"0")}, waypoint_gaps={self.waypoint_gaps})"""
+    
+    @classmethod
+    def from_yaml(cls, constructor, node):
+        return cls(json.loads(node.value))
+    
+    @classmethod
+    def to_yaml(cls, representer, object_of_this_class):
+        representation = json.dumps(object_of_this_class)
+        # ^ needs to be a string (or some other yaml-primitive)
+        return representer.represent_scalar(
+            tag=cls.yaml_tag,
+            value=representation,
+            style=None,
+            anchor=None
+        )
+
+AdditionalInfo = namedtuple(
+    "AdditionalInfo",
+    [
+        # chronologically
+        "timestep_index",
+        "action_duration",
+        "spacial_info",
+        "spacial_info_with_noise",
+        "observation_from_spacial_info_with_noise",
+        "historic_transform",
+        "original_reaction",
+        "mutated_reaction",
+        "next_spacial_info",
+        "next_spacial_info_spacial_info_with_noise",
+        "next_observation_from_spacial_info_with_noise",
+        "next_closest_index",
+        "reward",
+    ]
+)
+
+
+WarthogEnv.SpacialInformation = SpacialInformation
+WarthogEnv.ReactionClass      = ReactionClass
+WarthogEnv.WaypointGap        = WaypointGap
+WarthogEnv.Waypoint           = Waypoint
+WarthogEnv.Observation        = Observation
+WarthogEnv.AdditionalInfo     = AdditionalInfo

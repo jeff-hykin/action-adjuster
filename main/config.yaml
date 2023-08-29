@@ -246,6 +246,8 @@
             grug_test:
                 disable: False
                 replay_inputs: True
+                record_io: False
+                
         WARTHOG:
             vehicle:
                 name: Warthog

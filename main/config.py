@@ -34,7 +34,7 @@ grug_test = GrugTest(
     test_folder=f"{project_folder}/tests/grug_tests",
     fully_disable=config.grug_test.disable,
     replay_inputs=config.grug_test.replay_inputs,
-    record_io=True,
+    record_io=config.grug_test.record_io,
 )
 
 send_notification = setup_notifier_if_possible(
