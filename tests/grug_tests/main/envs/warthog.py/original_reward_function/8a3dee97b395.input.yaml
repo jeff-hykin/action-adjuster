@@ -1,0 +1,39 @@
+args: []
+kwargs:
+   spacial_info: !python/pickled "envs.warthog.SpacialInformation:\0\x04\x15b\0\0\0\
+      \r\0\0\0\0\f\fe\x10nvs.war\0thog\x14\f\x120Spacial\0Informa\0tion\x14\x13\x14\
+      p(\f\x15nump\x02y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\x05\
+      nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\
+      \x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\byYS0U$|&A\x14\
+      \x06\x14R\x14\\h\x05h\vC\bA\07\\\x13A`IA\x10\x14\x06\x14R\x14h\x05\x17h\vC\b\
+      W{\a`\x0FFH\0@\x14\x06a\x14R\x14h\x05h\v\x05C\b\0\0\0\0B`Oz?\x14\x06\x14R;\x14\
+      h\x05h\vC\b\x01\0\0\088)uP?\x14\x06\x14R\x14K/.t\x14\x01\x14.\0\x1C\x01"
+   closest_distance: 3.5286348480408307
+   relative_velocity: !<python/numpy/int64> 0.41893064975738525
+   prev_relative_velocity: 0
+   relative_spin: !<python/numpy/int64> -0.5290741801261902
+   prev_relative_spin: !<python/numpy/int64> 0.043825727701187145
+   closest_waypoint: !python/pickled "envs.warthog.WarthogEnv.Waypoint:\0\x04\x15\
+      A\0\0\0\r\0\0\0\0\f\x15n\x10umpy.co\0re.mult\0iarray\x14@\f\f_reco\x01nstruct\0\
+      \x14\x13\x14\f\fen\x0Fvs.wart\0hog\x14\f\x13W\x18arthogE\0nv.Wayp\0oint\x14\x13\
+      \x14pK\0\x05\x14C\x01b\f\x14\a\x14R\x14(K\x17\x01K\x04\x05\x14\f\x058numpy\x14\
+      \f`\x05dtype\x14@\x13\x14\f\x02f8\x14G\t\b\a\x14R\x14(/K\x03\f\x01<\x14N$NNJ\x7F\
+      \x7F\x7F\x7FxJ\x7F\x7F\x7F\x7FK\0\x1Et\x14b\tC cJb\x0F\x19P$&A\x18ygR&B`I$A{\
+      \ `B3\n4\x04@I8a\x04BX?\x05@\x14t\x14b).\0\0\0\0\0\0\0\x06"
+   closest_relative_index: 0
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x158\x02\0\0\x05\0\0\0\0)}\x14\
+   @(\f\fspac\x02ial_inf\0o\x14\f\fenv\x06s.warth\0og\x14\f\x12Sp\facialIn\0formati\0\
+   on\x14\x13\x14(\f\\\x15numpy.\0core.mu\0ltiarra\0y\x14\f\x06sca\x06lar\x14\x13\x14\
+   \fx\x05numpy\x14@\f\x05dtype\x01\x14\x13\x14\f\x02f8\x0F\x14\t\b\a\x14R\x14_(K\x03\
+   \f\x01<\x14HNNNJ\x7F\x7F\x7Fp\x7FJ\x7F\x7F\x7F\x7FK=\0t\x14bC\by\x04YS0U$&A\x1F\
+   \x14\x06\x14R\x14h\a\x17h\rC\bA7\\\0\x13A`IA\x14\x06d\x14R\x14h\ah\r\x05C\bW{\a\
+   \x0FF8H\0@\x14\x06\x14R8\x14h\ah\rC\b\x01\0\0\0\0BOzx?\x14\x06\x14R\x14h.\ah\r\
+   C\b\0\0\0\088)u?\x14t\x06\x14R\x14K.t\v\x14\x01\x14\f\x10cl\x0Fosest_d\0istance\0\
+   \x14G@\f:$ha>cp\f\x11re\x0Elative_\0velocit\0y\x14h\ah\rC\x02\b\0\0\0\0BOpZ?\x14\
+   \x06\x14R\x14]\f\x16prev_\x01relativ\0e_veloc\0ity\x14K\0\fH\rrelati\0ve_spin\0\
+   \x14h\ah\rC\b\x01\x1A\x19\x19y,n`o?\x14\x06\x14R\x14\fo\x12prev_r\0elative\0_spin\x14\
+   h \ah\rC\bhf\0ffSp&?\x14P\x06\x14R\x14\f\x10c\elosest_\0waypoin\0t\x14h\x05\f\f\
+   _\x12reconst\0ruct\x14\x13\x14ph\x02\f\x13War\x04thogEnv\0.Waypoi\0nt\x14\x13\x14\
+   K\0\x1C\x05\x14C\x01b\x14\ac\x14R\x14(K\x01K\x05\x04\x05\x14h\r\tC& cb\x0F\x19\
+   P$b&AygR&B\x10`IA{ `BQ3\n\x04@I8aa\x04B?\x05@\x14t&\x14b\f\x16clo\x05sest_re\0\
+   lative_\0index\x14K \0u\x06\x14.\0\0\f\x02"
