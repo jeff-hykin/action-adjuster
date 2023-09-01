@@ -1,12 +1,12 @@
 ; DO NOT EDIT (unless you know what you are doing)
 ;
 ; This subdirectory is a git "subrepo", and this file is maintained by the
-; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
 ;
 [subrepo]
 	remote = git@github.com:jeff-hykin/telepy_notify.git
 	branch = master
 	commit = 3ac9361d38be8ac107d2017caf0d8daadfa5f0df
-	parent = d4c78ed7e9eaceb79f26e5d1d9e5966af14a7a41
+	parent = 967570342f9f14778e6be8bd64e9f129ecc2472d
 	method = merge
-	cmdver = 0.4.1
+	cmdver = 0.4.5
