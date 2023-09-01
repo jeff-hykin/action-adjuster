@@ -23,7 +23,7 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
-yaml.width = 999999999999999
+yaml.width = float("Infinity")
 
 @yaml.register_class
 class YamlPickled:
@@ -70,7 +70,7 @@ try:
     
     # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
     for each in [
-        # "float",
+        "float",
         'double',
         # "cfloat",
         # 'cdouble',
@@ -109,14 +109,14 @@ try:
         # "uintc",
         # "longlong",
         # "ulonglong",
-        "uint",
+        "int",
         "uint8",
         "uint16",
         "uint32",
         "uint64",
         "uint128",
         "uint256",
-        # "int",
+        "int",
         "int8",
         "int16",
         "int32",
@@ -283,7 +283,7 @@ class GrugTest:
                                 source=source,
                             )
                         except Exception as error:
-                            warn(f"corrupted_input: {path}\n    {error}")
+                            warn(error)
                     decorator.replaying_inputs = False
                     self.has_been_tested[function_id] = True
             
