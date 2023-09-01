@@ -4,6 +4,7 @@ from generic_tools.notifier import setup_notifier_if_possible
 from __dependencies__.quik_config import find_and_load
 from __dependencies__.blissful_basics import FS, LazyDict, Warnings
 from __dependencies__.grug_test import GrugTest
+from __dependencies__.telepy_notify import Notifier
 
 Warnings.disable()
 
@@ -38,6 +39,12 @@ grug_test = GrugTest(
 )
 
 send_notification = setup_notifier_if_possible(
+    disable=not secrets.get("send_notification", False),
+    token=secrets.get("telegram_token", None),
+    chat_id=secrets.get("telegram_chat_id", None),
+)
+
+notifier = Notifier(
     disable=not secrets.get("send_notification", False),
     token=secrets.get("telegram_token", None),
     chat_id=secrets.get("telegram_chat_id", None),
