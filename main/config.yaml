@@ -83,10 +83,10 @@
             number_of_episode_runs_per_scenario: 10
             should_use_ros: False
             action_adjuster:
-                disabled: False
+                disabled: True
                 default_to_perfect: False
                 always_perfect: False
-                use_transform: True # when true, this means it will modify the policies actions
+                use_transform: False # when true, this means it will modify the policies actions
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
                 update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
@@ -141,7 +141,7 @@
                 main_node_name: 'warthog_faker'
             
             simulator:
-                starting_waypoint: 10 # integer or 'random' <- a string
+                starting_waypoint: 'random' # integer or 'random' <- a string
                 waypoint_radius: 3 # meters
                 save_data: True
                 should_render: True
@@ -173,14 +173,14 @@
                 # 
                 # action adversity
                 # 
-                sudden_flat_tire_enabled: True
+                sudden_flat_tire_enabled: False
                 sudden_flat_tire_on_timestep: 500
                 battery_adversity_enabled: False # Battery performs linearly decreasing velocity
                 battery_decay_rate: 0.0006 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
-                spin_offset: 0.20  # will be added to the relative_spin value every step (which is then scaled by controller_max_spin)
+                spin_offset: 0     # will be added to the relative_spin value every step (which is then scaled by controller_max_spin)
                                    # relative_spin will be between -1 and 1
                                    # with controller_max_spin=2.5, and spin_offset=0.2, the offset will be 28.6 degrees
                 
@@ -190,18 +190,18 @@
                 use_gaussian_action_noise: False
                 gaussian_action_noise:
                     velocity_action:
-                        standard_deviation: 0.01 # after being scaled by controller_max_velocity, the value will be meters per second
+                        standard_deviation: 0 # after being scaled by controller_max_velocity, the value will be meters per second
                     spin_action:
-                        standard_deviation: 0.05 # after being scaled by controller_max_spin, the value will be radians per action_duration (default 15 hertz)
+                        standard_deviation: 0 # after being scaled by controller_max_spin, the value will be radians per action_duration (default 15 hertz)
                 # 
                 # spacial info noise (e.g. sensor error)
                 # 
                 use_gaussian_spacial_noise: False
                 gaussian_spacial_noise:
                     "x":
-                        standard_deviation: 0.5 # meters
+                        standard_deviation: 0 # meters
                     "y":
-                        standard_deviation: 0.5 # meters
+                        standard_deviation: 0 # meters
                     "angle":
                         standard_deviation: 0 # radians
                     "velocity":
@@ -213,7 +213,7 @@
                 parameters:
                     seed: 0
                     buff_size: 4000
-                    train_time_steps: 10_000_000
+                    train_time_steps: 1_000_000
                     gamma: 0.99
                     clip_ratio: 0.2
                     lr_pi: 3.0e-5
@@ -244,7 +244,7 @@
                 controller_max_spin: 2.5 # radians
             
             grug_test:
-                disable: False
+                disable: True
                 replay_inputs: True
                 record_io: False
                 

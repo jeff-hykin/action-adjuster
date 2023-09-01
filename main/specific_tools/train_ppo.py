@@ -16,6 +16,7 @@ import scipy.signal
 import time
 from config import config, path_to
 from blissful_basics import FS, print
+from __dependencies__.informative_iterator import ProgressBar
 
 # torch.manual_seed(100)
 eps = np.finfo(np.float32).eps.item()
@@ -116,7 +117,7 @@ class PPOBuffer:
         Append one timestep of agent-environment interaction to the buffer.
         """
         assert self.ptr < self.max_size     # buffer has to have room so you can store
-        self.obs_buf[self.ptr] = obs
+        self.obs_buf[self.ptr] = obs.to_numpy()
         self.act_buf[self.ptr] = act
         self.rew_buf[self.ptr] = rew
         self.val_buf[self.ptr] = val
@@ -177,15 +178,16 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
     obs            = env.reset()
     curr_time_step = 0
     num_episode    = 0
-    pbar           = tqdm(total=train_time_steps)
     ep_rewards     = [0]
     ep_steps       = [0]
     start_time = time.time()
+    progress_bar = iter(ProgressBar(train_time_steps))
     while curr_time_step < train_time_steps:
         for t in range(0, buff_size):
             curr_time_step += 1
+            next(progress_bar)
             with torch.no_grad():
-                m = pi(torch.as_tensor(obs, dtype=torch.float32).to(device))
+                m = pi(torch.as_tensor(obs.to_numpy(), dtype=torch.float32).to(device))
                 action = m.sample()
                 action = action.reshape((-1,) + action_dim)
                 logp = m.log_prob(action).sum(dim=1)
@@ -194,7 +196,7 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
                 obs_new, rew, done, _ = env.step(clipped_action[0])
                 ep_rewards[num_episode] += rew
                 ep_steps[num_episode] += 1
-                v = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
+                v = vi(torch.as_tensor(obs.to_numpy(), dtype=torch.float32).to(device))
             
             data_buff.store(obs, action, rew, v.cpu().numpy(), logp.cpu().numpy())
             obs = obs_new
@@ -218,7 +220,6 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
                 np.savetxt(f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}", ep_rewards, fmt="%f")
             # curr_time_step+=1
         
-        #  pbar.update(1)
         data = data_buff.get()
         ret      = data["ret"].to(device)
         act      = data["act"].to(device)
@@ -242,8 +243,6 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
             value_loss = F.mse_loss(val.flatten(), ret)
             value_loss.backward()
             value_opt.step()
-        # pbar.update(1)
-    pbar.close()
     return pi
 
 
@@ -251,7 +250,7 @@ def ppo(env, seed, buff_size, train_time_steps, gamma, clip_ratio, lr_pi, lr_vf,
 
 if __name__ == '__main__':
     with print.indent:
-        env = WarthogEnv(path_to.waypoints_folder + "/sim_remote_waypoint.csv", None)
+        env = WarthogEnv(path_to.waypoints_folder + "/sim_remote_waypoint.csv", None, recorder=None)
         pi = ppo(env, **config.training.parameters)
         # pi = torch.load("./temp_warthog.pt")
         # plt.ion()

@@ -283,7 +283,6 @@ class WarthogEnv(gym.Env):
         y_diff     = closest_waypoint.y - spacial_info.y
         angle_diff = get_angle_from_origin(x_diff, y_diff)
         yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
-        print(f'''{spacial_info.timestep}: yaw_error = {yaw_error}''')
 
         velocity_error   = closest_waypoint.velocity - spacial_info.velocity
         crosstrack_error = closest_distance * math.sin(yaw_error)
@@ -470,8 +469,6 @@ class WarthogEnv(gym.Env):
                 relative_spin=self.mutated_relative_spin,
                 action_duration=self.action_duration,
             )
-        
-        print(f'''self.spacial_info = {self.spacial_info}''')
         
         # 
         # increment waypoints
