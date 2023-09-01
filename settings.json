@@ -16,6 +16,10 @@
             "git_url": "git@github.com:jeff-hykin/grug_test_py.git",
             "path": "__sources__/grug_test/main/grug_test"
         },
+        "telepy_notify": {
+            "git_url": "git@github.com:jeff-hykin/telepy_notify.git",
+            "path": "__sources__/telepy_notify/main/telepy_notify"
+        },
         "trivial_torch_tools": {
             "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
             "path": "__sources__/trivial_torch_tools/main/trivial_torch_tools"
