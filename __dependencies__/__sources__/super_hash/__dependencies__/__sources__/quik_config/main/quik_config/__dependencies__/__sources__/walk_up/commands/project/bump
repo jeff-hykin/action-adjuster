@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-ruby "$FORNIX_FOLDER/gem_tools/version_bump.rb" "$@"

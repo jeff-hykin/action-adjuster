@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-pip install "poetry==1.2.1" 2>/dev/null
 
 # if not in the standard env, try to make it work anyways
 if [ -z "$FORNIX_FOLDER" ]

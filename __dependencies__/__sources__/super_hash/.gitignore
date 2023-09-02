@@ -1,7 +1,8 @@
 # 
 # Custom
 # 
-
+dist/
+build/
 
 # 
 # standard
