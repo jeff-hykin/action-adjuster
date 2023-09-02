@@ -81,7 +81,7 @@ class WarthogEnv(gym.Env):
         self.action_duration        = config.simulator.action_duration  
         self.number_of_trajectories = config.simulator.number_of_trajectories
         self.render_axis_size       = 20
-        self.next_waypoint_index          = 0
+        self.next_waypoint_index    = 0
         self.prev_closest_index     = 0
         self.closest_distance       = math.inf
         self.desired_velocities     = []
@@ -475,18 +475,18 @@ class WarthogEnv(gym.Env):
         # 
         if True:
             closest_relative_index = 0
-            next_waypoint              = self.waypoints_list[self.next_waypoint_index]
+            last_waypoint_index = len(self.waypoints_list)-1
+            next_waypoint          = self.waypoints_list[self.next_waypoint_index]
             if len(self.waypoints_list) > 1:
-                next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
                 distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
                 got_further_away           = self.closest_distance < distance_to_waypoint
                 was_within_waypoint_radius = min(distance_to_waypoint, self.closest_distance) < config.simulator.waypoint_radius
                 # went past waypoint? increment the index
                 if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
                     closest_relative_index  = 1
-                    next_waypoint = self.waypoints_list[self.next_waypoint_index]
                 # went past waypoint, but edgecase of getting further away:
-                elif was_within_waypoint_radius:
+                elif was_within_waypoint_radius and self.next_waypoint_index < last_waypoint_index:
+                    next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
                     waypoint_arm_angle = angle_created_by(
                         start=(self.spacial_info.x, self.spacial_info.y),
                         midpoint=(next_waypoint.x, next_waypoint.y),
@@ -498,8 +498,15 @@ class WarthogEnv(gym.Env):
                         
             if closest_relative_index > 0:
                 self.next_waypoint_index += 1
+                # prevent indexing error
+                self.next_waypoint_index = min(self.next_waypoint_index, len(self.waypoints_list)-1)
                 next_waypoint = self.waypoints_list[self.next_waypoint_index]
-            self.closest_distance = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
+            self.closest_distance = get_distance(
+                next_waypoint.x,
+                next_waypoint.y,
+                self.spacial_info.x,
+                self.spacial_info.y
+            )
         
         # 
         # Reward Calculation
@@ -534,7 +541,7 @@ class WarthogEnv(gym.Env):
                     self.spacial_info_with_noise.timestep ,
                 )
             
-            # generate observation off potentially incorrect spacial info
+            # generate observation off potentially incorrect (noisey) spacial info
             self.prev_observation = self.observation
             self.observation = WarthogEnv.generate_observation(
                 closest_index=self.next_waypoint_index,
@@ -599,7 +606,7 @@ class WarthogEnv(gym.Env):
         # simulator position
         else:
             waypoint = self.waypoints_list[index]
-            self.next_waypoint_index      = index
+            self.next_waypoint_index = index
             self.prev_closest_index = index
             
             self.spacial_info = WarthogEnv.SpacialInformation(
