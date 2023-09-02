@@ -1,0 +1,63 @@
+{
+    "gamma": 0.99,
+    "n_steps": 128,
+    "vf_coef": 0.5,
+    "ent_coef": 0.01,
+    "max_grad_norm": 0.5,
+    "learning_rate": {
+        ":type:": "<class 'function'>",
+        ":serialized:": "gASV8wIAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwNX2J1aWx0aW5fdHlwZZSTlIwKTGFtYmRhVHlwZZSFlFKUKGgCjAhDb2RlVHlwZZSFlFKUKEsBSwBLAUsBSxNDBIgAUwCUToWUKYwBX5SFlIxjL2hvbWUvc2FpLy5jb25kYS9lbnZzL3N0YmFzZWxpbmVzMS9saWIvcHl0aG9uMy42L3NpdGUtcGFja2FnZXMvc3RhYmxlX2Jhc2VsaW5lcy9jb21tb24vc2NoZWR1bGVzLnB5lIwEZnVuY5RLikMCAAGUjAN2YWyUhZQpdJRSlH2UKIwLX19wYWNrYWdlX1+UjBdzdGFibGVfYmFzZWxpbmVzLmNvbW1vbpSMCF9fbmFtZV9flIwhc3RhYmxlX2Jhc2VsaW5lcy5jb21tb24uc2NoZWR1bGVzlIwIX19maWxlX1+UjGMvaG9tZS9zYWkvLmNvbmRhL2VudnMvc3RiYXNlbGluZXMxL2xpYi9weXRob24zLjYvc2l0ZS1wYWNrYWdlcy9zdGFibGVfYmFzZWxpbmVzL2NvbW1vbi9zY2hlZHVsZXMucHmUdU5OaACMEF9tYWtlX2VtcHR5X2NlbGyUk5QpUpSFlHSUUpSMHGNsb3VkcGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0c3RhdGWUk5RoIH2UfZQoaBdoDowMX19xdWFsbmFtZV9flIwVY29uc3Rmbi48bG9jYWxzPi5mdW5jlIwPX19hbm5vdGF0aW9uc19flH2UjA5fX2t3ZGVmYXVsdHNfX5ROjAxfX2RlZmF1bHRzX1+UTowKX19tb2R1bGVfX5RoGIwHX19kb2NfX5ROjAtfX2Nsb3N1cmVfX5RoAIwKX21ha2VfY2VsbJSTlEc/MGJN0vGp/IWUUpSFlIwXX2Nsb3VkcGlja2xlX3N1Ym1vZHVsZXOUXZSMC19fZ2xvYmFsc19flH2UdYaUhlIwLg=="
+    },
+    "lam": 0.95,
+    "nminibatches": 4,
+    "noptepochs": 4,
+    "cliprange": {
+        ":type:": "<class 'function'>",
+        ":serialized:": "gASV8wIAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwNX2J1aWx0aW5fdHlwZZSTlIwKTGFtYmRhVHlwZZSFlFKUKGgCjAhDb2RlVHlwZZSFlFKUKEsBSwBLAUsBSxNDBIgAUwCUToWUKYwBX5SFlIxjL2hvbWUvc2FpLy5jb25kYS9lbnZzL3N0YmFzZWxpbmVzMS9saWIvcHl0aG9uMy42L3NpdGUtcGFja2FnZXMvc3RhYmxlX2Jhc2VsaW5lcy9jb21tb24vc2NoZWR1bGVzLnB5lIwEZnVuY5RLikMCAAGUjAN2YWyUhZQpdJRSlH2UKIwLX19wYWNrYWdlX1+UjBdzdGFibGVfYmFzZWxpbmVzLmNvbW1vbpSMCF9fbmFtZV9flIwhc3RhYmxlX2Jhc2VsaW5lcy5jb21tb24uc2NoZWR1bGVzlIwIX19maWxlX1+UjGMvaG9tZS9zYWkvLmNvbmRhL2VudnMvc3RiYXNlbGluZXMxL2xpYi9weXRob24zLjYvc2l0ZS1wYWNrYWdlcy9zdGFibGVfYmFzZWxpbmVzL2NvbW1vbi9zY2hlZHVsZXMucHmUdU5OaACMEF9tYWtlX2VtcHR5X2NlbGyUk5QpUpSFlHSUUpSMHGNsb3VkcGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0c3RhdGWUk5RoIH2UfZQoaBdoDowMX19xdWFsbmFtZV9flIwVY29uc3Rmbi48bG9jYWxzPi5mdW5jlIwPX19hbm5vdGF0aW9uc19flH2UjA5fX2t3ZGVmYXVsdHNfX5ROjAxfX2RlZmF1bHRzX1+UTowKX19tb2R1bGVfX5RoGIwHX19kb2NfX5ROjAtfX2Nsb3N1cmVfX5RoAIwKX21ha2VfY2VsbJSTlEc/yZmZmZmZmoWUUpSFlIwXX2Nsb3VkcGlja2xlX3N1Ym1vZHVsZXOUXZSMC19fZ2xvYmFsc19flH2UdYaUhlIwLg=="
+    },
+    "cliprange_vf": 0.2,
+    "verbose": 1,
+    "policy": {
+        ":type:": "<class 'abc.ABCMeta'>",
+        ":serialized:": "gASVMgAAAAAAAACMIHN0YWJsZV9iYXNlbGluZXMuY29tbW9uLnBvbGljaWVzlIwJTWxwUG9saWN5lJOULg==",
+        "__module__": "stable_baselines.common.policies",
+        "__doc__": "\n    Policy object that implements actor critic, using a MLP (2 layers of 64)\n\n    :param sess: (TensorFlow session) The current TensorFlow session\n    :param ob_space: (Gym Space) The observation space of the environment\n    :param ac_space: (Gym Space) The action space of the environment\n    :param n_env: (int) The number of environments to run\n    :param n_steps: (int) The number of steps to run for each environment\n    :param n_batch: (int) The number of batch to run (n_envs * n_steps)\n    :param reuse: (bool) If the policy is reusable or not\n    :param _kwargs: (dict) Extra keyword arguments for the nature CNN feature extraction\n    ",
+        "__init__": "<function MlpPolicy.__init__ at 0x7fbad6d6ee18>",
+        "__abstractmethods__": "frozenset()",
+        "_abc_registry": "<_weakrefset.WeakSet object at 0x7fbad6d66f28>",
+        "_abc_cache": "<_weakrefset.WeakSet object at 0x7fbad6d66f60>",
+        "_abc_negative_cache": "<_weakrefset.WeakSet object at 0x7fbad6d66a90>",
+        "_abc_negative_cache_version": 51
+    },
+    "observation_space": {
+        ":type:": "<class 'gym.spaces.box.Box'>",
+        ":serialized:": "gASVcgQAAAAAAACMDmd5bS5zcGFjZXMuYm94lIwDQm94lJOUKYGUfZQojAVkdHlwZZSMBW51bXB5lIwFZHR5cGWUk5SMAmY4lImIh5RSlChLA4wBPJROTk5K/////0r/////SwB0lGKMBXNoYXBllEsqhZSMA2xvd5SMFW51bXB5LmNvcmUubXVsdGlhcnJheZSMDF9yZWNvbnN0cnVjdJSTlGgGjAduZGFycmF5lJOUSwCFlEMBYpSHlFKUKEsBSyqFlGgLiUJQAQAAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAAAAAAAAAWcAAAAAAAABZwAAAAAAAAFnAlHSUYowEaGlnaJRoE2gVSwCFlGgXh5RSlChLAUsqhZRoC4lCUAEAAAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQAAAAAAAQI9AAAAAAABAj0AAAAAAAECPQJR0lGKMDWJvdW5kZWRfYmVsb3eUaBNoFUsAhZRoF4eUUpQoSwFLKoWUaAiMAmIxlImIh5RSlChLA4wBfJROTk5K/////0r/////SwB0lGKJQyoBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQGUdJRijA1ib3VuZGVkX2Fib3ZllGgTaBVLAIWUaBeHlFKUKEsBSyqFlGgriUMqAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBlHSUYowKX25wX3JhbmRvbZROdWIu",
+        "dtype": "float64",
+        "shape": [
+            42
+        ],
+        "low": "[-100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100.\n -100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100.\n -100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100. -100.\n -100. -100. -100. -100. -100. -100.]",
+        "high": "[1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000.\n 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000.\n 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000. 1000.\n 1000. 1000. 1000. 1000. 1000. 1000.]",
+        "bounded_below": "[ True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True]",
+        "bounded_above": "[ True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True  True  True  True  True  True  True\n  True  True  True  True  True  True]",
+        "_np_random": null
+    },
+    "action_space": {
+        ":type:": "<class 'gym.spaces.box.Box'>",
+        ":serialized:": "gASVjAEAAAAAAACMDmd5bS5zcGFjZXMuYm94lIwDQm94lJOUKYGUfZQojAVkdHlwZZSMBW51bXB5lIwFZHR5cGWUk5SMAmY0lImIh5RSlChLA4wBPJROTk5K/////0r/////SwB0lGKMBXNoYXBllEsChZSMA2xvd5SMFW51bXB5LmNvcmUubXVsdGlhcnJheZSMDF9yZWNvbnN0cnVjdJSTlGgGjAduZGFycmF5lJOUSwCFlEMBYpSHlFKUKEsBSwKFlGgLiUMIAAAAAAAAwL+UdJRijARoaWdolGgTaBVLAIWUaBeHlFKUKEsBSwKFlGgLiUMIAACAPwAAwD+UdJRijA1ib3VuZGVkX2JlbG93lGgTaBVLAIWUaBeHlFKUKEsBSwKFlGgIjAJiMZSJiIeUUpQoSwOMAXyUTk5OSv////9K/////0sAdJRiiUMCAQGUdJRijA1ib3VuZGVkX2Fib3ZllGgTaBVLAIWUaBeHlFKUKEsBSwKFlGgriUMCAQGUdJRijApfbnBfcmFuZG9tlE51Yi4=",
+        "dtype": "float32",
+        "shape": [
+            2
+        ],
+        "low": "[ 0.  -1.5]",
+        "high": "[1.  1.5]",
+        "bounded_below": "[ True  True]",
+        "bounded_above": "[ True  True]",
+        "_np_random": null
+    },
+    "n_envs": 1,
+    "n_cpu_tf_sess": null,
+    "seed": null,
+    "_vectorize_action": false,
+    "policy_kwargs": {}
+}

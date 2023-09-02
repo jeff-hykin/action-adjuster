@@ -24,6 +24,8 @@ if config.policy.name == 'dummy':
     from policies.dummy import policy
 if config.policy.name == 'bicycle':
     from policies.bicycle import policy
+if config.policy.name == 'kinematic_sup0':
+    from policies.kinematic_sup0 import policy
 if config.policy.name == 'retrained':
     from policies.retrained import policy
 
