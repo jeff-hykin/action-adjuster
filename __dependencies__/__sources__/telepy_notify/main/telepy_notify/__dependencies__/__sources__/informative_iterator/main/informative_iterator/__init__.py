@@ -496,7 +496,7 @@ class ProgressBar:
     def __len__(self):
         return self.progress_data.total_iterations
 
-
+from statistics import mean as average
 def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_seconds=2):
     list_of_end_times = []
     
