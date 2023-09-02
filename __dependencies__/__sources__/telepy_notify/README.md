@@ -29,9 +29,9 @@ notify = Notifier(
     # # OR give the token directly, ex:
     # token="alkdsfjakjfoirj029294ijfoi24j4-2",
     
-    # optional: prefix give all messages
+    # optional: a prefix for all messages (good if multiple machines)
     message_prefix="Lambda Machine: Experiment 19:",
-    # optional: set to true when debugging
+    # optional: set to true when debugging to avoid a million notifications
     disable=False,
 )
 # NOTE:
