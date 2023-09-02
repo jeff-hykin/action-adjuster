@@ -60,9 +60,9 @@ try {
         const folderToPull = FileSystem.parentPath(eachPath)
         console.log(`pulling: ${eachPath}`)
         const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
-        if (!success) {
-            break
-        }
+        // if (!success) {
+        //     break
+        // }
     }
     console.log(`done`)
 } finally {
