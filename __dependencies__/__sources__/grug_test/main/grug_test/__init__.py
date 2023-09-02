@@ -12,7 +12,13 @@ from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
     # DONE: add counting-caps (max IO for a particular function, or in-general)
+    # improve to_yaml(), allow deep recursion to make as much of the structure visible as possible
+        # maybe add named tuple support
+        # maybe add pandas dataframe support
+        # maybe add torch tensor support
     # add CLI tools
+        # capture all stdout/stderr
+        # run all .test.py files
     # create add_input_for(func_id, args, kwargs, input_name)
     # use threads to offload the work
     # report which tests have recordings but were not tested during replay mode (e.g. couldn't reach/find function)
@@ -23,7 +29,7 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
-yaml.width = float("Infinity")
+yaml.width = 999999999999999
 
 @yaml.register_class
 class YamlPickled:
@@ -54,6 +60,22 @@ class YamlPickled:
             style=None,
             anchor=None
         )
+
+# def is_probably_named_tuple(obj):
+#     return (
+#         isinstance(obj, tuple) and
+#         hasattr(obj, '_asdict') and
+#         hasattr(obj, '_fields')
+#     )
+
+# def to_yaml(obj):
+#     if isinstance(obj, (tuple, list)):
+#         return tuple(to_yaml(each) for each in obj)
+#     elif isinstance(obj, (dict)):
+#         return tuple(to_yaml(each) for each in obj)
+#     else:
+        
+        
 # 
 # add yaml representations for numpy values if possible
 # 
@@ -70,7 +92,7 @@ try:
     
     # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
     for each in [
-        "float",
+        # "float",
         'double',
         # "cfloat",
         # 'cdouble',
@@ -109,14 +131,14 @@ try:
         # "uintc",
         # "longlong",
         # "ulonglong",
-        "int",
+        "uint",
         "uint8",
         "uint16",
         "uint32",
         "uint64",
         "uint128",
         "uint256",
-        "int",
+        # "int",
         "int8",
         "int16",
         "int32",
@@ -283,7 +305,7 @@ class GrugTest:
                                 source=source,
                             )
                         except Exception as error:
-                            warn(error)
+                            warn(f"corrupted_input: {path}\n    {error}")
                     decorator.replaying_inputs = False
                     self.has_been_tested[function_id] = True
             

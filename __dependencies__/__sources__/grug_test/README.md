@@ -6,6 +6,9 @@ Simple automated tests; for [grug](https://grugbrain.dev/) devs like me who don'
 
 `pip install grug_test`
 
+
+In your `main.py` equivlent:
+
 ```python
 from grug_test import GrugTest
 import os
@@ -16,8 +19,7 @@ grug_test = GrugTest(
     test_folder="./tests/grug_tests",
     fully_disable=os.environ.get("PROD")!=None,
     replay_inputs=os.environ.get("RUN_TEST_CASES")!=None,
-    record_io=True, # set to false when want a faster runtime while debugging
-                    # NOTE: fully_disable does override this setting
+    record_io=os.environ.get("RECORD")!=None,
 )
 
 # 2. slap @grug_test on any of your pure-functions
@@ -30,11 +32,14 @@ def repeat(a,times):
 ```
 
 3. That's all the setup!
-- The "test cases" are generated when you set `GrugTest(record_io=True)` and run your normal workflow
-- Commit your generated "test cases" (input/output files) to git
-- Then when you want to test, run your normal workflow with `GrugTest(replay_inputs=True)`. Once its done git-diff will show you all the changes.
-    - If you like the changes, well volia, those are your freshly-written test cases
+- `RECORD=True         python ./main.py` will record tests for you
+- `RUN_TEST_CASES=True python ./main.py` will check your functions
+- `PROD=True           python ./main.py` will run with grug totally disabled
+- Make sure to commit the generated tests to git
+    - When you do `RUN_TEST_CASES=True`, the git-diff will show you any problems
+    - If you like the changes, well ✨volia✨ the git changes are your freshly-written test cases
     - If you don't like the changes, well then it looks like you've got some dev work to do
+    - thats it
 
 # Q&A
 

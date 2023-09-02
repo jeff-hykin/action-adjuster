@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grug_test"
-version = "0.0.6"
+version = "0.0.7"
 description = "Tests for lazy (smart) devs"
 authors=[]
 
