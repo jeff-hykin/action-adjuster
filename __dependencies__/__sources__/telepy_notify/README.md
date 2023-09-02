@@ -65,10 +65,10 @@ with notify.when_done:
 # Progress notifications
 # 
 #    - gives ETA and other time-info
-#    - can limit print-rate (by time passed or percent-progress)
-#        e.g. percent_per_print=50 => message me after 50% progress
-#        e.g. seconds_per_print=60*30 => message once every 30min
-for progress, epoch in notify.progress(range(100), percent_per_print=50, seconds_per_print=60*30):
+#    - can limit notify-rate (by time passed or percent-progress)
+#        e.g. percent_per_notify=50 => message me after 50% progress
+#        e.g. minutes_per_notify=30 => message once every 30min
+for progress, epoch in notify.progress(range(100), percent_per_notify=50, minutes_per_notify=30):
     index = progress.index
     
     # do stuff

@@ -242,7 +242,7 @@ class Notifier:
             real_title = kwargs.get("title", "")
             title = f"<b>{real_title}</b>\n" if len(real_title) else ""
             for progress, item in ProgressBar(*args,**kwargs):
-                if progress.updated: # e.g. update rate can be slower than iteration rate
+                if progress.notified: # e.g. update rate can be slower than iteration rate
                     self.send(title+progress.previous_output[len(real_title)+1:].replace("|", "\n|")+progress.get("message", ""))
                 yield (progress, item)
             
