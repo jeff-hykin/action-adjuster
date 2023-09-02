@@ -61,10 +61,10 @@ try {
     for await (const eachPath of FileSystem.globIterator(globPath, { searchOrder: 'breadthFirstSearch'})) {
         const folderToPull = FileSystem.parentPath(eachPath)
         console.log(`pulling: ${eachPath}`)
-        const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
-        if (!success) {
-            break
-        }
+        // const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
+        // if (!success) {
+        //     break
+        // }
     }
 } finally {
     if (changesWereStashed) {
