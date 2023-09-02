@@ -105,7 +105,7 @@ class ProgressBar:
         for each_key, each_value in config.items():
             setattr(this_class, each_key, each_value)
     
-    def __init__(self, iterator, *, title=None, iterations=None, layout=None, disable_logging=None, minimal=None, inline=None, progress_bar_size=None, seconds_per_print=None, percent_per_print=None, minutes_per_notify=None, percent_per_notify=None, lookback_size=None, smoothing_buffer_size=5, smoothing_threshold_in_seconds=2, notify_delay=1):
+    def __init__(self, iterator, *, title=None, iterations=None, layout=None, disable_logging=None, minimal=None, inline=None, progress_bar_size=None, seconds_per_print=None, percent_per_print=None, minutes_per_notify=None, percent_per_notify=None, lookback_size=None, smoothing_buffer_size=10, smoothing_threshold_in_seconds=2, notify_iter_delay=1):
         original_generator = range(int(iterator)) if isinstance(iterator, (int, float)) else iterator
         self.title = title or ""
         
@@ -304,7 +304,7 @@ class ProgressBar:
         time_estimator = create_time_estimator(smoothing_buffer_size=smoothing_buffer_size, smoothing_threshold_in_seconds=smoothing_threshold_in_seconds)
         
         def generator_func():
-            nonlocal notify_delay
+            nonlocal notify_iter_delay
             self.parent_bars = list(nested_progress_bars)
             nested_progress_bars.append(self)
             self.nested_indent = bliss_print.indent.string * len(self.parent_bars)
@@ -316,6 +316,7 @@ class ProgressBar:
                 progress_data       = self.progress_data
                 total_iterations    = self.progress_data.total_iterations
                 percentage_complete = (iter_index * 10000 // total_iterations) / 100 # two decimals of accuracy
+                self.total_eslaped_time = current_timestamp - self.start_time.timestamp()
                 self.times.append(current_timestamp)
                 self.past_indicies.append(iter_index)
                 
@@ -337,24 +338,24 @@ class ProgressBar:
                 if print_percetage_passed:
                     self.percent_at_prev_print = percentage_complete
                 
-                shouldnt_notify_because_of_delay = notify_delay != None and iter_index <= notify_delay # block the first notify
-                notify_because_of_delay = notify_delay != None and not iter_index <= notify_delay      # triggered only once (after blocking)
+                shouldnt_notify_because_of_iter_delay = notify_iter_delay != None and iter_index <= notify_iter_delay # block the first notify
+                notify_after_iter_delay = notify_iter_delay != None and not iter_index <= notify_iter_delay
                 notify_duration_passed  = (seconds_since_prev_notify  >= (self.minutes_per_notify*60))
                 notify_percetage_passed = (percent_since_prev_notify  >= self.percent_per_notify )
-                if notify_because_of_delay:
-                    notify_delay = None # prevent this from being triggered again
+                if notify_after_iter_delay:
+                    notify_iter_delay = None # prevent this from being triggered again
                 if notify_duration_passed:
                     self.time_at_prev_notify = current_timestamp
                 if notify_percetage_passed:
                     self.percent_at_prev_notify = percentage_complete
                 
-                should_notify = not shouldnt_notify_because_of_delay and (
-                    notify_because_of_delay
+                should_notify = not shouldnt_notify_because_of_iter_delay and (
+                    notify_after_iter_delay
                     or notify_duration_passed
                     or notify_percetage_passed
                 )
                 
-                updated = should_print or should_notify
+                updated = should_print or should_notify or iter_index == 0 or iter_index == 1
                 if updated:
                     self.time_at_prev_update = current_timestamp
                 
@@ -373,7 +374,7 @@ class ProgressBar:
                 ))
                 
                 if updated:
-                    self.total_eslaped_time, self.secs_remaining, self.end_time = time_estimator(
+                    self.secs_remaining, self.end_time = time_estimator(
                         start_time=self.start_time,
                         total_iterations=self.progress_data.total_iterations,
                         index=iter_index,
@@ -469,13 +470,16 @@ class ProgressBar:
     def show_end_time(self):
         if self.progress_data.percent != 100:
             time_format = self.time_format
-            if self.secs_remaining > (86400/2): # more than half a day
-                time_format = self.long_time_format
-            try:
-                endtime = self.start_time + timedelta(seconds=self.total_eslaped_time + self.secs_remaining)
-                self.print(f'eta: {endtime.strftime(time_format)}',  end='')
-            except:
+            if self.secs_remaining == math.inf:
                 self.print(f'eta: {"_"*(len(time_format)-3)}',  end='')
+            else:
+                if self.secs_remaining > (86400/2): # more than half a day
+                    time_format = self.long_time_format
+                try:
+                    endtime = self.start_time + timedelta(seconds=self.total_eslaped_time + self.secs_remaining)
+                    self.print(f'eta: {endtime.strftime(time_format)}',  end='')
+                except:
+                    self.print(f'eta: {"_"*(len(time_format)-3)}',  end='')
     
     def show_done(self):
         if self.inline:
@@ -536,14 +540,16 @@ def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_second
         
         end_time = None
         if secs_remaining != math.inf:
-            end_time = start_time + timedelta(seconds=total_eslaped_time + secs_remaining)
+            end_time = (start_time + timedelta(seconds=total_eslaped_time + secs_remaining)).timestamp()
             list_of_end_times.append(end_time)
-            list_of_end_times = list_of_end_times[-smoothing_buffer_size:]
+            # buffer slowly gets bigger over time
+            cutoff = int(math.log(index+2) * smoothing_buffer_size)
+            list_of_end_times = list_of_end_times[-cutoff:]
         
-        if seconds_since_prev_update <= smoothing_threshold_in_seconds:
+        if seconds_since_prev_update <= smoothing_threshold_in_seconds and len(list_of_end_times) > 0:
             end_time = average(list_of_end_times)
-            secs_remaining = end_time - total_eslaped_time
+            secs_remaining = end_time - time.time()
         
-        return total_eslaped_time, secs_remaining, end_time
-    
+        return secs_remaining, end_time
+        
     return time_estimator
