@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/blissful_basics.git
 	branch = master
-	commit = 3e141301f161fdeb4e26bdf5b3f87b2178fae1a2
-	parent = 542b13cb7c4c3ceb4697a547f1b65b64ddbf2ecc
+	commit = 0bfa11506ecd930702a79b49f29ac9bfafcc4d3f
+	parent = 9d16895f696f1c7b4140d5d535723964d454b433
 	method = merge
-	cmdver = 0.4.1
+	cmdver = 0.4.5
