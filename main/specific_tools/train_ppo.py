@@ -229,7 +229,7 @@ with notifier.when_done:
                         v_ = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                         v_ = v_.detach().cpu().numpy()
                     data_buff.finish_path(v_)
-                if curr_time_step % 100000 == 0:
+                if curr_time_step % 100_000 == 0:
                     torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt"
                     numpy_save_path = f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}"
                     FS.ensure_is_folder(FS.parent_path(torch_save_path))
