@@ -56,6 +56,7 @@ try {
             }
         }
     }
+    console.debug(`depsFolder is:`,depsFolder)
     const globPath = `${depsFolder}/__sources__/*/.gitrepo`
     for await (const eachPath of FileSystem.globIterator(globPath, { searchOrder: 'breadthFirstSearch'})) {
         const folderToPull = FileSystem.parentPath(eachPath)
