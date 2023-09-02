@@ -64,6 +64,7 @@ try {
             break
         }
     }
+    console.log(`done`)
 } finally {
     if (changesWereStashed) {
         await run`git stash pop`
