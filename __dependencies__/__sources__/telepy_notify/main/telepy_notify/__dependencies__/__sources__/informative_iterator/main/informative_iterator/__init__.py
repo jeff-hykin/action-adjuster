@@ -136,7 +136,6 @@ class ProgressBar:
             self.minutes_per_notify = math.inf
         
         # initilize misc values
-        running_notify_delay = notify_delay
         self.past_indicies            = []
         self.start_time               = datetime.now()
         self.percent_at_prev_print    = 0 
@@ -305,6 +304,7 @@ class ProgressBar:
         time_estimator = create_time_estimator(smoothing_buffer_size=smoothing_buffer_size, smoothing_threshold_in_seconds=smoothing_threshold_in_seconds)
         
         def generator_func():
+            nonlocal notify_delay
             self.parent_bars = list(nested_progress_bars)
             nested_progress_bars.append(self)
             self.nested_indent = bliss_print.indent.string * len(self.parent_bars)
