@@ -125,7 +125,7 @@ with notifier.when_done:
             Append one timestep of agent-environment interaction to the buffer.
             """
             assert self.ptr < self.max_size     # buffer has to have room so you can store
-            self.obs_buf[self.ptr] = obs.to_numpy()
+            self.obs_buf[self.ptr] = obs
             self.act_buf[self.ptr] = act
             self.rew_buf[self.ptr] = rew
             self.val_buf[self.ptr] = val
@@ -183,13 +183,13 @@ with notifier.when_done:
         data_buff  = PPOBuffer(*obs_dim, *action_dim, buff_size)
         policy_opt = optim.Adam(pi.parameters(), lr=lr_pi)
         value_opt  = optim.Adam(vi.parameters(), lr=lr_vf)
-        obs            = env.reset()
+        obs            = env.reset().to_numpy()
         curr_time_step = 0
         num_episode    = 0
         ep_rewards     = [0]
         ep_steps       = [0]
         start_time = time.time()
-        progress_notifications = iter(notifier.progress(train_time_steps, seconds_per_print=60*60*3, percent_per_print=10))
+        progress_notifications = iter(notifier.progress(train_time_steps, seconds_per_print=60*30, percent_per_print=10))
         progress_bar = iter(ProgressBar(train_time_steps))
         while curr_time_step < train_time_steps:
             for t in range(0, buff_size):
@@ -197,16 +197,17 @@ with notifier.when_done:
                 next(progress_notifications)
                 next(progress_bar)
                 with torch.no_grad():
-                    m = pi(torch.as_tensor(obs.to_numpy(), dtype=torch.float32).to(device))
+                    m = pi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                     action = m.sample()
                     action = action.reshape((-1,) + action_dim)
                     logp = m.log_prob(action).sum(dim=1)
                     action = action.cpu().numpy()
                     clipped_action = np.clip(action, env.action_space.low, env.action_space.high)
                     obs_new, rew, done, _ = env.step(clipped_action[0])
+                    obs_new = obs_new.to_numpy()
                     ep_rewards[num_episode] += rew
                     ep_steps[num_episode] += 1
-                    v = vi(torch.as_tensor(obs.to_numpy(), dtype=torch.float32).to(device))
+                    v = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
                 
                 data_buff.store(obs, action, rew, v.cpu().numpy(), logp.cpu().numpy())
                 obs = obs_new
@@ -216,6 +217,7 @@ with notifier.when_done:
                         # pick another waypoint file
                         env = WarthogEnv(path_to.waypoints_folder + randomly_pick_from(waypoint_path_options), None, recorder=None)
                         obs = env.reset()
+                        obs = obs.to_numpy()
                         done = False
                         num_episode += 1
                         ep_rewards.append(0)
