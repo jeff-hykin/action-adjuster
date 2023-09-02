@@ -501,6 +501,7 @@ def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_second
     list_of_end_times = []
     
     def time_estimator(start_time, total_iterations, index, percent, times, lookback_size, past_indicies, seconds_since_prev_update):
+        nonlocal list_of_end_times
         total_eslaped_time = 0
         secs_remaining     = math.inf
         # if more than 3, then stdev can be computed
