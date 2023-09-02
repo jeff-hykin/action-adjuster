@@ -230,8 +230,12 @@ with notifier.when_done:
                         v_ = v_.detach().cpu().numpy()
                     data_buff.finish_path(v_)
                 if curr_time_step % 100000 == 0:
-                    torch.save(pi, f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt")
-                    np.savetxt(f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}", ep_rewards, fmt="%f")
+                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt"
+                    numpy_save_path = f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}"
+                    FS.ensure_is_folder(FS.parent_path(torch_save_path))
+                    FS.ensure_is_folder(FS.parent_path(numpy_save_path))
+                    torch.save(pi, torch_save_path)
+                    np.savetxt(numpy_save_path, ep_rewards, fmt="%f")
                 # curr_time_step+=1
             
             data = data_buff.get()
@@ -278,7 +282,6 @@ with notifier.when_done:
                 if done:
                     obs = env.reset()
 
-            try:
-                torch.save(pi,"temp_warthog.pt")
-            except Exception as error:
-                pass
+            torch_save_path = f"{path_to.temp_policy_folder}/final_ppo.pt"
+            FS.ensure_is_folder(FS.parent_path(torch_save_path))
+            torch.save(pi,torch_save_path)
