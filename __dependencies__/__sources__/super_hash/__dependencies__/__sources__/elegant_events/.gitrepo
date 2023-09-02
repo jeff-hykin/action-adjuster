@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/elegant_events.git
+	branch = master
+	commit = 7376a3f4d1b6199b55a7ea9191d115ff32d3154a
+	parent = e7937a94ed74b5e336090bfe42d01acd46d22bd4
+	method = merge
+	cmdver = 0.4.1

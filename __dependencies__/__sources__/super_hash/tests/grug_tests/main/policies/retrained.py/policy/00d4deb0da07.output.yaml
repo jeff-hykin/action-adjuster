@@ -1,0 +1,2 @@
+error_output: RuntimeError('mat1 and mat2 shapes cannot be multiplied (1x82 and 42x64)')
+normal_output: null

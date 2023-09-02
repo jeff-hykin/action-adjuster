@@ -1,0 +1,8 @@
+{
+    "pure_python_packages": {
+        "super_map": {
+            "git_url": "git@github.com:jeff-hykin/super_map.git",
+            "path": "__sources__/super_map/main/super_map/"
+        }
+    }
+}

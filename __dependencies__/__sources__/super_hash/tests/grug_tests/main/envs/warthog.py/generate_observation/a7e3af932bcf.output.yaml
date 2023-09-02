@@ -1,0 +1,2 @@
+error_output: TypeError("generate_observation() got an unexpected keyword argument 'closest_index'")
+normal_output: null

@@ -1,0 +1,44 @@
+args:
+- !python/warthog/Observation '[2.0708516211798833, -0.23204011917738487, 0.04306266665458719,
+  1.5189112424850464, 1.9749387352937664, -0.24362528113418858, 0.0018165326118466663,
+  1.503443956375122, 1.8776191181889879, -0.2543987522553861, -0.03891402423381832,
+  1.5189112424850464, 1.7797266071002007, -0.26416251128011314, -0.07887121677398704,
+  1.5189112424850464, 1.6813508513659674, -0.2728090573055395, -0.11753946781158454,
+  1.5189112424850464, 1.5825946161576558, -0.28028484419879707, -0.15362983286380763,
+  1.5189112424850464, 1.483074658033132, -0.28681716131214774, -0.1832754963636398,
+  1.5292227268218994, 1.3839370587713153, -0.29279075933311116, -0.2036407747864723,
+  1.5189112424850464, 1.2848227194153048, -0.2994076631204017, -0.2072498136758804,
+  1.5189112424850464, 1.1865435489798877, -0.307065392670566, -0.2072498136758804,
+  1.503443956375122, 1.4057039022445679, 0.47121477127075195, 2]'
+kwargs: {}
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15\a\x04\0\0\x05\0\0\0\0\f\
+   \fe\x10nvs.war\0thog\x14\f\v0Observa\0tion\x14\x13\x14p)\x01\x14}\x14(\fV\btimest\0\
+   ep\x14K\x02\f\x11$absolut\0e_veloc\0ity\x14\f\x15n\x18umpy.co\0re.mult\0iarray\x14\
+   @\f\x06scala\x01r\x14\x13\x14\f\x05n\x1Eumpy\x14\f\x050dtype\x14\x13`\x14\f\x02\
+   f8\x14\tc\b\a\x14R\x14(K\x17\x03\f\x01<\x14NN\x12NJ\x7F\x7F\x7F\x7FJ<\x7F\x7F\x7F\
+   \x7FK\0t\x0F\x14bC\b\0\0\0\x01`C}v?\x14\x06j\x14R\x14\f\rab\rsolute_\0spin\x14\
+   h\t\x10h\x0FC\b\0\0\0\0\0b(^?\x14\x06h\x14R\x14\f\rwa\rypoint_\0gaps\x14]\x14P(\f\
+   \ __de\x02pendenc\0ies__.b\0lissful\0_basics\0\x14\f\x19Name\x03dList4a\061ab042\0\
+   67b21ce\0\x14\x13\x14)\x01\x14(7G@\0\x11\x1A'\x1Eh0\x7Fh\th\x0FC\x01\b \b\x1D\x19\
+   }3XM?\x14\x06\x14R\x14_h\th\x0FC\bX\0\x05kQO\f&?#\x14\x06\x14R\x14h\t\x17h\x0F\
+   C\b\0\0\0\0`uMx?\x14\x06i\x14R\x14eh\x1D)\x05\x01\x14(G?\x7F\x19cY[{\v\x15h\t\x14\
+   h\x0FC\b`\x1Ey {\x1C/O?\x14\x06y\x14R\x14h\th\x0F\x05C\b\0l=\n\x17\0C]?\x14\x06\
+   \x14R9\x14h\th\x0FC\b\x01\0\0\0@\e\x0Ex@?\x14\x06\x14R\x14e.h\x1D)\x01\x14(G\x18\
+   ?~\n:X/t\n}h\th\x0FC\b\x010 E4\x11HPH?\x14\x06\x14R\x14h/\th\x0FC\bTG az\tl#?\x14\
+   \x7F\x06\x14R\x14h\th\v\x0FC\b\0\0\0`@uMx?\x14\x06\x14tR\x14eh\x1D)\x01B\x14(G?|yBQ\e\
+   U\x0F}h\th\t\x0FC\b\x10?1`x\thP?\x14\x06\x14~R\x14h\th\x0FC\x02\b\x1AW#pg0,4?\x14\
+   \x06\x14R\x14_h\th\x0FC\b\0\0\0\0`uMx?$\x14\x06\x14R\x14eh\x17\x1D)\x01\x14(G?\f\
+   zfP&{\x7FU\ah\th\x0FC\b0\0\x03K\x1E4uQ?k\x14\x06\x14R\x14h\t\x17h\x0FC\b)p=\x10\
+   \n\x11\x17>?\x14\x06x\x14R\x14h\th\x0F\x05C\b\0\0\0`u Mx?\x14\x06\x14R:\x14eh\x1D\
+   )\x01\x14a(G?yRN;Hs\x10\x1Ch\th\x0F\x06C\b\x10}YW/4pQ?\x14\x06\x14R?\x14h\th\x0F\
+   C\b\x01\x1D\x05kq$*Cf?\x14\x06\x14R\x14h/\th\x0FC\b\0\0\0\0`uMx?\x14R\x06\x14R\x14\
+   eh\x1D\v)\x01\x14(G?wF:,~\x1Cu\x7Fh\x03\th\x0FC\bP\x1A\0q]6[R?\x14q\x06\x14R\x14\
+   h\th\v\x0FC\b7\x1E\x05K(\x12uG?\x14\x06\x14}R\x14h\th\x0FC\x02\b\0\0\0@2w x?\x14\
+   \x06\x14R\x14]eh\x1D)\x01\x14(0G?v$\e/r\x14R\\h\th\x0FC\x02\b0\azs\x15=JR?\x14\x06\
+   \x14R\x14_h\th\x0FC\b\x1E\0\x05k!f\x10J?o\x14\x06\x14R\x14h\t\x17h\x0FC\b\0\0\0\
+   \0`uMx?\x14\x06i\x14R\x14eh\x1D)\x05\x01\x14(G?t\x0Ec\"D\x10>\nh\t\x1Dh\x0FC\b\
+   @\aQ0B~)S?\x14\x06y\x14R\x14h\th\x0F\x05C\b\x1E\x05kq)\x18\aJ?\x14\x06\x14R?\x14\
+   h\th\x0FC\b\x01\0\0\0`uMxH?\x14\x06\x14R\x14e.h\x1D)\x01\x14(G\x18?r|\x15\x16\"\
+   _&Ph\th\x0FC\b\x01\09P\x1Au&S|?\x14\x06\x14R\x14h/\th\x0FC\b\x1E\x05@kq)\aJ?\x14\
+   y\x06\x14R\x14h\th\v\x0FC\b\0\0\0@\0\e\x0Ex?\x14\x06\x14tR\x14eeub\x05B\x14}\x14\
+   \x06\x14.\0\x1D\x01"

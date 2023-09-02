@@ -1,4 +1,5 @@
 # 
 # add pythonpath
 # 
-export PYTHONPATH="$PYTHONPATH:$FORNIX_FOLDER:$FORNIX_FOLDER/main"
+export PYTHONPATH="$FORNIX_FOLDER/__dependencies__:$PYTHONPATH:$FORNIX_FOLDER:$FORNIX_FOLDER/main"
+stty sane 2>/dev/null

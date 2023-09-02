@@ -1,0 +1,40 @@
+{
+    "pure_python_packages": {
+        "blissful_basics": {
+            "git_url": "git@github.com:jeff-hykin/blissful_basics.git",
+            "path": "__sources__/blissful_basics/main/blissful_basics"
+        },
+        "cool_cache": {
+            "git_url": "git@github.com:jeff-hykin/cool_cache.git",
+            "path": "__sources__/cool_cache/main/cool_cache"
+        },
+        "rigorous_recorder": {
+            "git_url": "git@github.com:jeff-hykin/rigorous_recorder.git",
+            "path": "__sources__/rigorous_recorder/main/rigorous_recorder"
+        },
+        "grug_test": {
+            "git_url": "git@github.com:jeff-hykin/grug_test_py.git",
+            "path": "__sources__/grug_test/main/grug_test"
+        },
+        "telepy_notify": {
+            "git_url": "git@github.com:jeff-hykin/telepy_notify.git",
+            "path": "__sources__/telepy_notify/main/telepy_notify"
+        },
+        "trivial_torch_tools": {
+            "git_url": "git@github.com:jeff-hykin/trivial-torch-tools.git",
+            "path": "__sources__/trivial_torch_tools/main/trivial_torch_tools"
+        },
+        "informative_iterator": {
+            "git_url": "git@github.com:jeff-hykin/informative-iterator.git",
+            "path": "__sources__/informative_iterator/main/informative_iterator"
+        },
+        "super_hash": {
+            "git_url": "git@github.com:jeff-hykin/super_hash.git",
+            "path": "__sources__/super_hash/main/super_hash"
+        },
+        "quik_config": {
+            "git_url": "git@github.com:jeff-hykin/quik_config.git",
+            "path": "__sources__/quik_config/main/quik_config"
+        }
+    }
+}

@@ -1,0 +1,28 @@
+#!/usr/bin/env -S deno run --allow-all
+import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.36/main/file_system.js"
+import { run, Stderr, Stdout } from "https://deno.land/x/quickr@0.6.36/main/run.js"
+import { recursivelyAllKeysOf, get, set, remove, merge, compareProperty } from "https://deno.land/x/good@1.4.4.0/object.js"
+
+// go to project root
+FileSystem.cwd = await FileSystem.walkUpUntil(".git/")
+
+// still ends up including the build folder
+const canidates = (
+    (
+        await glob('**/__dependencies__')
+    ).filter(
+        each=>(
+            // ignore git folders
+            !each.startsWith(".git")
+            // ignore nested dep folders
+            && each.match(/__dependencies__/g).length == 1
+        )
+    )
+)
+canidates.sort(compareProperty({ keyList: [ "length" ], largestFirst: false }))
+
+const depsFolder = canidates[0]
+for (const eachPath of await glob(`${depsFolder}/__sources__/*/.gitrepo`)) {
+    const folderToPull = FileSystem.parentPath(eachPath)
+    await run`git subrepo pull ${folderToPull}`
+}

@@ -1,0 +1,6 @@
+error_output: None
+normal_output:
+- 0
+- !<python/numpy/int64> 1.5913986331352459
+- 3.1006476925669935
+- !<python/numpy/int64> 1.2372115013470477

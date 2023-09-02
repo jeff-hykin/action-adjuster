@@ -1,0 +1,16 @@
+{
+    "pure_python_packages": {
+        "blissful_basics": {
+            "git_url": "git@github.com:jeff-hykin/blissful_basics.git",
+            "path": "__sources__/blissful_basics/main/blissful_basics"
+        },
+        "informative_iterator": {
+            "git_url": "git@github.com:jeff-hykin/informative-iterator.git",
+            "path": "__sources__/informative_iterator/main/informative_iterator"
+        },
+        "ez_yaml": {
+            "git_url": "git@github.com:jeff-hykin/ez_yaml.git",
+            "path": "__sources__/ez_yaml/main/ez_yaml"
+        }
+    }
+}

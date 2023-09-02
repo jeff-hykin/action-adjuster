@@ -1,22 +1,20 @@
 [tool.poetry]
-name = "super_hash"
-version = "1.2.8"
-description = "hash the unhashable, hash everything"
-authors=[]
-
-[tool.extra]
-author='Jeff Hykin'
-author_email='jeff.hykin@gmail.com'
-url='https://github.com/jeff-hykin/super_hash.git'
-license = "MIT"
+name = "fornix"
+version = "0.1.0"
+description = ""
+authors = [""]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.10"
+python = ">=3.8,<3.12"
+plotly = "^5.13.1"
+matplotlib = "^3.7.1"
+cma = "^3.3.0"
+tdqm = "^0.0.1"
+torch = "1.13.1"
+stable-baselines3 = "^2.0.0"
+gym = "^0.26.2"
 
 [tool.poetry.dev-dependencies]
-twine = "3.4.1"
-"keyrings.alt" = "4.0.2"
-toml = "^0.10.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

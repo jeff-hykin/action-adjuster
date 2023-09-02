@@ -1,0 +1,455 @@
+# NOTE: names in parentheses are special, all other names are not!
+(project):
+    
+    # a central place for filepaths
+    (path_to):
+        records: "./records/"
+        main: "./main.py"
+        waypoints_folder: "./waypoint_paths/"
+        default_waypoints: "./waypoint_paths/real1.csv"
+        # default_waypoints: "./waypoint_paths/straight_line.csv"
+        # default_waypoints: "./waypoint_paths/concrete1.csv"
+        saved_policies: "./saved_policies"
+        default_output_folder: "./output.ignore/"
+        temp_policy_folder: "./saved_policies/temp.ignore/"
+    
+    (local_data): ./local_data.ignore.yaml
+    
+    road map:
+        - Sept. 15th
+        - RELLIS Mon Aug 14th; 6.00pm
+            - get code working
+            - linear testing
+        - 6 visits; 2 per week for 3 weeks
+        - run tests with non-linear adversity
+        - run tests with non-static adversity
+        - compare against IQLR
+        - LATER: try RC experiments
+        - writing the paper
+        
+    todo:
+        - DONE: simulate battery drain
+        - simulate steering drift over time
+        - simulate wind drift
+        - simulate delayed dynamics; sliding out (too much angular momentum)
+        - autograd
+        - read up on LQR 
+        - read up on ILQR 
+        - read up on guassian-newton optimization
+        - watch: https://www.youtube.com/playlist?list=PLMrJAkhIeNNR20Mz-VpzgfQs5zrYi085m
+        
+    writing paper:
+        what we offer:
+            - ours is non-linear
+            - they assume that the transformation isn't changing over time
+            - optimal adaptive:
+                - needs accurate model; cite references that optimal adaptive control needs accurate models to 
+                - can do learned model
+        word it towards RL stuff so that we don't get control-theory guys:
+        relate it to the k* value in paper1: 
+            
+        
+    related papers:
+    
+        paper1: https://www.annualreviews.org/doi/abs/10.1146/annurev-control-062922-090153
+        paper2: https://arxiv.org/abs/2108.11336 
+        learning to adapt in dynamic envs with meta learning:
+            paper: https://arxiv.org/pdf/1803.11347.pdf
+            code: https://github.com/dhl8282/learning_to_adapt_gpu
+        
+        meta-reinforcement learning robust to distributional shift via model identification and experience relabeling:
+            paper: https://arxiv.org/pdf/2006.07178.pdf
+        
+        learning visual locomotion with cross-modal supervision:
+            paper: https://arxiv.org/abs/2211.03785
+        
+        
+        robust adaptive finite-time parameter estimation and control for robotic systems:
+            paper: Robust adaptive finite-time parameter estimation and control for robotic systems
+        
+        reinforcement learning in non-stationary environments:
+            paper: https://arxiv.org/abs/1905.03970
+        
+        deep dynamics models for learning dexterous manipulation:
+            paper: https://arxiv.org/pdf/1909.11652.pdf
+        
+        continuous adaptation via meta-learning in nonstationary and competitive environments:
+            paper: 
+        
+            
+    (profiles):
+        (default):
+            experiment_number: '32'
+            number_of_episode_runs_per_scenario: 10
+            should_use_ros: False
+            action_adjuster:
+                disabled: True
+                default_to_perfect: False
+                always_perfect: False
+                use_transform: False # when true, this means it will modify the policies actions
+                update_rate: 1 # kinda similar to alpha/step-size
+                future_projection_length: 1 # timesteps
+                update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
+                max_history_size: 250 # timesteps
+                solver_max_iterations: 10000
+                use_threading: True
+            
+            curve_fitting_loss: 'mean_squared_error' # straight_line, or mean_squared_error
+            policy:
+                name: 'retrained' # 'bicycle' or 'dummy' or 'retrained'
+                
+            reward_parameters:
+                max_expected_crosstrack_error:  2.0   # meters
+                max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
+                max_expected_angle_error:       1.047 # scaled by the vehicle's controller max angle, after scaling the units are radians
+                velocity_jerk_cost_coefficient: 1
+                spin_jerk_cost_coefficient:     0.5
+                direct_velocity_cost:           0 # no penalty for going fast
+                direct_spin_cost:               1 # no scaling of spin cost relative to combination
+                
+                # for reward_function2
+                distance_scale: 20  # base distance is 0 to 1 (is 1 when directly on point, 0 when infinitely far away) then that is scaled by this value
+                                    # this number is important relative to the size of the reward from crosstrack/velocity
+                                    # bigger=distance is more important than crosstrack or angle
+                completed_waypoint_bonus: 100 # this value is added for every completed waypoint (e.g. progress along the path is good; not just being close to the same point over and over)
+                
+                velocity_caps_enabled: true
+                velocity_caps:
+                    # EXAMPLE:
+                    #   40%: 10% 
+                    #  # ^this means, if the closest waypoint has a velocity >= 40% of max-speed,
+                    #  # then the velocity error must be < 10% of max speed (otherwise 0 reward)
+                    
+                    0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
+                    62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
+            
+            cmaes:
+                inital_stdev: 0.001 # this will be auto-tuned, but ideally make it big enough to get a "NO IMPROVEMENT" message then leave it there
+                reduction_rate: 2 # 2== cut in half
+                increase_rate: 0.001 # will get multiplied (e.g. 0.01 means success ==> increase stdev by 1% of its current value)
+            
+            ros_runtime:
+                main_node_name: 'warthog_policy'
+                controller_topic: '/warthog_velocity_controller/cmd_vel'
+                odometry_topic: '/warthog_velocity_controller/odom'
+                gps_topic: '/odometry/filtered2'
+                time_sync_size: 10 # TODO: I don't actually know what this 10 does
+                is_client: True
+            
+            ros_faker:
+                enable: False
+                main_node_name: 'warthog_faker'
+            
+            simulator:
+                starting_waypoint: 'random' # integer or 'random' <- a string
+                waypoint_radius: 3 # meters
+                save_data: True
+                should_render: True
+                render_rate: 1 # timesteps
+                max_velocity: 4
+                action_length: 2
+                action_space:
+                    low:  [ 0.0, -1.5 ] # (1.5 radians per second is max option on the controller, but the )
+                    high: [ 1.0,  1.5 ] # 0-1 for velocity
+                observation_space:
+                    low: -100
+                    high: 1000
+                    shape: [ 42 ]
+                horizon: 10 # number of waypoints in the observation
+                max_number_of_timesteps_per_episode: 1200
+                number_of_trajectories: 100
+                action_duration: 0.06 # 0.06 seconds (controller is at 15hertz)
+                granularity_of_calculations: 4 # the simulator is run this many times per action_duration in order to allow actions to smoothly propogate
+                                               # setting this value to 3 or less causes problems because the action won't affect the x,y of the next observation
+                allow_cut_short_episode: False
+                action_delay: 0 # 5 => 5 timesteps (5 * action_duration)
+                
+                # 
+                # random start
+                # 
+                random_start_position_offset: 0.1 # TODO: units?
+                random_start_angle_offset: 0.10 # TODO: units?
+                
+                # 
+                # action adversity
+                # 
+                sudden_flat_tire_enabled: False
+                sudden_flat_tire_on_timestep: 500
+                battery_adversity_enabled: False # Battery performs linearly decreasing velocity
+                battery_decay_rate: 0.0006 # 0.0005
+                velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
+                                   # relative_velocity will be between 0 and 1
+                
+                spin_offset: 0     # will be added to the relative_spin value every step (which is then scaled by controller_max_spin)
+                                   # relative_spin will be between -1 and 1
+                                   # with controller_max_spin=2.5, and spin_offset=0.2, the offset will be 28.6 degrees
+                
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: False
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0 # after being scaled by controller_max_velocity, the value will be meters per second
+                    spin_action:
+                        standard_deviation: 0 # after being scaled by controller_max_spin, the value will be radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: False
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0 # meters
+                    "y":
+                        standard_deviation: 0 # meters
+                    "angle":
+                        standard_deviation: 0 # radians
+                    "velocity":
+                        standard_deviation: 0 # after being scaled by controller_max_velocity, the value will be meters per second
+                    "spin":
+                        standard_deviation: 0 # after being scaled by controller_max_spin, the value will be radians per action_duration (default 15 hertz)
+            
+            training:
+                parameters:
+                    seed: 0
+                    buff_size: 4000
+                    train_time_steps: 1_000_000
+                    gamma: 0.99
+                    clip_ratio: 0.2
+                    lr_pi: 3.0e-5
+                    lr_vf: 1.0e-3
+                    pi_train_itrs: 80
+                    v_train_itrs: 80
+                    lam: 0.97
+                    max_ep_len: 500
+                
+                evaluation:
+                    timesteps: 400
+                policy:
+                    layer_sizes: [ 128 ]
+                value_network:
+                    layer_sizes: [64, 64]
+        
+            dummy_policy:
+                relative_velocity: 0.5 # this value is scaled by controller_max_velocity
+                relative_spin: 0       # this value is scaled by controller_max_spin
+        
+            vehicle:
+                name: Warthog
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
+            
+            grug_test:
+                disable: True
+                replay_inputs: True
+                record_io: False
+                
+        WARTHOG:
+            vehicle:
+                name: Warthog
+                real_length: 1 # meter (approximately)
+                real_width: 0.5 # meters (approximately)
+                render_length: 0.25 
+                render_width: 0.5
+                controller_max_velocity: 4 # meters per second
+                controller_max_spin: 2.5 # radians
+        
+        ADVERSITY=NONE:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0
+            spin_offset: 0
+            battery_adversity_enabled: False
+            sudden_flat_tire_enabled: False
+            
+        ADVERSITY=WEAK:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0
+            spin_offset: 0.20
+        
+        ADVERSITY=STRONG:
+            # 
+            # action offset 
+            # 
+            velocity_offset: 0.5
+            spin_offset: 0.75
+        
+        BATTERY_DRAIN:
+            dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
+            battery_decay_rate: 0.01
+        
+        NOISE=NONE:
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: False
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.00001 # meters per second
+                    spin_action:
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: False
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.00001 # meters
+                    "y":
+                        standard_deviation: 0.00001 # meters
+                    "angle":
+                        standard_deviation: 0.00001 # radians
+                    "velocity":
+                        standard_deviation: 0.00001 # meters per second
+                    "spin":
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+        NOISE=HEAVY:
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: True
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.01 # meters per second
+                    spin_action:
+                        standard_deviation: 0.05 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: True
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.5 # meters
+                    "y":
+                        standard_deviation: 0.5 # meters
+                    "angle":
+                        standard_deviation: 0 # radians
+                    "velocity":
+                        standard_deviation: 0 # meters per second
+                    "spin":
+                        standard_deviation: 0 # radians per action_duration (default 15 hertz)
+        
+        NOISE=MEDIUM:
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: True
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.01 # meters per second
+                    spin_action:
+                        standard_deviation: 0.01 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: True
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.05 # meters
+                    "y":
+                        standard_deviation: 0.05 # meters
+                    "angle":
+                        standard_deviation: 0 # radians
+                    "velocity":
+                        standard_deviation: 0 # meters per second
+                    "spin":
+                        standard_deviation: 0 # radians per action_duration (default 15 hertz)
+        
+        NO_ADJUSTER:
+            action_adjuster:
+                disabled: True
+                use_transform: False
+                
+        NORMAL_ADJUSTER:
+            action_adjuster:
+                disabled: False
+                default_to_perfect: False
+                always_perfect: False
+                use_transform: True
+        
+        PERFECT_ADJUSTER:
+            action_adjuster:
+                disabled: False
+                default_to_perfect: True
+                always_perfect: True
+                use_transform: True
+        
+        ROS=REAL:
+            should_use_ros: True
+            ros_faker:
+                enable: False
+            ros_runtime:
+                main_node_name: 'warthog_policy'
+                controller_topic: '/warthog_velocity_controller/cmd_vel'
+                # odometry_topic: 'odometry/filtered'
+                odometry_topic: '/warthog_velocity_controller/odom'
+                gps_topic: '/odometry/filtered2'
+        
+        ROS=LOG:
+            should_use_ros: True
+            ros_faker:
+                enable: False
+            ros_runtime:
+                main_node_name: 'warthog_policy'
+                controller_topic: '/warthog_velocity_controller/cmd_vel_dry'
+                # odometry_topic: 'odometry/filtered'
+                odometry_topic: '/warthog_velocity_controller/odom'
+                gps_topic: '/odometry/filtered2'
+        
+        IRL:
+            grug_test:
+                disable: True
+            # POLICY
+            policy:
+                name: 'retrained' # 'bicycle' or 'dummy' or 'retrained'
+                
+            simulator:
+                should_render: False
+            
+            # NO_ADJUSTER
+            action_adjuster:
+                disabled: True
+                use_transform: False
+        
+            # ADVERSITY=NONE:
+            velocity_offset: 0
+            spin_offset: 0
+            battery_adversity_enabled: False
+            sudden_flat_tire_enabled: False
+            
+            # NOISE=NONE
+            simulator:
+                # 
+                # action noise
+                # 
+                use_gaussian_action_noise: False
+                gaussian_action_noise:
+                    velocity_action:
+                        standard_deviation: 0.00001 # meters per second
+                    spin_action:
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)
+                # 
+                # spacial info noise (e.g. sensor error)
+                # 
+                use_gaussian_spacial_noise: False
+                gaussian_spacial_noise:
+                    "x":
+                        standard_deviation: 0.00001 # meters
+                    "y":
+                        standard_deviation: 0.00001 # meters
+                    "angle":
+                        standard_deviation: 0.00001 # radians
+                    "velocity":
+                        standard_deviation: 0.00001 # meters per second
+                    "spin":
+                        standard_deviation: 0.00001 # radians per action_duration (default 15 hertz)

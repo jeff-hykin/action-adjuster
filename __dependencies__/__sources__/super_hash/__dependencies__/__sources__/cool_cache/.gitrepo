@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/cool_cache.git
+	branch = master
+	commit = 7c8976bbd24c956e7367ca0d26bbebfdf9b0675b
+	parent = e082f6b525b204313ae8826209d42157344df7c4
+	method = merge
+	cmdver = 0.4.1

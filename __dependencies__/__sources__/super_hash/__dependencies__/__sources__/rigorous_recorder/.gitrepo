@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/rigorous_recorder.git
+	branch = master
+	commit = a16a142e283f40bd7f60cf8d38b3d70d056ac089
+	parent = cd0a8720d45e1b1ea164374d289e0a451506908b
+	method = merge
+	cmdver = 0.4.1

@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:jeff-hykin/quik_config_python.git
+	branch = master
+	commit = 70642748ec294505809e3a8c498e17f6dd9109a6
+	parent = 11307a3f8c5ba4f691e3c26811c0a45052df28a4
+	method = merge
+	cmdver = 0.4.1

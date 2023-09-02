@@ -1,0 +1,129 @@
+parent_data_snapshot: {
+    "config": {
+        "vehicle": {
+            "name": "Warthog",
+            "real_length": 1,
+            "real_width": 0.5,
+            "render_length": 0.25,
+            "render_width": 0.5,
+            "controller_max_velocity": 4,
+            "controller_max_spin": 2.5
+        },
+        "action_adjuster": {
+            "disabled": true,
+            "update_rate": 1,
+            "future_projection_length": 1,
+            "update_frequency": 20
+        },
+        "reward_parameters": {
+            "max_expected_crosstrack_error": 2.0,
+            "max_expected_velocity_error": 1.125,
+            "max_expected_angle_error": 1.047,
+            "velocity_jerk_cost_coefficient": 1,
+            "spin_jerk_cost_coefficient": 0.5,
+            "direct_velocity_cost": 0,
+            "direct_spin_cost": 1,
+            "velocity_caps_enabled": true,
+            "velocity_caps": {
+                "0%": "12.5%",
+                "62.5%": "37.5%"
+            }
+        },
+        "simulator": {
+            "save_data": true,
+            "should_render": true,
+            "max_velocity": 4,
+            "action_length": 2,
+            "action_space": {
+                "low": [
+                    0.0,
+                    -1.5
+                ],
+                "high": [
+                    1.0,
+                    1.5
+                ]
+            },
+            "observation_space": {
+                "low": -100,
+                "high": 1000,
+                "shape": [
+                    42
+                ]
+            },
+            "horizon": 10,
+            "max_number_of_timesteps_per_episode": 700,
+            "number_of_trajectories": 100,
+            "action_duration": 0.06,
+            "allow_cut_short_episode": false,
+            "action_delay": 0,
+            "random_start_position_offset": 0.1,
+            "random_start_angle_offset": 0.01,
+            "velocity_offset": 0,
+            "spin_offset": 0.2,
+            "use_gaussian_action_noise": true,
+            "gaussian_action_noise": {
+                "velocity_action": {
+                    "standard_deviation": 0
+                },
+                "spin_action": {
+                    "standard_deviation": 0.05
+                }
+            },
+            "use_gaussian_spacial_noise": true,
+            "gaussian_spacial_noise": {
+                "x": {
+                    "standard_deviation": 0
+                },
+                "y": {
+                    "standard_deviation": 0
+                },
+                "angle": {
+                    "standard_deviation": 0
+                },
+                "velocity": {
+                    "standard_deviation": 0
+                },
+                "spin": {
+                    "standard_deviation": 0
+                }
+            }
+        }
+    }
+}
+records:
+- {"accumulated_reward": 0, "reward": 0, "timestep": 20, "line_fit_score": -2.847653715683315}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 40, "line_fit_score": -5.69421699958496}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 60, "line_fit_score": -8.803465108377667}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 80, "line_fit_score": -11.78740051975485}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 100, "line_fit_score": -14.91419352208621}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 120, "line_fit_score": -18.11600550073947}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 140, "line_fit_score": -21.26979340311645}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 160, "line_fit_score": -24.241324838503424}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 180, "line_fit_score": -27.362285918425858}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 200, "line_fit_score": -30.451492296750942}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 220, "line_fit_score": -33.49520278441381}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 240, "line_fit_score": -36.59349819426071}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 260, "line_fit_score": -39.519166211748434}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 280, "line_fit_score": -42.42058168029592}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 300, "line_fit_score": -45.66572310127668}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 320, "line_fit_score": -48.57051434994017}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 340, "line_fit_score": -51.5782732517117}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 360, "line_fit_score": -54.51836647563637}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 380, "line_fit_score": -57.642219714667284}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 400, "line_fit_score": -60.647001200630704}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 420, "line_fit_score": -63.85522766821304}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 440, "line_fit_score": -66.9233026315718}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 460, "line_fit_score": -69.71633017980433}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 480, "line_fit_score": -72.68130639006462}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 500, "line_fit_score": -75.82450478741409}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 520, "line_fit_score": -78.70790107818695}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 540, "line_fit_score": -81.54893031735037}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 560, "line_fit_score": -84.31370454313719}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 580, "line_fit_score": -87.20416525435076}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 600, "line_fit_score": -90.22496758341282}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 620, "line_fit_score": -92.8551634440277}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 640, "line_fit_score": -95.98749631603388}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 660, "line_fit_score": -98.99546213627532}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 680, "line_fit_score": -102.02627258282939}
+- {"accumulated_reward": 0, "reward": 0, "timestep": 700, "line_fit_score": -105.19936685879972}
