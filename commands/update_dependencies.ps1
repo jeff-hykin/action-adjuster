@@ -42,15 +42,6 @@ if (statusOutput.match(/Changes to be committed:|Changes not staged for commit:|
 }
 try {
     
-    const globPath = `${depsFolder}/__sources__/*/.gitrepo`
-    for (const eachPath of await FileSystem.globIterator(globPath, { searchOrder: 'breadthFirstSearch'})) {
-        const folderToPull = FileSystem.parentPath(eachPath)
-        console.log(`pulling: ${eachPath}`)
-        const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
-        if (!success) {
-            break
-        }
-    }
     for (const [importName, value] of Object.entries(dependencies)) {
         const { path, git_url: gitUrl } = value
         const repoPath = `${depsFolder}/__sources__/${importName}`
@@ -62,6 +53,15 @@ try {
                     break
                 }
             }
+        }
+    }
+    const globPath = `${depsFolder}/__sources__/*/.gitrepo`
+    for await (const eachPath of FileSystem.globIterator(globPath, { searchOrder: 'breadthFirstSearch'})) {
+        const folderToPull = FileSystem.parentPath(eachPath)
+        console.log(`pulling: ${eachPath}`)
+        const { success } = (await run`git subrepo pull --force ${folderToPull}`) 
+        if (!success) {
+            break
         }
     }
 } finally {
