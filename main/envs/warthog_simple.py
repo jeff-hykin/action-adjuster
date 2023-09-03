@@ -55,7 +55,14 @@ class WarthogEnv(gym.Env):
             self.warthog_width**2 + self.warthog_length**2
         )
         if self.filename is not None:
-            self.plot_waypoints()
+            # plot_waypoints
+            x = []
+            y = []
+            for i in range(0, self.num_waypoints):
+                x.append(self.waypoints_list[i][0])
+                y.append(self.waypoints_list[i][1])
+            self.ax.plot(x, y, "+r")
+        
         self.rect = Rectangle(
             (0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False
         )
@@ -184,14 +191,6 @@ class WarthogEnv(gym.Env):
         obs = self.get_observation()
         return obs
         
-    def plot_waypoints(self):
-        x = []
-        y = []
-        for i in range(0, self.num_waypoints):
-            x.append(self.waypoints_list[i][0])
-            y.append(self.waypoints_list[i][1])
-        self.ax.plot(x, y, "+r")
-
     def sim_warthog(self, v, w):
         x = self.pose[0]
         y = self.pose[1]
@@ -217,7 +216,7 @@ class WarthogEnv(gym.Env):
         self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
         self.ep_start = 0
 
-    def get_closest_index_for_sup(self):
+    def get_closest_index_for_supervised(self):
         idx = 0
         closest_id_data = []
         num_sup_waypoints = len(self.sup_waypoint_list)
@@ -307,7 +306,7 @@ class WarthogEnv(gym.Env):
             fig_t = plt.figure()
             plt.ion()
         m = 0
-        closest_id_data = self.get_closest_index_for_sup()
+        closest_id_data = self.get_closest_index_for_supervised()
         while m < len(self.ep_poses):
             pose = self.ep_poses[m]
             twist = [0, 0]
