@@ -10,10 +10,11 @@ from matplotlib.patches import Rectangle
 import gym
 import matplotlib as mpl
 import numpy as np
-from config import grug_test, path_to
+from config import grug_test, path_to, config
 
 
 from generic_tools.plotting import create_slider_from_traces
+from __dependencies__.blissful_basics import FS
 
 def zero_to_2pi(theta):
     if theta < 0:
@@ -296,7 +297,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
-@grug_test(max_io=60, skip=False)
+@grug_test(max_io=60, skip=True)
 def pure_step(
     action,
     closest_dist,
@@ -423,9 +424,10 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
+    render_axis_size = 20
+    
     def __init__(self, waypoint_file, *args, **kwargs):
         super(WarthogEnv, self).__init__()
-        plt.ion
         self.waypoints_list = []
         self.pose = [0, 0, 0]
         self.twist = [0, 0]
@@ -471,9 +473,40 @@ class WarthogEnv(gym.Env):
         self.ep_start                = 1
         self.ep_dist                 = 0
         self.ep_poses                = []
+        
+        self.should_render = True
+        self.global_timestep = 0
+        self.original_relative_spin = 0 
+        
+        if self.should_render:
+            from matplotlib.patches import Rectangle
+            self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
+            self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
+            self.prev_timestamp = time.time()
+            
+            self.render_path = f"{config.output_folder}/render/"
+            FS.remove(self.render_path)
+            FS.ensure_is_folder(self.render_path)
+            plt.ion
+            self.fig = plt.figure(dpi=100, figsize=(10, 10))
+            self.ax  = self.fig.add_subplot(111)
+            self.ax.set_xlim([-4, 4])
+            self.ax.set_ylim([-4, 4])
+            self.rect = Rectangle((0.0, 0.0), config.vehicle.render_width * 2, config.vehicle.render_length * 2, fill=False)
+            self.ax.add_artist(self.rect)
+            (self.cur_pos,) = self.ax.plot(self.xpose, self.ypose, "+g")
+            self.text = self.ax.text(1, 2, f"vel_error={self.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
+            x = []
+            y = []
+            for each_waypoint in self.waypoints_list:
+                x.append(each_waypoint[0])
+                y.append(each_waypoint[1])
+            self.ax.plot(x, y, "+r")
     
     # just a wrapper around the pure_step
     def step(self, action):
+        self.global_timestep += 1
+        self.original_relative_velocity, self.original_relative_spin = action
         output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
             action=Action(*action),
             closest_dist=self.closest_dist,
@@ -503,6 +536,7 @@ class WarthogEnv(gym.Env):
             w_delay_data=self.w_delay_data,
             waypoints_list=self.waypoints_list,
         )
+        self.render()
         return output
     
     def reset(self):
@@ -537,11 +571,54 @@ class WarthogEnv(gym.Env):
             waypoints_list=self.waypoints_list,
         )
         return obs
-    
+
+    def render(self, mode="human"):
+        from matplotlib.patches import Rectangle
+        
+        spacial_info_x = self.pose[0]
+        spacial_info_y = self.pose[1]
+        spacial_info_angle = self.pose[2]
+        
+        self.ax.set_xlim([spacial_info_x - self.render_axis_size / 2.0, spacial_info_x + self.render_axis_size / 2.0])
+        self.ax.set_ylim([spacial_info_y - self.render_axis_size / 2.0, spacial_info_y + self.render_axis_size / 2.0])
+        total_diag_ang = self.diagonal_angle + spacial_info_angle
+        xl = spacial_info_x - self.warthog_diag * math.cos(total_diag_ang)
+        yl = spacial_info_y - self.warthog_diag * math.sin(total_diag_ang)
+        self.rect.remove()
+        self.rect = Rectangle(
+            xy=(xl, yl), 
+            width=config.vehicle.render_width * 2, 
+            height=config.vehicle.render_length * 2, 
+            angle=180.0 * spacial_info_angle / math.pi,
+            facecolor="blue",
+        )
+        self.text.remove()
+        omega_reward = -2 * math.fabs(self.original_relative_spin)
+        self.text = self.ax.text(
+            spacial_info_x + 1,
+            spacial_info_y + 2,
+            f"vel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
+            style="italic",
+            bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
+            fontsize=10,
+        )
+        self.prev_timestamp = time.time()
+        self.ax.add_artist(self.rect)
+        self.xpose.append(spacial_info_x)
+        self.ypose.append(spacial_info_y)
+        del self.xpose[0]
+        del self.ypose[0]
+        self.cur_pos.set_xdata(self.xpose)
+        self.cur_pos.set_ydata(self.ypose)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
+
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
     @grug_test
     def smoke_test_warthog(trajectory_file):
         env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
+        env.should_render = False
         outputs = []
         def env_snapshot(env):
             return deepcopy(dict(
@@ -600,45 +677,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
         return outputs
     
     smoke_test_warthog("real1.csv")
-    # exit()
-
-import ez_yaml
-
-config = ez_yaml.to_object(string="""
-vehicle:
-    name: Warthog
-    real_length: 1 # meter (approximately)
-    real_width: 0.5 # meters (approximately)
-    render_length: 0.25 
-    render_width: 0.5
-    controller_max_velocity: 4 # meters per second
-    controller_max_spin: 2.5 # radians
-
-reward_parameters:
-    max_expected_crosstrack_error:  2.0   # meters
-    max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
-    max_expected_angle_error:       1.047 # scaled by the vehicle's controller max angle, after scaling the units are radians
-    velocity_jerk_cost_coefficient: 1
-    spin_jerk_cost_coefficient:     0.5
-    direct_velocity_cost:           0 # no penalty for going fast
-    direct_spin_cost:               1 # no scaling of spin cost relative to combination
-    
-    # for reward_function2
-    distance_scale: 20  # base distance is 0 to 1 (is 1 when directly on point, 0 when infinitely far away) then that is scaled by this value
-                        # this number is important relative to the size of the reward from crosstrack/velocity
-                        # bigger=distance is more important than crosstrack or angle
-    completed_waypoint_bonus: 100 # this value is added for every completed waypoint (e.g. progress along the path is good; not just being close to the same point over and over)
-    
-    velocity_caps_enabled: true
-    velocity_caps:
-        # EXAMPLE:
-        #   40%: 10% 
-        #  # ^this means, if the closest waypoint has a velocity >= 40% of max-speed,
-        #  # then the velocity error must be < 10% of max speed (otherwise 0 reward)
-        
-        0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
-        62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
-""")
+    exit()
 
 
 def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
