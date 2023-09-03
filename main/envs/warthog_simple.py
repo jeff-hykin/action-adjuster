@@ -103,7 +103,6 @@ class WarthogEnv(gym.Env):
         self.ep_start = 1
         self.ep_dist = 0
         self.ep_poses = []
-        self.sup_waypoint_list = []
 
     def step(self, action):
         self.ep_steps = self.ep_steps + 1
@@ -206,23 +205,6 @@ class WarthogEnv(gym.Env):
         self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
         self.ep_start = 0
 
-    def get_closest_index_for_supervised(self):
-        index = 0
-        closest_id_data = []
-        num_sup_waypoints = len(self.sup_waypoint_list)
-        for k in range(0, len(self.ep_poses)):
-            closest_dist = math.inf
-            pose = self.ep_poses[k][0:2]
-            for i in range(index, num_sup_waypoints):
-                dist = get_dist(self.sup_waypoint_list[i][0:2], pose)
-                if dist <= closest_dist:
-                    closest_dist = dist
-                    index = i
-                else:
-                    break
-            closest_id_data.append(index)
-        return closest_id_data
-
     def get_observation(self):
         obs   = [0] * (self.horizon * 4 + 2)
         pose  = self.pose
@@ -265,22 +247,6 @@ class WarthogEnv(gym.Env):
         obs[j] = twist[0]
         obs[j + 1] = twist[1]
         return obs
-
-    def get_waypoints_for_sup_learning(self):
-        num_st = len(self.ep_poses)
-        if num_st == 0 or self.num_steps < self.start_step_for_sup_data:
-            return
-        k = 1
-        self.sup_waypoint_list = []
-        prev_waypoint = self.ep_poses[0]
-        self.sup_waypoint_list.append(prev_waypoint)
-        while k < num_st:
-            curr_waypoint = self.ep_poses[k]
-            dist_from_prev_wp = np.linalg.norm(curr_waypoint[0:2] - prev_waypoint[0:2])
-            if dist_from_prev_wp >= self.waypoints_dist:
-                self.sup_waypoint_list.append(curr_waypoint)
-                prev_waypoint = curr_waypoint
-            k = k + 1
 
     def render(self, mode="human"):
         self.ax.set_xlim(
