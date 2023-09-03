@@ -1,0 +1,22 @@
+args: []
+kwargs:
+   closest_waypoint: !<python/numpy/ndarray>
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.1959192454814911
+   pose:
+   - 0.0
+   - 0.0
+   - 0.0
+   twist:
+   - !<python/numpy/float64> 2.0
+   - !<python/numpy/float64> 1.25
+   closest_dist: 0.0
+   action:
+   - !<python/numpy/float64> 2.0
+   - !<python/numpy/float64> 1.25
+   prev_action:
+   - 0.0
+   - 0.0
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x156\x01\0\0\r\0\0\0\0)}\x14@(\f\x10clos\x02est_way\0point\x14\f`\x15numpy.\0core.mu\0ltiarra\0y\x14\f\f_re\x06constru\0ct\x14\x13\x14\f\x05<numpy\x14\f`\andarra\0y\x14\x13\x14K\0\x05N\x14C\x01b\x14\a\x14qR\x14(K\x01K\x04\x02\x05\x14h\x05\f\x05d\x13type\x14\x13\x14p\f\x02f8\x14\t\bq\a\x14R\x14(K\x03\v\f\x01<\x14NNN\tJ\x7F\x7F\x7F\x7FJ\x7F^\x7F\x7F\x7FK\0t\x14Gb\tC \0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@a\x13IX?\x14t\x14b\f\x04*pose\x14]\x14P(G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0e\f\x05twis\x02t\x14]\x14(h\x02\n\f\x06scala\x01r\x14\x13\x14h\x0E\fN\x02f8\x14\t\b\ax\x14R\x14(K\x03h\x05\x12NNNJ\x7F\x7F`\x7F\x7FJ\x7F\x7F\x7F\x7F{K\0t\x14bC\b\b\0\0\0\0\0\0\0\0@\x14\x06\x14R\x14h.\eh\x1EC\b\0\0\0\0\0\0\0t?\x14P\x06\x14R\x14e\f\f+closest\0_dist\x14G \0\0\0\0\0\0\0\0\0\f\x06acti\x02on\x14]\x14(h\x14\eh\x1EC\b\0\0\0\0\0\0\0\0@\x14@\x06\x14R\x14h\eh\v\x1EC\b\0\0\0\0\0\0\0t?\x14\x06\x14tR\x14e\f\vpr\nev_acti\0on\x14]\x14(G\x14\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0eu\x06\x14`.\0\0\0\0\0\0\0\x06"

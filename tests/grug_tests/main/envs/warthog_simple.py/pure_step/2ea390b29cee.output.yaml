@@ -1,196 +1,204 @@
 error_output: None
 normal_output:
-- - - 0.1414213562373065
-    - !<python/numpy/float64> 0.4170901440851704
-    - !<python/numpy/float64> -0.009999999999999787
-    - !<python/numpy/float64> 1.0
-    - 0.6747691706941059
-    - !<python/numpy/float64> 0.07692449165905169
-    - !<python/numpy/float64> 0.3482649959569417
-    - !<python/numpy/float64> 1.0
-    - 1.2123542853196385
-    - !<python/numpy/float64> 0.19853044526187658
-    - !<python/numpy/float64> 0.32154515868656874
-    - !<python/numpy/float64> 1.0
-    - 1.7569360201445696
-    - !<python/numpy/float64> 0.23677264365710116
-    - !<python/numpy/float64> 0.04724880811692289
-    - !<python/numpy/float64> 1.0
-    - 2.293095296868026
-    - !<python/numpy/float64> 0.1920974285908219
-    - !<python/numpy/float64> -0.2979815063250477
-    - !<python/numpy/float64> 1.0
-    - 2.7855373352569557
-    - !<python/numpy/float64> 0.09991874103619436
-    - !<python/numpy/float64> -0.6602943806787702
-    - !<python/numpy/float64> 1.0
-    - 3.2009510363930342
-    - !<python/numpy/float64> -0.017232113748844036
-    - !<python/numpy/float64> -1.0293143270403031
-    - !<python/numpy/float64> 1.0
-    - 3.5189177559335567
-    - !<python/numpy/float64> -0.14840415777809968
-    - !<python/numpy/float64> -1.4041048404943859
-    - !<python/numpy/float64> 1.0
-    - 3.7230701516028555
-    - !<python/numpy/float64> -0.28746363761459603
-    - !<python/numpy/float64> -1.7666215261500209
-    - !<python/numpy/float64> 1.0
-    - 3.811795683655499
-    - !<python/numpy/float64> -0.4303484852430599
-    - !<python/numpy/float64> -2.0119804024808383
-    - !<python/numpy/float64> 1.0
-    - !<python/numpy/float64> 0.0
-    - !<python/numpy/float64> 0.0
-  - 0
-  - false
-  - {}
-- - - !<python/numpy/float64> 0.0
-    - !<python/numpy/float64> 0.0
-  - 0.05729004218706757
-  - 14
-  - 14
-  - -0.0
-  - !<python/numpy/float64> -0.009999999999999787
-  - - !<python/numpy/float64> 0.0
-    - !<python/numpy/float64> 0.0
-  - 1012
-  - 0
-  - 0
-  - !<python/numpy/float64> 1.0
-  - -0.0
-  - - !<python/numpy/float64> 0.0
-    - !<python/numpy/float64> 0.0
-    - 0.0
-  - !<python/numpy/float64> 3.5099006729021065
-  - - !<python/numpy/float64> -104.64402780786043
-    - !<python/numpy/float64> 52.71486014654178
-    - !<python/numpy/float64> 3.5099006729021065
-  - 0
+- !python/named_tuple/StepOutput
+  observation:
   - 0.1414213562373065
-  - 1012
-  - - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - !<python/numpy/ndarray>
-      - -104.64402780786043
-      - 52.71486014654178
-      - 3.5099006729021065
-      - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-  - - 0.0
+  - !<python/numpy/float64> 0.4170901440851704
+  - !<python/numpy/float64> -0.009999999999999787
+  - !<python/numpy/float64> 1.0
+  - 0.6747691706941059
+  - !<python/numpy/float64> 0.07692449165905169
+  - !<python/numpy/float64> 0.3482649959569417
+  - !<python/numpy/float64> 1.0
+  - 1.2123542853196385
+  - !<python/numpy/float64> 0.19853044526187658
+  - !<python/numpy/float64> 0.32154515868656874
+  - !<python/numpy/float64> 1.0
+  - 1.7569360201445696
+  - !<python/numpy/float64> 0.23677264365710116
+  - !<python/numpy/float64> 0.04724880811692289
+  - !<python/numpy/float64> 1.0
+  - 2.293095296868026
+  - !<python/numpy/float64> 0.1920974285908219
+  - !<python/numpy/float64> -0.2979815063250477
+  - !<python/numpy/float64> 1.0
+  - 2.7855373352569557
+  - !<python/numpy/float64> 0.09991874103619436
+  - !<python/numpy/float64> -0.6602943806787702
+  - !<python/numpy/float64> 1.0
+  - 3.2009510363930342
+  - !<python/numpy/float64> -0.017232113748844036
+  - !<python/numpy/float64> -1.0293143270403031
+  - !<python/numpy/float64> 1.0
+  - 3.5189177559335567
+  - !<python/numpy/float64> -0.14840415777809968
+  - !<python/numpy/float64> -1.4041048404943859
+  - !<python/numpy/float64> 1.0
+  - 3.7230701516028555
+  - !<python/numpy/float64> -0.28746363761459603
+  - !<python/numpy/float64> -1.7666215261500209
+  - !<python/numpy/float64> 1.0
+  - 3.811795683655499
+  - !<python/numpy/float64> -0.4303484852430599
+  - !<python/numpy/float64> -2.0119804024808383
+  - !<python/numpy/float64> 1.0
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.0
+  reward: 0
+  done: false
+  debug: {}
+- !python/named_tuple/StepSideEffects
+  action: &id001 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 0.0
+     spin: !<python/numpy/float64> 0.0
+  crosstrack_error: 0.05729004218706757
+  ep_steps: 14
+  num_steps: 14
+  omega_reward: -0.0
+  phi_error: !<python/numpy/float64> -0.009999999999999787
+  prev_action: *id001
+  prev_closest_index: 1012
+  reward: 0
+  total_ep_reward: 0
+  vel_error: !<python/numpy/float64> 1.0
+  vel_reward: -0.0
+  twist:
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.0
+  - 0.0
+  prev_angle: !<python/numpy/float64> 3.5099006729021065
+  pose:
+  - !<python/numpy/float64> -104.64402780786043
+  - !<python/numpy/float64> 52.71486014654178
+  - !<python/numpy/float64> 3.5099006729021065
+  ep_start: 0
+  closest_dist: 0.1414213562373065
+  closest_index: 1012
+  ep_poses:
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
     - 0.0
     - 0.0
     - 0.0
     - 0.0
-  - - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
     - 0.0
     - 0.0
     - 0.0
     - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  - !<python/numpy/ndarray>
+    - -104.64402780786043
+    - 52.71486014654178
+    - 3.5099006729021065
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
 - - !<python/numpy/float64> 0.4170901440851704
   - !<python/numpy/float64> -0.10000000000000142
   - !<python/numpy/float64> -0.09999999999999432

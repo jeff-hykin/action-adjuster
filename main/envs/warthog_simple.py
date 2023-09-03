@@ -75,6 +75,7 @@ def read_waypoint_file(filename):
 # data structures (for test cases)
 # 
 if True:
+    Action = namedtuple('Action', ['velocity', 'spin'])
     StepOutput = namedtuple('StepOutput', ['observation', 'reward', 'done', 'debug'])
     StepSideEffects = namedtuple('StepSideEffects', [
         'action',
@@ -221,15 +222,13 @@ def pure_get_observation(
 
 @grug_test(max_io=30, skip=False)
 def pure_reward(
-    closest_index,
-    waypoints_list,
+    closest_waypoint,
     pose,
     twist,
     closest_dist,
     action,
     prev_action,
 ):
-    closest_waypoint = waypoints_list[closest_index]
     waypoint_x, waypoint_y, waypoint_phi, waypoint_velocity, *_ = closest_waypoint
     pose_x, pose_y, pose_phi, *_ = pose
     
@@ -269,37 +268,30 @@ def pure_reward_wrapper(
     prev_action,
     done,
 ):
-    k = closest_index
-    xdiff = waypoints_list[k][0] - pose[0]
-    ydiff = waypoints_list[k][1] - pose[1]
-    th = get_theta(xdiff, ydiff)
-    yaw_error = pi_to_pi(th - pose[2])
-    phi_error = pi_to_pi(
-        waypoints_list[closest_index][2] - pose[2]
+    xdiff         = waypoints_list[closest_index][0] - pose[0]
+    ydiff         = waypoints_list[closest_index][1] - pose[1]
+    yaw_error     = pi_to_pi(get_theta(xdiff, ydiff) - pose[2])
+    omega_reward  = -2 * math.fabs(action[1])
+    vel_reward    = -math.fabs(action[0] - prev_action[0])
+    
+    reward, vel_error, crosstrack_error, phi_error = pure_reward(
+        closest_waypoint=waypoints_list[closest_index],
+        pose=pose,
+        twist=twist,
+        closest_dist=closest_dist,
+        action=action,
+        prev_action=prev_action,
     )
-    vel_error = waypoints_list[k][3] - twist[0]
-    crosstrack_error = closest_dist * math.sin(yaw_error)
+    
     if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
         done = True
-    if ep_steps == max_ep_steps:
+    
+    if ep_steps >= max_ep_steps:
         done = True
         ep_steps = 0
-    reward = (
-        (2.0 - math.fabs(crosstrack_error))
-        * (4.5 - math.fabs(vel_error))
-        * (math.pi / 3.0 - math.fabs(phi_error))
-        - math.fabs(action[0] - prev_action[0])
-        - 2 * math.fabs(action[1])
-    )
-    omega_reward = -2 * math.fabs(action[1])
-    vel_reward = -math.fabs(action[0] - prev_action[0])
-    prev_action = action
-    if waypoints_list[k][3] >= 2.5 and math.fabs(vel_error) > 1.5:
-        reward = 0
-    elif waypoints_list[k][3] < 2.5 and math.fabs(vel_error) > 0.5:
-        reward = 0
-        
+    
     total_ep_reward = total_ep_reward + reward
+    prev_action = action
     
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
@@ -336,8 +328,10 @@ def pure_step(
 ):
     ep_steps = ep_steps + 1
     num_steps = num_steps + 1
-    action[0] = np.clip(action[0], 0, 1) * 4.0
-    action[1] = np.clip(action[1], -1, 1) * 2.5
+    action = Action(
+        np.clip(action[0], 0, 1) * 4.0,
+        np.clip(action[1], -1, 1) * 2.5,
+    )
     twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
         v=action[0],
         w=action[1],
@@ -481,7 +475,7 @@ class WarthogEnv(gym.Env):
     # just a wrapper around the pure_step
     def step(self, action):
         output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
-            action=action,
+            action=Action(*action),
             closest_dist=self.closest_dist,
             closest_index=self.closest_index,
             crosstrack_error=self.crosstrack_error,

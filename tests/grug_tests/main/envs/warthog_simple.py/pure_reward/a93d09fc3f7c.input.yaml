@@ -1,0 +1,22 @@
+args: []
+kwargs:
+   closest_waypoint: !<python/numpy/ndarray>
+   - 0.3609036937355995
+   - 0.0
+   - 0.0
+   - 1.4539262056350708
+   pose:
+   - !<python/numpy/float64> 0.3883856787230399
+   - !<python/numpy/float64> 0.031616221507181845
+   - !<python/numpy/float64> 0.24405
+   twist:
+   - !<python/numpy/float64> 2.2712
+   - !<python/numpy/float64> 1.4195
+   closest_dist: 0.041890869664416
+   action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 2.2712
+      spin: !<python/numpy/float64> 1.4195
+   prev_action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 2.268
+      spin: !<python/numpy/float64> 1.4175
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15i\x01\0\0\r\0\0\0\0)}\x14@(\f\x10clos\x02est_way\0point\x14\f`\x15numpy.\0core.mu\0ltiarra\0y\x14\f\f_re\x06constru\0ct\x14\x13\x14\f\x05<numpy\x14\f`\andarra\0y\x14\x13\x14K\0\x05N\x14C\x01b\x14\a\x14qR\x14(K\x01K\x04\x02\x05\x14h\x05\f\x05d\x13type\x14\x13\x14p\f\x02f8\x14\t\bq\a\x14R\x14(K\x03\v\f\x01<\x14NNN\tJ\x7F\x7F\x7F\x7FJ\x7F^\x7F\x7F\x7FK\0t\x14Gb\tC fff\x02N\v\x19W?\0\0\t\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0 HCw@?\x14t\x14b\f\x04*pose\x14]\x14P(h\x02\f\x06sc\balar\x14\x13\x14ph\x11C\b\x7Fi\x16\x10\eO[X?\x14\x06m\x14R\x14h\x19h\x11\x05C\bgyJZ\0\x1C0 ?\x14\x06\x14R:\x14h\x19h\x11C\b\x01L]KH\a=OI?\x14\x06\x14R\x14e.\f\x05twist\x01\x14]\x14(h\x19h\x05\x11C\bOfUghj+\x02@\x14\x06\x14pR\x14h\x19h\x11C\x02\b\x03@J!E6^v?\x14\x06\x14R\x14]e\f\fclos\x02est_dis\0t\x14G?%r8RVkY=\f\x06a\x10ction\x14\f`\x13envs.w\0arthog_\0simple\x14@\f\x06Actio\x01n\x14\x13\x14h\x19h\x0E\x11C\bOfUghj+\x02@\x14\x06\x14pR\x14h\x19h\x11C\x02\b\x03@J!E6^v?\x14\x06\x14R\x14]\x06\x14\x01\x14\f\vp\x1Frev_act\0ion\x14h/h\b\x19h\x11C\b>\x1F`\x1A/]$\x02@\x14D\x06\x14R\x14h\x19h\v\x11C\b.Gaz(\x14.v?\x14\x06\x14vR\x14\x06\x14\x01\x14u>\x06\x14.\0\0\0\0\x03\x04"
