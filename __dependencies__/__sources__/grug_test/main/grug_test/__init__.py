@@ -1,3 +1,5 @@
+import os
+intial_cwd = os.getcwd()
 from warnings import warn
 import pickle
 import os
@@ -373,7 +375,7 @@ class GrugTest:
                 # 
                 # setup name/folder
                 # 
-                relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=source))
+                relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=FS.normalize(source)))
                 function_name = func_name or getattr(function_being_wrapped, "__name__", "<unknown_func>")
                 if not save_to:
                     relative_path_to_test = self.test_folder+"/"+relative_path_to_function
@@ -400,6 +402,11 @@ class GrugTest:
                     for progress, path in ProgressBar(input_files, disable_logging=not self.verbose):
                         progress.text = f" loading: {FS.basename(path)}"
                         try:
+                            # corrupted file
+                            if FS.read(path) == "":
+                                FS.remove(path)
+                                continue
+                            
                             args, kwargs = ez_yaml.to_object(file_path=path)["pickled_args_and_kwargs"]
                             output, the_error = self.record_output(
                                 function_being_wrapped,
@@ -412,9 +419,9 @@ class GrugTest:
                             )
                         except Exception as error:
                             if self.verbose:
-                                print(f"corrupted_input: {path}\n    {error}")
+                                print(f"\n\ncorrupted_input: {path}\n    {error}")
                             else:
-                                warn(f"corrupted_input: {path}\n    {error}")
+                                warn(f"\n\ncorrupted_input: {path}\n    {error}")
                     decorator.replaying_inputs = False
                     self.has_been_tested[function_id] = True
             
@@ -549,7 +556,6 @@ def _get_path_of_caller(*paths):
     import os
     import inspect
     
-    intial_cwd = os.getcwd()
     # https://stackoverflow.com/questions/28021472/get-relative-path-of-caller-in-python
     try:
         frame = inspect.stack()[2]
