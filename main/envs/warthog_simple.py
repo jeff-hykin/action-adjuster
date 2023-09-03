@@ -10,14 +10,19 @@ import time
 
 
 class WarthogEnv(gym.Env):
+    action_space = spaces.Box(
+        low=np.array([0.0, -1.5]),
+        high=np.array([1.0, 1.5]),
+        shape=(2,)
+    )
+    observation_space = spaces.Box(
+        low=-100,
+        high=1000,
+        shape=(42,),
+        dtype=np.float,
+    )
     def __init__(self, waypoint_file, file_name, **kwargs):
         super(WarthogEnv, self).__init__()
-        self.action_space = spaces.Box(
-            low=np.array([0.0, -1.5]), high=np.array([1.0, 1.5]), shape=(2,)
-        )
-        self.observation_space = spaces.Box(
-            low=-100, high=1000, shape=(42,), dtype=np.float
-        )
         self.filename = waypoint_file
         self.out_traj_file = file_name
         plt.ion
@@ -25,8 +30,8 @@ class WarthogEnv(gym.Env):
         self.num_waypoints = 0
         self.pose = [0, 0, 0]
         self.twist = [0, 0]
-        self.closest_idx = 0
-        self.prev_closest_idx = 0
+        self.closest_index = 0
+        self.prev_closest_index = 0
         self.closest_dist = math.inf
         self.num_waypoints = 0
         self.horizon = 10
@@ -132,22 +137,7 @@ class WarthogEnv(gym.Env):
         self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
         self.ep_start = 0
 
-    def close_files(self):
-        self.traj_file.close()
-
-    def update_closest_idx(self, pose):
-        idx = self.closest_idx
-        self.closest_dist = math.inf
-        for i in range(self.closest_idx, self.num_waypoints):
-            dist = get_dist(self.waypoints_list[i], pose)
-            if dist <= self.closest_dist:
-                self.closest_dist = dist
-                idx = i
-            else:
-                break
-        self.closest_idx = idx
-
-    def get_closest_idx_for_sup(self):
+    def get_closest_index_for_sup(self):
         idx = 0
         closest_id_data = []
         num_sup_waypoints = len(self.sup_waypoint_list)
@@ -169,13 +159,24 @@ class WarthogEnv(gym.Env):
         return zero_to_2pi(theta)
 
     def get_observation(self):
-        obs = [0] * (self.horizon * 4 + 2)
-        pose = self.pose
+        obs   = [0] * (self.horizon * 4 + 2)
+        pose  = self.pose
         twist = self.twist
-        self.update_closest_idx(pose)
+        idx   = self.closest_index
+        
+        self.closest_dist = math.inf
+        for i in range(self.closest_index, self.num_waypoints):
+            dist = get_dist(self.waypoints_list[i], pose)
+            if dist <= self.closest_dist:
+                self.closest_dist = dist
+                idx = i
+            else:
+                break
+        self.closest_index = idx
+        
         j = 0
         for i in range(0, self.horizon):
-            k = i + self.closest_idx
+            k = i + self.closest_index
             if k < self.num_waypoints:
                 r = get_dist(self.waypoints_list[k], pose)
                 xdiff = self.waypoints_list[k][0] - pose[0]
@@ -207,19 +208,19 @@ class WarthogEnv(gym.Env):
         action[1] = np.clip(action[1], -1, 1) * 2.5
         self.action = action
         self.sim_warthog(action[0], action[1])
-        self.prev_closest_idx = self.closest_idx
+        self.prev_closest_index = self.closest_index
         obs = self.get_observation()
         done = False
-        if self.closest_idx >= self.num_waypoints - 1:
+        if self.closest_index >= self.num_waypoints - 1:
             done = True
         # Calculating reward
-        k = self.closest_idx
+        k = self.closest_index
         xdiff = self.waypoints_list[k][0] - self.pose[0]
         ydiff = self.waypoints_list[k][1] - self.pose[1]
         th = self.get_theta(xdiff, ydiff)
         yaw_error = pi_to_pi(th - self.pose[2])
         self.phi_error = pi_to_pi(
-            self.waypoints_list[self.closest_idx][2] - self.pose[2]
+            self.waypoints_list[self.closest_index][2] - self.pose[2]
         )
         self.vel_error = self.waypoints_list[k][3] - self.twist[0]
         self.crosstrack_error = self.closest_dist * math.sin(yaw_error)
@@ -241,7 +242,7 @@ class WarthogEnv(gym.Env):
         #    4.0 - math.fabs(self.vel_error)) * (math.pi / 3. -
         #                                        math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 1.3*math.fabs(self.action[1] - self.prev_action[1])
         self.prev_action = self.action
-        # if (self.prev_closest_idx == self.closest_idx
+        # if (self.prev_closest_index == self.closest_index
         #        or math.fabs(self.vel_error) > 1.5):
         if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
             self.reward = 0
@@ -267,7 +268,7 @@ class WarthogEnv(gym.Env):
                 prev_waypoint = curr_waypoint
             k = k + 1
 
-    def save_obs_for_sup_learning(self):
+    def save_obs_for_supervised_learning(self):
         if self.traj_file is None:
             return
         if (
@@ -281,7 +282,7 @@ class WarthogEnv(gym.Env):
             fig_t = plt.figure()
             plt.ion()
         m = 0
-        closest_id_data = self.get_closest_idx_for_sup()
+        closest_id_data = self.get_closest_index_for_sup()
         while m < len(self.ep_poses):
             pose = self.ep_poses[m]
             twist = [0, 0]
@@ -339,7 +340,7 @@ class WarthogEnv(gym.Env):
 
     def reset(self):
         self.get_waypoints_for_sup_learning()
-        self.save_obs_for_sup_learning()
+        self.save_obs_for_supervised_learning()
         self.ep_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
@@ -349,8 +350,8 @@ class WarthogEnv(gym.Env):
         # idx = [0]
         idx = idx[0]
         # idx = 880
-        self.closest_idx = idx
-        self.prev_closest_idx = idx
+        self.closest_index = idx
+        self.prev_closest_index = idx
         self.pose[0] = self.waypoints_list[idx][0] + 0.1
         self.pose[1] = self.waypoints_list[idx][1] + 0.1
         self.pose[2] = self.waypoints_list[idx][2] + 0.01
@@ -400,7 +401,7 @@ class WarthogEnv(gym.Env):
         self.text = self.ax.text(
             self.pose[0] + 1,
             self.pose[1] + 2,
-            f"vel_error={self.vel_error:.3f}\nclosest_idx={self.closest_idx}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.twist[0]:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.tprev:.4f}\nep_reward={self.total_ep_reward:.4f}\nmax_vel={self.max_vel:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
+            f"vel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.twist[0]:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.tprev:.4f}\nep_reward={self.total_ep_reward:.4f}\nmax_vel={self.max_vel:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
