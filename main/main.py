@@ -71,64 +71,71 @@ if __name__ == '__main__':
     if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
         @grug_test
         def main_smoke_test_warthog(trajectory_file):
-            env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
-            env.should_render = False
-            outputs = []
-            def env_snapshot(env):
-                return deepcopy(dict(
-                    waypoints_list=         getattr(env, "waypoints_list"         , None),
-                    pose=                   getattr(env, "pose"                   , None),
-                    twist=                  getattr(env, "twist"                  , None),
-                    closest_index=          getattr(env, "closest_index"          , None),
-                    prev_closest_index=     getattr(env, "prev_closest_index"     , None),
-                    closest_dist=           getattr(env, "closest_dist"           , None),
-                    number_of_waypoints=    getattr(env, "number_of_waypoints"    , None),
-                    horizon=                getattr(env, "horizon"                , None),
-                    dt=                     getattr(env, "dt"                     , None),
-                    ref_vel=                getattr(env, "ref_vel"                , None),
-                    num_steps=              getattr(env, "num_steps"              , None),
-                    max_vel=                getattr(env, "max_vel"                , None),
-                    waypoints_dist=         getattr(env, "waypoints_dist"         , None),
-                    warthog_length=         getattr(env, "warthog_length"         , None),
-                    warthog_width=          getattr(env, "warthog_width"          , None),
-                    warthog_diag=           getattr(env, "warthog_diag"           , None),
-                    diag_angle=             getattr(env, "diag_angle"             , None),
-                    prev_angle=             getattr(env, "prev_angle"             , None),
-                    n_traj=                 getattr(env, "n_traj"                 , None),
-                    xpose=                  getattr(env, "xpose"                  , None),
-                    ypose=                  getattr(env, "ypose"                  , None),
-                    crosstrack_error=       getattr(env, "crosstrack_error"       , None),
-                    vel_error=              getattr(env, "vel_error"              , None),
-                    phi_error=              getattr(env, "phi_error"              , None),
-                    start_step_for_sup_data=getattr(env, "start_step_for_sup_data", None),
-                    ep_steps=               getattr(env, "ep_steps"               , None),
-                    max_ep_steps=           getattr(env, "max_ep_steps"           , None),
-                    total_ep_reward=        getattr(env, "total_ep_reward"        , None),
-                    reward=                 getattr(env, "reward"                 , None),
-                    action=                 getattr(env, "action"                 , None),
-                    prev_action=            getattr(env, "prev_action"            , None),
-                    omega_reward=           getattr(env, "omega_reward"           , None),
-                    vel_reward=             getattr(env, "vel_reward"             , None),
-                    is_delayed_dynamics=    getattr(env, "is_delayed_dynamics"    , None),
-                    delay_steps=            getattr(env, "delay_steps"            , None),
-                    v_delay_data=           getattr(env, "v_delay_data"           , None),
-                    w_delay_data=           getattr(env, "w_delay_data"           , None),
-                    save_data=              getattr(env, "save_data"              , None),
-                    ep_start=               getattr(env, "ep_start"               , None),
-                    ep_dist=                getattr(env, "ep_dist"                , None),
-                    ep_poses=               getattr(env, "ep_poses"               , None),
-                ))
-            
-            outputs.append(env_snapshot(env))
-            env.step([0.5, 0.5])
-            outputs.append(env_snapshot(env))
-            env.step([0.56, 0.56])
-            outputs.append(env_snapshot(env))
-            env.step([0.567, 0.567])
-            outputs.append(env_snapshot(env))
-            env.step([0.5678, 0.5678])
-            outputs.append(env_snapshot(env))
-            return outputs
+            actual_starting_setting = config.simulator.starting_waypoint
+            config.simulator.starting_waypoint = 0 # force override it for test
+            try:
+                env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
+                env.should_render = False
+                outputs = []
+                def env_snapshot(env):
+                    return deepcopy(dict(
+                        waypoints_list=         getattr(env, "waypoints_list"         , None),
+                        pose=                   getattr(env, "pose"                   , None),
+                        twist=                  getattr(env, "twist"                  , None),
+                        closest_index=          getattr(env, "closest_index"          , None),
+                        prev_closest_index=     getattr(env, "prev_closest_index"     , None),
+                        closest_dist=           getattr(env, "closest_dist"           , None),
+                        number_of_waypoints=    getattr(env, "number_of_waypoints"    , None),
+                        horizon=                getattr(env, "horizon"                , None),
+                        dt=                     getattr(env, "dt"                     , None),
+                        ref_vel=                getattr(env, "ref_vel"                , None),
+                        num_steps=              getattr(env, "num_steps"              , None),
+                        max_vel=                getattr(env, "max_vel"                , None),
+                        waypoints_dist=         getattr(env, "waypoints_dist"         , None),
+                        warthog_length=         getattr(env, "warthog_length"         , None),
+                        warthog_width=          getattr(env, "warthog_width"          , None),
+                        warthog_diag=           getattr(env, "warthog_diag"           , None),
+                        diag_angle=             getattr(env, "diag_angle"             , None),
+                        prev_angle=             getattr(env, "prev_angle"             , None),
+                        n_traj=                 getattr(env, "n_traj"                 , None),
+                        xpose=                  getattr(env, "xpose"                  , None),
+                        ypose=                  getattr(env, "ypose"                  , None),
+                        crosstrack_error=       getattr(env, "crosstrack_error"       , None),
+                        vel_error=              getattr(env, "vel_error"              , None),
+                        phi_error=              getattr(env, "phi_error"              , None),
+                        start_step_for_sup_data=getattr(env, "start_step_for_sup_data", None),
+                        ep_steps=               getattr(env, "ep_steps"               , None),
+                        max_ep_steps=           getattr(env, "max_ep_steps"           , None),
+                        total_ep_reward=        getattr(env, "total_ep_reward"        , None),
+                        reward=                 getattr(env, "reward"                 , None),
+                        action=                 getattr(env, "action"                 , None),
+                        reaction=               getattr(env, "reaction"               , None),
+                        prev_action=            getattr(env, "prev_action"            , None),
+                        prev_reaction=          getattr(env, "prev_reaction"          , None),
+                        omega_reward=           getattr(env, "omega_reward"           , None),
+                        vel_reward=             getattr(env, "vel_reward"             , None),
+                        is_delayed_dynamics=    getattr(env, "is_delayed_dynamics"    , None),
+                        delay_steps=            getattr(env, "delay_steps"            , None),
+                        v_delay_data=           getattr(env, "v_delay_data"           , None),
+                        w_delay_data=           getattr(env, "w_delay_data"           , None),
+                        save_data=              getattr(env, "save_data"              , None),
+                        ep_start=               getattr(env, "ep_start"               , None),
+                        ep_dist=                getattr(env, "ep_dist"                , None),
+                        ep_poses=               getattr(env, "ep_poses"               , None),
+                    ))
+                
+                outputs.append(env_snapshot(env))
+                env.step([0.5, 0.5])
+                outputs.append(env_snapshot(env))
+                env.step([0.56, 0.56])
+                outputs.append(env_snapshot(env))
+                env.step([0.567, 0.567])
+                outputs.append(env_snapshot(env))
+                env.step([0.5678, 0.5678])
+                outputs.append(env_snapshot(env))
+                return outputs
+            finally:
+                config.simulator.starting_waypoint = actual_starting_setting
         
         main_smoke_test_warthog("real1.csv")
         main_smoke_test_warthog("concrete1.csv")

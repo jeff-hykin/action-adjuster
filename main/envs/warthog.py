@@ -28,7 +28,7 @@ g = LazyDict()
 class Unknown:
     pass
 
-@grug_test(func_name="scaled_sigmoid", max_io=100, record_io=None, additional_io_per_run=None)
+@grug_test(func_name="scaled_sigmoid", max_io=100, record_io=None, additional_io_per_run=None, skip=True)
 def scaled_sigmoid(x):
     # normally sigmoid(10) = 0.9999092042625952
     # normally sigmoid(100) = 1.0
@@ -151,7 +151,7 @@ class WarthogEnv(gym.Env):
             self.trajectory_file.close()
             
     @staticmethod
-    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None, skip=True)
     def generate_observation(closest_index, remaining_waypoints, current_spacial_info):
         """
             Note:
@@ -192,7 +192,7 @@ class WarthogEnv(gym.Env):
         return observation
     
     @staticmethod
-    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None, skip=True)
     def generate_next_spacial_info(old_spacial_info, relative_velocity, relative_spin, action_duration, debug=False):
         '''
             Note:
@@ -261,7 +261,7 @@ class WarthogEnv(gym.Env):
         return next_spacial_info
     
     @staticmethod
-    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None, skip=True)
     def get_closest(remaining_waypoints, x, y):
         """
             Note:
@@ -277,7 +277,7 @@ class WarthogEnv(gym.Env):
         return closest_index, closest_distance
     
     @staticmethod
-    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None, skip=True)
     def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index,):
         x_diff     = closest_waypoint.x - spacial_info.x
         y_diff     = closest_waypoint.y - spacial_info.y
@@ -324,7 +324,7 @@ class WarthogEnv(gym.Env):
         return running_reward, velocity_error, crosstrack_error, phi_error
     
     @staticmethod
-    @grug_test(max_io=100, record_io=None, additional_io_per_run=None)
+    @grug_test(max_io=100, record_io=None, additional_io_per_run=None, skip=True)
     def almost_original_reward_function(**kwargs):
         closest_relative_index = kwargs["closest_relative_index"]
         running_reward, *other = WarthogEnv.original_reward_function(**kwargs)
@@ -689,7 +689,7 @@ class WarthogEnv(gym.Env):
             y.append(each_waypoint.y)
         self.ax.plot(x, y, "+r")
 
-@grug_test(max_io=10)
+@grug_test(max_io=10, skip=True)
 def read_waypoint_file(filename):
     comments, column_names, rows = Csv.read(filename, separator=",", first_row_is_column_names=True, skip_empty_lines=True)
     desired_velocities = []

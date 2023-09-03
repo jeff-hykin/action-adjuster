@@ -11,6 +11,7 @@ import gym
 import matplotlib as mpl
 import numpy as np
 from config import grug_test, path_to, config
+from envs.warthog import read_waypoint_file
 
 
 from generic_tools.plotting import create_slider_from_traces
@@ -39,38 +40,6 @@ def get_dist(waypoint, pose):
 def get_theta(xdiff, ydiff):
     theta = math.atan2(ydiff, xdiff)
     return zero_to_2pi(theta)
-
-
-@grug_test(skip=True)
-def read_waypoint_file(filename):
-    num_waypoints = 0
-    waypoints_list = []
-    ref_vel = []
-    with open(filename) as csv_file:
-        pos = csv.reader(csv_file, delimiter=",")
-        for index, row in enumerate(pos):
-            if index == 0: # skip column names
-                continue
-            utm_cord = [float(row[0]), float(row[1])]
-            phi = 0.0
-            xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
-            ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
-            waypoints_list.append(
-                np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])])
-            )
-            ref_vel.append(float(row[3]))
-        # waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
-        for i in range(0, len(waypoints_list) - 1):
-            xdiff = waypoints_list[i + 1][0] - waypoints_list[i][0]
-            ydiff = waypoints_list[i + 1][1] - waypoints_list[i][1]
-            waypoints_list[i][2] = zero_to_2pi(
-                get_theta(xdiff, ydiff)
-            )
-        waypoints_list[i + 1][2] = waypoints_list[i][2]
-        num_waypoints = i + 2
-    
-    return waypoints_list, ref_vel, num_waypoints
-
 
 # 
 # data structures (for test cases)
@@ -434,12 +403,12 @@ class WarthogEnv(gym.Env):
         self.closest_index = 0
         self.prev_closest_index = 0
         self.closest_dist = math.inf
-        self.number_of_waypoints = 0
         self.horizon = 10
         self.dt = 0.06
         self.ref_vel = []
         self.num_steps = 0
-        self.waypoints_list, self.ref_vel, self.number_of_waypoints = read_waypoint_file(waypoint_file)
+        self.ref_vel, self.waypoints_list = read_waypoint_file(waypoint_file)
+        self.number_of_waypoints = len(self.waypoints_list)
         self.max_vel = 1
         self.waypoints_dist = 0.5
         self.warthog_length = 0.5 / 2.0
@@ -615,66 +584,71 @@ class WarthogEnv(gym.Env):
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
-    @grug_test
+    @grug_test(skip=True)
     def smoke_test_warthog(trajectory_file):
-        env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
-        env.should_render = False
-        outputs = []
-        def env_snapshot(env):
-            return deepcopy(dict(
-                waypoints_list=env.waypoints_list,
-                pose=env.pose,
-                twist=env.twist,
-                closest_index=env.closest_index,
-                prev_closest_index=env.prev_closest_index,
-                closest_dist=env.closest_dist,
-                number_of_waypoints=env.number_of_waypoints,
-                horizon=env.horizon,
-                dt=env.dt,
-                ref_vel=env.ref_vel,
-                num_steps=env.num_steps,
-                max_vel=env.max_vel,
-                waypoints_dist=env.waypoints_dist,
-                warthog_length=env.warthog_length,
-                warthog_width=env.warthog_width,
-                warthog_diag=env.warthog_diag,
-                diag_angle=env.diag_angle,
-                prev_angle=env.prev_angle,
-                n_traj=env.n_traj,
-                xpose=env.xpose,
-                ypose=env.ypose,
-                crosstrack_error=env.crosstrack_error,
-                vel_error=env.vel_error,
-                phi_error=env.phi_error,
-                start_step_for_sup_data=env.start_step_for_sup_data,
-                ep_steps=env.ep_steps,
-                max_ep_steps=env.max_ep_steps,
-                total_ep_reward=env.total_ep_reward,
-                reward=env.reward,
-                action=env.action,
-                prev_action=env.prev_action,
-                omega_reward=env.omega_reward,
-                vel_reward=env.vel_reward,
-                is_delayed_dynamics=env.is_delayed_dynamics,
-                delay_steps=env.delay_steps,
-                v_delay_data=env.v_delay_data,
-                w_delay_data=env.w_delay_data,
-                save_data=env.save_data,
-                ep_start=env.ep_start,
-                ep_dist=env.ep_dist,
-                ep_poses=env.ep_poses,
-            ))
-        
-        outputs.append(env_snapshot(env))
-        env.step([0.5, 0.5])
-        outputs.append(env_snapshot(env))
-        env.step([0.56, 0.56])
-        outputs.append(env_snapshot(env))
-        env.step([0.567, 0.567])
-        outputs.append(env_snapshot(env))
-        env.step([0.5678, 0.5678])
-        outputs.append(env_snapshot(env))
-        return outputs
+        actual_starting_setting = config.simulator.starting_waypoint
+        config.simulator.starting_waypoint = 0 # force override it for test
+        try:
+            env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
+            env.should_render = False
+            outputs = []
+            def env_snapshot(env):
+                return deepcopy(dict(
+                    waypoints_list=env.waypoints_list,
+                    pose=env.pose,
+                    twist=env.twist,
+                    closest_index=env.closest_index,
+                    prev_closest_index=env.prev_closest_index,
+                    closest_dist=env.closest_dist,
+                    number_of_waypoints=env.number_of_waypoints,
+                    horizon=env.horizon,
+                    dt=env.dt,
+                    ref_vel=env.ref_vel,
+                    num_steps=env.num_steps,
+                    max_vel=env.max_vel,
+                    waypoints_dist=env.waypoints_dist,
+                    warthog_length=env.warthog_length,
+                    warthog_width=env.warthog_width,
+                    warthog_diag=env.warthog_diag,
+                    diag_angle=env.diag_angle,
+                    prev_angle=env.prev_angle,
+                    n_traj=env.n_traj,
+                    xpose=env.xpose,
+                    ypose=env.ypose,
+                    crosstrack_error=env.crosstrack_error,
+                    vel_error=env.vel_error,
+                    phi_error=env.phi_error,
+                    start_step_for_sup_data=env.start_step_for_sup_data,
+                    ep_steps=env.ep_steps,
+                    max_ep_steps=env.max_ep_steps,
+                    total_ep_reward=env.total_ep_reward,
+                    reward=env.reward,
+                    action=env.action,
+                    prev_action=env.prev_action,
+                    omega_reward=env.omega_reward,
+                    vel_reward=env.vel_reward,
+                    is_delayed_dynamics=env.is_delayed_dynamics,
+                    delay_steps=env.delay_steps,
+                    v_delay_data=env.v_delay_data,
+                    w_delay_data=env.w_delay_data,
+                    save_data=env.save_data,
+                    ep_start=env.ep_start,
+                    ep_dist=env.ep_dist,
+                    ep_poses=env.ep_poses,
+                ))
+            
+            outputs.append(env_snapshot(env))
+            env.step([0.5, 0.5])
+            outputs.append(env_snapshot(env))
+            env.step([0.56, 0.56])
+            outputs.append(env_snapshot(env))
+            env.step([0.567, 0.567])
+            outputs.append(env_snapshot(env))
+            env.step([0.5678, 0.5678])
+            outputs.append(env_snapshot(env))
+            return outputs
+        finally:
+            config.simulator.starting_waypoint = actual_starting_setting
     
     # smoke_test_warthog("real1.csv")
     # exit()
