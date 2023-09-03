@@ -216,6 +216,70 @@ class WarthogEnv(gym.Env):
         obs[j + 1] = twist[1]
         return obs
 
+if not grug_test.disable and (grug_test.replay_inputs or grug_test.record_io):
+    @grug_test
+    def smoke_test_warthog(trajectory_file):
+        env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
+        outputs = []
+        def env_snapshot(env):
+            return deepcopy(dict(
+                waypoints_list=env.waypoints_list,
+                pose=env.pose,
+                twist=env.twist,
+                closest_index=env.closest_index,
+                prev_closest_index=env.prev_closest_index,
+                closest_dist=env.closest_dist,
+                number_of_waypoints=env.number_of_waypoints,
+                horizon=env.horizon,
+                dt=env.dt,
+                ref_vel=env.ref_vel,
+                num_steps=env.num_steps,
+                max_vel=env.max_vel,
+                waypoints_dist=env.waypoints_dist,
+                warthog_length=env.warthog_length,
+                warthog_width=env.warthog_width,
+                warthog_diag=env.warthog_diag,
+                diag_angle=env.diag_angle,
+                prev_angle=env.prev_angle,
+                n_traj=env.n_traj,
+                xpose=env.xpose,
+                ypose=env.ypose,
+                crosstrack_error=env.crosstrack_error,
+                vel_error=env.vel_error,
+                phi_error=env.phi_error,
+                start_step_for_sup_data=env.start_step_for_sup_data,
+                ep_steps=env.ep_steps,
+                max_ep_steps=env.max_ep_steps,
+                tprev=env.tprev,
+                total_ep_reward=env.total_ep_reward,
+                reward=env.reward,
+                action=env.action,
+                prev_action=env.prev_action,
+                omega_reward=env.omega_reward,
+                vel_reward=env.vel_reward,
+                is_delayed_dynamics=env.is_delayed_dynamics,
+                delay_steps=env.delay_steps,
+                v_delay_data=env.v_delay_data,
+                w_delay_data=env.w_delay_data,
+                save_data=env.save_data,
+                ep_start=env.ep_start,
+                ep_dist=env.ep_dist,
+                ep_poses=env.ep_poses,
+            ))
+        
+        outputs.append(env_snapshot(env))
+        env.step(0.5, 0.5)
+        outputs.append(env_snapshot(env))
+        env.step(0.56, 0.56)
+        outputs.append(env_snapshot(env))
+        env.step(0.567, 0.567)
+        outputs.append(env_snapshot(env))
+        env.step(0.5678, 0.5678)
+        outputs.append(env_snapshot(env))
+        return outputs
+    
+    smoke_test_warthog(path_to.waypoints_for_real1)
+
 @grug_test
 def read_waypoint_file(filename):
     num_waypoints = 0
