@@ -19,7 +19,7 @@ from __dependencies__.rigorous_recorder import RecordKeeper
 from config import config, path_to, debug
 from envs.warthog import WarthogEnv
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
-from generic_tools.numpy import shift_towards
+from generic_tools.for_numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
 
@@ -550,6 +550,59 @@ class ActionAdjustedAgent(Skeleton):
                             new_solution
                         )
                     )
+    def when_episode_ends(self):
+        pass
+    
+    def when_mission_ends(self):
+        pass
+
+class NormalAgent(Skeleton):
+    previous_timestep = None
+    timestep          = None
+    next_timestep     = None
+    # timestep attributes:
+    # self.timestep.index
+    # self.timestep.observation
+    # self.timestep.is_last_step
+    # self.timestep.reward
+    # self.timestep.hidden_info
+    # self.timestep.reaction
+    
+    def __init__(self, observation_space, reaction_space, policy, waypoints_list, recorder=None, **options):
+        self.observation_space  = observation_space
+        self.reaction_space     = reaction_space
+        self.accumulated_reward = 0
+        self.policy   = policy
+        self.recorder = recorder if recorder != None else RecordKeeper()
+        self.recorder.live_write_to(recorder_path, as_yaml=True)
+
+    def when_mission_starts(self):
+        pass
+    
+    def when_episode_starts(self):
+        pass
+    
+    def when_timestep_starts(self):
+        """
+        read: self.observation
+        write: self.timestep.reaction = something
+        """
+        self.timestep.reaction = self.policy(self.timestep.observation)
+    
+    def when_timestep_ends(self):
+        """
+        read: self.timestep.reward
+        """
+        # 
+        # logging / record-keeping
+        # 
+        self.accumulated_reward += self.timestep.reward
+        self.recorder.add(timestep=self.timestep.index)
+        self.recorder.add(accumulated_reward=self.accumulated_reward)
+        self.recorder.add(reward=self.timestep.reward)
+        self.recorder.commit()
+        self.recorder.add(timestep=self.timestep.index) # encase there's another commit during the same timestep
+        
     def when_episode_ends(self):
         pass
     

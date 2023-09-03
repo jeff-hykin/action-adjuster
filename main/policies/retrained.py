@@ -18,7 +18,9 @@ def policy(observation):
     global pi
     pi = pi or torch.load(path_to.saved_policies+ "/manaul_ppo_10000000.pt")
     with print.indent:
-        observation = torch.as_tensor(observation.to_numpy(), dtype=torch.float32).to(device)
+        if hasattr(observation, "to_numpy"):
+            observation = observation.to_numpy()
+        observation = torch.as_tensor(observation, dtype=torch.float32).to(device)
         distribution = pi(observation)
         if deterministic:
             action = distribution.loc

@@ -9,8 +9,9 @@ from __dependencies__.rigorous_recorder import RecordKeeper
 from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 
 from specific_tools.train_ppo import * # required because of pickle lookup
-from envs.warthog import WarthogEnv
-from action_adjuster import ActionAdjustedAgent
+# from envs.warthog import WarthogEnv
+from envs.warthog_simple import WarthogEnv
+from action_adjuster import ActionAdjustedAgent, NormalAgent
 from config import config, path_to, selected_profiles
 from generic_tools.functions import cache_outputs
 from generic_tools.universe.agent import Skeleton
@@ -39,7 +40,7 @@ recorder = RecordKeeper(selected_profiles=selected_profiles, config=config)
 # env
 # 
 env = WarthogEnv(
-    waypoint_file_path=path_to.default_waypoints,
+    path_to.default_waypoints,
     trajectory_output_path=f"{config.output_folder}/trajectory.log",
     recorder=recorder,
 )
@@ -53,7 +54,8 @@ policy = cache_outputs(policy)
 # 
 # agent
 # 
-agent = ActionAdjustedAgent(
+Agent = NormalAgent if config.action_adjuster.disabled else ActionAdjustedAgent
+agent = Agent(
     observation_space=env.observation_space,
     reaction_space=env.action_space,
     policy=policy,

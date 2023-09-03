@@ -676,8 +676,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
         outputs.append(env_snapshot(env))
         return outputs
     
-    smoke_test_warthog("real1.csv")
-    exit()
+    # smoke_test_warthog("real1.csv")
+    # exit()
 
 
 def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
