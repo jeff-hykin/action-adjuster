@@ -105,7 +105,7 @@ class WarthogEnv(gym.Env):
         self.simulated_battery_level = 1.0 # proportion 
         
         if self.waypoint_file_path is not None:
-            self.desired_velocities, self.waypoints_list = self.read_waypoint_file(self.waypoint_file_path)
+            self.desired_velocities, self.waypoints_list = read_waypoint_file(self.waypoint_file_path)
         
         self.prev_angle = 0
         self.x_pose = [0.0] * self.number_of_trajectories
