@@ -122,7 +122,6 @@ class WarthogEnv(gym.Env):
 
     
     def reset(self):
-        self.get_waypoints_for_sup_learning()
         self.ep_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
