@@ -390,7 +390,7 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.flush_events()
 
 
-def read_waypoint_file(self, filename):
+def read_waypoint_file(filename):
     num_waypoints = 0
     waypoints_list = []
     ref_vel = []
