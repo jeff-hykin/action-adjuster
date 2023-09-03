@@ -15,3 +15,4 @@ normal_output:
   velocity: !<python/numpy/float64> 1.0203871726989746
   spin: !<python/numpy/float64> 0.2161656878888607
 - 90.40356209105045
+...

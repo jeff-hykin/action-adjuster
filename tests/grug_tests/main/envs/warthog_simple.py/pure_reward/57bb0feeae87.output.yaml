@@ -4,3 +4,4 @@ normal_output: !python/named_tuple/RewardOutput
    velocity_error: !<python/numpy/float64> 0.001407325267791748
    crosstrack_error: -0.11373909007785334
    phi_error: !<python/numpy/float64> -0.15728166745986094
+...

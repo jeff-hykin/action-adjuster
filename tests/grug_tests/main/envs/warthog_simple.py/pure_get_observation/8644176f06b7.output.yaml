@@ -45,3 +45,4 @@ normal_output: !python/named_tuple/GetObservationOutput
    - !<python/numpy/float64> 0.41955500841140747
    closest_dist: 0.17833429339451295
    closest_index: 70
+...

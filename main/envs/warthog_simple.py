@@ -16,6 +16,7 @@ from envs.warthog import read_waypoint_file
 
 from generic_tools.plotting import create_slider_from_traces
 from __dependencies__.blissful_basics import FS
+from __dependencies__.grug_test import register_named_tuple
 
 def zero_to_2pi(theta):
     if theta < 0:
@@ -87,6 +88,18 @@ if True:
         "crosstrack_error",
         "phi_error"
     ])
+    SimWarthogOutput = namedtuple('SimWarthogOutput', [
+        "twist",
+        "prev_angle",
+        "pose",
+        "ep_start",
+        "ep_poses",
+        "v_delay_data",
+        "w_delay_data",
+    ])
+    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, WarthogSimOutput, RewardOutput, SimWarthogOutput]:
+        register_named_tuple(each)
+    
 
 
 @grug_test(max_io=30, skip=False)
@@ -139,7 +152,7 @@ def pure_sim_warthog(
     ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
     ep_start = 0
     
-    return twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data
+    return SimWarthogOutput(twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data)
 
 @grug_test(max_io=30, skip=False)
 def pure_get_observation(

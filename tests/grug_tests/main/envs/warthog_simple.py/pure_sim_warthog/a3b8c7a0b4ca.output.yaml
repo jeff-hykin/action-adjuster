@@ -1,43 +1,49 @@
 error_output: None
-normal_output:
-- - !<python/numpy/float64> 2.268
-  - !<python/numpy/float64> 1.4175
-- !<python/numpy/float64> 0.075
-- - !<python/numpy/float64> 0.25402217715428066
-  - !<python/numpy/float64> 0.010070552657456572
-  - !<python/numpy/float64> 0.159
-- 0
-- - !<python/numpy/ndarray>
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 2.0
-    - 1.25
-  - !<python/numpy/ndarray>
-    - 0.0
-    - 0.0
-    - 0.0
-    - 2.0
-    - 1.25
-    - 2.24
-    - 1.4000000000000001
-  - !<python/numpy/ndarray>
-    - 0.12
-    - 0.0
-    - 0.075
-    - 2.24
-    - 1.4000000000000001
-    - 2.268
-    - 1.4175
-- - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-- - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+normal_output: !python/named_tuple/SimWarthogOutput
+   twist:
+   - !<python/numpy/float64> 2.268
+   - !<python/numpy/float64> 1.4175
+   prev_angle: !<python/numpy/float64> 0.075
+   pose:
+   - !<python/numpy/float64> 0.25402217715428066
+   - !<python/numpy/float64> 0.010070552657456572
+   - !<python/numpy/float64> 0.159
+   ep_start: 0
+   ep_poses:
+   - !<python/numpy/ndarray>
+     - 0.0
+     - 0.0
+     - 0.0
+     - 0.0
+     - 0.0
+     - 2.0
+     - 1.25
+   - !<python/numpy/ndarray>
+     - 0.0
+     - 0.0
+     - 0.0
+     - 2.0
+     - 1.25
+     - 2.24
+     - 1.4000000000000001
+   - !<python/numpy/ndarray>
+     - 0.12
+     - 0.0
+     - 0.075
+     - 2.24
+     - 1.4000000000000001
+     - 2.268
+     - 1.4175
+   v_delay_data:
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   w_delay_data:
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+...

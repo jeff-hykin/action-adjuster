@@ -466,3 +466,4 @@ normal_output:
 - - !<python/numpy/float64> -0.6466838920710449
   - !<python/numpy/float64> -0.14376204923319058
   - !<python/numpy/float64> 0.41488656418592207
+...
