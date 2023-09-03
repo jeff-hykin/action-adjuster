@@ -1,13 +1,13 @@
+import math
+import time
+import csv
+
+from gym import spaces
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import gym
-import numpy as np
-import math
-from gym import spaces
-import csv
 import matplotlib as mpl
-import time
-
+import numpy as np
 
 class WarthogEnv(gym.Env):
     action_space = spaces.Box(
@@ -19,7 +19,7 @@ class WarthogEnv(gym.Env):
         low=-100,
         high=1000,
         shape=(42,),
-        dtype=np.float,
+        dtype=float,
     )
     
     def __init__(self, waypoint_file, file_name, **kwargs):
@@ -121,7 +121,10 @@ class WarthogEnv(gym.Env):
         done = False
         if self.closest_index >= self.num_waypoints - 1:
             done = True
+        
+        # 
         # Calculating reward
+        # 
         k = self.closest_index
         xdiff = self.waypoints_list[k][0] - self.pose[0]
         ydiff = self.waypoints_list[k][1] - self.pose[1]
@@ -146,18 +149,13 @@ class WarthogEnv(gym.Env):
         )
         self.omega_reward = -2 * math.fabs(self.action[1])
         self.vel_reward = -math.fabs(self.action[0] - self.prev_action[0])
-        # self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (
-        #    4.0 - math.fabs(self.vel_error)) * (math.pi / 3. -
-        #                                        math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 1.3*math.fabs(self.action[1] - self.prev_action[1])
         self.prev_action = self.action
-        # if (self.prev_closest_index == self.closest_index
-        #        or math.fabs(self.vel_error) > 1.5):
         if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
             self.reward = 0
         elif self.waypoints_list[k][3] < 2.5 and math.fabs(self.vel_error) > 0.5:
             self.reward = 0
+            
         self.total_ep_reward = self.total_ep_reward + self.reward
-        # self.render()
         return obs, self.reward, done, {}
 
     
@@ -169,15 +167,12 @@ class WarthogEnv(gym.Env):
         self.total_ep_reward = 0
         if self.max_vel >= 5:
             self.max_vel = 1
-        idx = np.random.randint(self.num_waypoints, size=1)
-        # idx = [0]
-        idx = idx[0]
-        # idx = 880
-        self.closest_index = idx
-        self.prev_closest_index = idx
-        self.pose[0] = self.waypoints_list[idx][0] + 0.1
-        self.pose[1] = self.waypoints_list[idx][1] + 0.1
-        self.pose[2] = self.waypoints_list[idx][2] + 0.01
+        index = np.random.randint(self.num_waypoints, size=1)[0]
+        self.closest_index = index
+        self.prev_closest_index = index
+        self.pose[0] = self.waypoints_list[index][0] + 0.1
+        self.pose[1] = self.waypoints_list[index][1] + 0.1
+        self.pose[2] = self.waypoints_list[index][2] + 0.01
         self.xpose = [self.pose[0]] * self.n_traj
         self.ypose = [self.pose[1]] * self.n_traj
         self.twist = [0.0, 0.0, 0.0]
@@ -217,37 +212,37 @@ class WarthogEnv(gym.Env):
         self.ep_start = 0
 
     def get_closest_index_for_supervised(self):
-        idx = 0
+        index = 0
         closest_id_data = []
         num_sup_waypoints = len(self.sup_waypoint_list)
         for k in range(0, len(self.ep_poses)):
             closest_dist = math.inf
             pose = self.ep_poses[k][0:2]
-            for i in range(idx, num_sup_waypoints):
+            for i in range(index, num_sup_waypoints):
                 dist = get_dist(self.sup_waypoint_list[i][0:2], pose)
                 if dist <= closest_dist:
                     closest_dist = dist
-                    idx = i
+                    index = i
                 else:
                     break
-            closest_id_data.append(idx)
+            closest_id_data.append(index)
         return closest_id_data
 
     def get_observation(self):
         obs   = [0] * (self.horizon * 4 + 2)
         pose  = self.pose
         twist = self.twist
-        idx   = self.closest_index
+        index   = self.closest_index
         
         self.closest_dist = math.inf
         for i in range(self.closest_index, self.num_waypoints):
             dist = get_dist(self.waypoints_list[i], pose)
             if dist <= self.closest_dist:
                 self.closest_dist = dist
-                idx = i
+                index = i
             else:
                 break
-        self.closest_index = idx
+        self.closest_index = index
         
         j = 0
         for i in range(0, self.horizon):
@@ -442,3 +437,89 @@ def get_dist(waypoint, pose):
 def get_theta(xdiff, ydiff):
     theta = math.atan2(ydiff, xdiff)
     return zero_to_2pi(theta)
+
+
+
+import ez_yaml
+
+config = ez_yaml.to_object(string="""
+vehicle:
+    name: Warthog
+    real_length: 1 # meter (approximately)
+    real_width: 0.5 # meters (approximately)
+    render_length: 0.25 
+    render_width: 0.5
+    controller_max_velocity: 4 # meters per second
+    controller_max_spin: 2.5 # radians
+
+reward_parameters:
+    max_expected_crosstrack_error:  2.0   # meters
+    max_expected_velocity_error:    1.125 # scaled by the vehicle's controller max velocity (1.1 = 110%)
+    max_expected_angle_error:       1.047 # scaled by the vehicle's controller max angle, after scaling the units are radians
+    velocity_jerk_cost_coefficient: 1
+    spin_jerk_cost_coefficient:     0.5
+    direct_velocity_cost:           0 # no penalty for going fast
+    direct_spin_cost:               1 # no scaling of spin cost relative to combination
+    
+    # for reward_function2
+    distance_scale: 20  # base distance is 0 to 1 (is 1 when directly on point, 0 when infinitely far away) then that is scaled by this value
+                        # this number is important relative to the size of the reward from crosstrack/velocity
+                        # bigger=distance is more important than crosstrack or angle
+    completed_waypoint_bonus: 100 # this value is added for every completed waypoint (e.g. progress along the path is good; not just being close to the same point over and over)
+    
+    velocity_caps_enabled: true
+    velocity_caps:
+        # EXAMPLE:
+        #   40%: 10% 
+        #  # ^this means, if the closest waypoint has a velocity >= 40% of max-speed,
+        #  # then the velocity error must be < 10% of max speed (otherwise 0 reward)
+        
+        0%:    12.5% # 0.5m/s for warthog is (0.5/4.0) => 0.125 => 12.5%
+        62.5%: 37.5% # 2.5m/s for warthog is (2.5/4.0) => 0.625 => 62.5%, 1.5m/s is (1.5/4.0) => 37.5%
+""")
+
+
+def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
+    x_diff     = closest_waypoint.x - spacial_info.x
+    y_diff     = closest_waypoint.y - spacial_info.y
+    angle_diff = get_theta(x_diff, y_diff)
+    yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
+
+    velocity_error   = closest_waypoint.velocity - spacial_info.velocity
+    crosstrack_error = closest_distance * math.sin(yaw_error)
+    phi_error        = pi_to_pi(zero_to_2pi(closest_waypoint.angle) - spacial_info.angle)
+    
+    
+    max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
+    max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
+    max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
+
+    # base rewards
+    crosstrack_reward = max_expected_crosstrack_error - math.fabs(crosstrack_error)
+    velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
+    angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
+
+    # combine
+    running_reward = crosstrack_reward * velocity_reward * angle_reward
+
+    # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
+    running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(relative_velocity - prev_relative_velocity)
+    running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(relative_spin - prev_relative_spin)
+    # direct energy consumption
+    running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(relative_velocity)
+    running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
+    
+    if config.reward_parameters.velocity_caps_enabled:
+        abs_velocity_error = math.fabs(velocity_error)
+        for min_waypoint_speed, max_error_allowed in config.reward_parameters.velocity_caps.items():
+            # convert %'s to vehicle-specific values
+            min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
+            max_error_allowed  = float(max_error_allowed.replace( "%", ""))/100 * config.vehicle.controller_max_velocity
+            # if rule-is-active
+            if closest_waypoint.velocity >= min_waypoint_speed: # old code: self.waypoints_list[k][3] >= 2.5
+                # if rule is broken, no reward
+                if abs_velocity_error > max_error_allowed: # old code: math.fabs(self.vel_error) > 1.5
+                    running_reward = 0
+                    break
+    
+    return running_reward, velocity_error, crosstrack_error, phi_error
