@@ -22,87 +22,54 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
-    def __init__(self, waypoint_file, file_name, **kwargs):
+    def __init__(self, waypoint_file, *args, **kwargs):
         super(WarthogEnv, self).__init__()
-        self.filename = waypoint_file
         plt.ion
         self.waypoints_list = []
-        self.num_waypoints = 0
         self.pose = [0, 0, 0]
         self.twist = [0, 0]
         self.closest_index = 0
         self.prev_closest_index = 0
         self.closest_dist = math.inf
-        self.num_waypoints = 0
+        self.number_of_waypoints = 0
         self.horizon = 10
         self.dt = 0.06
         self.ref_vel = []
         self.num_steps = 0
-        self.axis_size = 20
-        if self.filename is not None:
-            self.waypoints_list, self.ref_vel, self.num_waypoints = read_waypoint_file(self.filename)
+        self.waypoints_list, self.ref_vel, self.number_of_waypoints = read_waypoint_file(waypoint_file)
         self.max_vel = 1
-        self.fig = plt.figure(dpi=100, figsize=(10, 10))
-        self.ax = self.fig.add_subplot(111)
         self.waypoints_dist = 0.5
-        # self.ax.set_box_aspect(1)
-        self.ax.set_xlim([-4, 4])
-        self.ax.set_ylim([-4, 4])
         self.warthog_length = 0.5 / 2.0
         self.warthog_width = 1.0 / 2.0
         self.warthog_diag = math.sqrt(
             self.warthog_width**2 + self.warthog_length**2
         )
-        if self.filename is not None:
-            # plot_waypoints
-            x = []
-            y = []
-            for i in range(0, self.num_waypoints):
-                x.append(self.waypoints_list[i][0])
-                y.append(self.waypoints_list[i][1])
-            self.ax.plot(x, y, "+r")
-        
-        self.rect = Rectangle(
-            (0.0, 0.0), self.warthog_width * 2, self.warthog_length * 2, fill=False
-        )
-        self.diag_ang = math.atan2(self.warthog_length, self.warthog_width)
-        self.ax.add_artist(self.rect)
-        self.prev_ang = 0
-        self.n_traj = 100
-        self.xpose = [0.0] * 100
-        self.ypose = [0.0] * 100
-        (self.cur_pos,) = self.ax.plot(self.xpose, self.ypose, "+g")
-        self.t_start = self.ax.transData
-        self.crosstrack_error = 0
-        self.vel_error = 0
-        self.phi_error = 0
-        self.text = self.ax.text(
-            1,
-            2,
-            f"vel_error={self.vel_error}",
-            style="italic",
-            bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
-            fontsize=12,
-        )
-        # self.ax.add_artist(self.text)
+        self.diag_angle              = math.atan2(self.warthog_length, self.warthog_width)
+        self.prev_angle              = 0
+        self.n_traj                  = 100
+        self.xpose                   = [0.0] * self.n_traj
+        self.ypose                   = [0.0] * self.n_traj
+        self.crosstrack_error        = 0
+        self.vel_error               = 0
+        self.phi_error               = 0
         self.start_step_for_sup_data = 500000
-        self.ep_steps = 0
-        self.max_ep_steps = 700
-        self.tprev = time.time()
-        self.total_ep_reward = 0
-        self.reward = 0
-        self.action = [0.0, 0.0]
-        self.prev_action = [0.0, 0.0]
-        self.omega_reward = 0
-        self.vel_reward = 0
-        self.is_delayed_dynamics = False
-        self.delay_steps = 5
-        self.v_delay_data = [0.0] * self.delay_steps
-        self.w_delay_data = [0.0] * self.delay_steps
-        self.save_data = False
-        self.ep_start = 1
-        self.ep_dist = 0
-        self.ep_poses = []
+        self.ep_steps                = 0
+        self.max_ep_steps            = 700
+        self.tprev                   = time.time()
+        self.total_ep_reward         = 0
+        self.reward                  = 0
+        self.action                  = [0.0, 0.0]
+        self.prev_action             = [0.0, 0.0]
+        self.omega_reward            = 0
+        self.vel_reward              = 0
+        self.is_delayed_dynamics     = False
+        self.delay_steps             = 5
+        self.v_delay_data            = [0.0] * self.delay_steps
+        self.w_delay_data            = [0.0] * self.delay_steps
+        self.save_data               = False
+        self.ep_start                = 1
+        self.ep_dist                 = 0
+        self.ep_poses                = []
 
     def step(self, action):
         self.ep_steps = self.ep_steps + 1
@@ -114,7 +81,7 @@ class WarthogEnv(gym.Env):
         self.prev_closest_index = self.closest_index
         obs = self.get_observation()
         done = False
-        if self.closest_index >= self.num_waypoints - 1:
+        if self.closest_index >= self.number_of_waypoints - 1:
             done = True
         
         # 
@@ -161,7 +128,7 @@ class WarthogEnv(gym.Env):
         self.total_ep_reward = 0
         if self.max_vel >= 5:
             self.max_vel = 1
-        index = np.random.randint(self.num_waypoints, size=1)[0]
+        index = np.random.randint(self.number_of_waypoints, size=1)[0]
         self.closest_index = index
         self.prev_closest_index = index
         self.pose[0] = self.waypoints_list[index][0] + 0.1
@@ -170,7 +137,7 @@ class WarthogEnv(gym.Env):
         self.xpose = [self.pose[0]] * self.n_traj
         self.ypose = [self.pose[1]] * self.n_traj
         self.twist = [0.0, 0.0, 0.0]
-        for i in range(0, self.num_waypoints):
+        for i in range(0, self.number_of_waypoints):
             if self.ref_vel[i] > self.max_vel:
                 self.waypoints_list[i][3] = self.max_vel
             else:
@@ -198,7 +165,7 @@ class WarthogEnv(gym.Env):
             self.twist[0] = self.v_delay_data[0]
             self.twist[1] = self.v_delay_data[1]
         dt = self.dt
-        self.prev_ang = self.pose[2]
+        self.prev_angle = self.pose[2]
         self.pose[0] = x + v_ * math.cos(th) * dt
         self.pose[1] = y + v_ * math.sin(th) * dt
         self.pose[2] = th + w_ * dt
@@ -212,7 +179,7 @@ class WarthogEnv(gym.Env):
         index   = self.closest_index
         
         self.closest_dist = math.inf
-        for i in range(self.closest_index, self.num_waypoints):
+        for i in range(self.closest_index, self.number_of_waypoints):
             dist = get_dist(self.waypoints_list[i], pose)
             if dist <= self.closest_dist:
                 self.closest_dist = dist
@@ -224,7 +191,7 @@ class WarthogEnv(gym.Env):
         j = 0
         for i in range(0, self.horizon):
             k = i + self.closest_index
-            if k < self.num_waypoints:
+            if k < self.number_of_waypoints:
                 r = get_dist(self.waypoints_list[k], pose)
                 xdiff = self.waypoints_list[k][0] - pose[0]
                 ydiff = self.waypoints_list[k][1] - pose[1]
@@ -247,58 +214,6 @@ class WarthogEnv(gym.Env):
         obs[j] = twist[0]
         obs[j + 1] = twist[1]
         return obs
-
-    def render(self, mode="human"):
-        self.ax.set_xlim(
-            [self.pose[0] - self.axis_size / 2.0, self.pose[0] + self.axis_size / 2.0]
-        )
-        self.ax.set_ylim(
-            [self.pose[1] - self.axis_size / 2.0, self.pose[1] + self.axis_size / 2.0]
-        )
-        total_diag_ang = self.diag_ang + self.pose[2]
-        xl = self.pose[0] - self.warthog_diag * math.cos(total_diag_ang)
-        yl = self.pose[1] - self.warthog_diag * math.sin(total_diag_ang)
-        # self.rect.set_xy((0, 0))
-        # t = mpl.transforms.Affine2D().rotate_around(xl, yl, self.pose[2])
-        # t = mpl.transforms.Affine2D().rotate(self.pose[2])
-        # self.rect._angle = self.pose[2]
-        # self.rect.set_xy((xl, yl))
-        # t = rect.get_patch_transform()
-        # self.rect.set_transform(t + self.t_start)
-        # self.rect.set_transform(t)
-        # self.rect.set_width(self.warthog_width * 2)
-        # self.rect.set_height(self.warthog_length * 2)
-        # del self.rect
-        self.rect.remove()
-        self.rect = Rectangle(
-            (xl, yl),
-            self.warthog_width * 2,
-            self.warthog_length * 2,
-            180.0 * self.pose[2] / math.pi,
-            facecolor="blue",
-        )
-        self.text.remove()
-        self.text = self.ax.text(
-            self.pose[0] + 1,
-            self.pose[1] + 2,
-            f"vel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.twist[0]:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.tprev:.4f}\nep_reward={self.total_ep_reward:.4f}\nmax_vel={self.max_vel:.4f}\nomega_reward={self.omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
-            style="italic",
-            bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
-            fontsize=10,
-        )
-        # print(time.time() - self.tprev)
-        self.tprev = time.time()
-        # self.ax.add_artist(self.text)
-        self.ax.add_artist(self.rect)
-        self.xpose.append(self.pose[0])
-        self.ypose.append(self.pose[1])
-        del self.xpose[0]
-        del self.ypose[0]
-        self.cur_pos.set_xdata(self.xpose)
-        self.cur_pos.set_ydata(self.ypose)
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-
 
 def read_waypoint_file(filename):
     num_waypoints = 0
