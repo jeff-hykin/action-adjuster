@@ -300,11 +300,7 @@ class WarthogEnv(gym.Env):
             or self.num_steps < self.start_step_for_sup_data
         ):
             return
-        plot_obs = False
         fig_t = None
-        if plot_obs:
-            fig_t = plt.figure()
-            plt.ion()
         m = 0
         closest_id_data = self.get_closest_index_for_supervised()
         while m < len(self.ep_poses):
@@ -340,29 +336,7 @@ class WarthogEnv(gym.Env):
             for ob in obs:
                 self.traj_file.writelines(f"{ob}, ")
             self.traj_file.writelines(f"{pose[5]}, {pose[6]}\n")
-            if plot_obs:
-                self.plot_observation(pose, obs)
             m = m + 1
-        if plot_obs:
-            plt.close(fig_t)
-
-    def plot_observation(self, pose, obs):
-        ob_way = []
-        for j in range(0, 10):
-            x_ob = pose[0] + obs[j * 4] * np.cos(obs[j * 4 + 1] + pose[2])
-            y_ob = pose[1] + obs[j * 4] * np.sin(obs[j * 4 + 1] + pose[2])
-            ob_way.append([x_ob, y_ob])
-        plt.plot(
-            [x[0] for x in self.sup_waypoint_list],
-            [x[1] for x in self.sup_waypoint_list],
-        )
-        plt.plot([x[0] for x in ob_way], [x[1] for x in ob_way], "+r")
-        plt.plot(pose[0], pose[1], "*g")
-        plt.draw()
-        plt.pause(0.001)
-        plt.clf()
-
-    
 
     def render(self, mode="human"):
         self.ax.set_xlim(
