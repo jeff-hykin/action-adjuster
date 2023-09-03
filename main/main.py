@@ -28,6 +28,8 @@ if config.policy.name == 'kinematic_sup0':
     from policies.kinematic_sup0 import policy
 if config.policy.name == 'retrained':
     from policies.retrained import policy
+if config.policy.name == 'original':
+    from policies.original import policy
 
 run_main_hooks_if_needed(__name__)
 
