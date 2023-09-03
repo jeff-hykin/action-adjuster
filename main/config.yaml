@@ -244,9 +244,10 @@
                 controller_max_spin: 2.5 # radians
             
             grug_test:
-                disable: True
-                replay_inputs: True
-                record_io: False
+                disable: False
+                replay_inputs: False
+                record_io: True
+                verbose: True
                 
         WARTHOG:
             vehicle:

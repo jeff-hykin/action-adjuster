@@ -8,6 +8,7 @@ from matplotlib.patches import Rectangle
 import gym
 import matplotlib as mpl
 import numpy as np
+from config import grug_test
 
 class WarthogEnv(gym.Env):
     action_space = spaces.Box(
@@ -214,6 +215,7 @@ class WarthogEnv(gym.Env):
         obs[j + 1] = twist[1]
         return obs
 
+@grug_test
 def read_waypoint_file(filename):
     num_waypoints = 0
     waypoints_list = []

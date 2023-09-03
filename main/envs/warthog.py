@@ -14,7 +14,7 @@ import gym
 import __dependencies__.blissful_basics as bb
 from __dependencies__.super_hash import super_hash
 from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip, countdown, LazyDict
-from __dependencies__.grug_test import yaml
+from __dependencies__.grug_test import yaml, ez_yaml
 
 from config import config, path_to, grug_test
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference, angle_created_by
@@ -721,6 +721,19 @@ def read_waypoint_file(filename):
 # 
 # support classes (mostly wrappers around lists to make debugging easier)
 # 
+def register_named_tuple(named_tuple):
+    named_tuple.yaml_tag = f"!python/named_tuple/{named_tuple.__name__}"
+    named_tuple.from_yaml = lambda constructor, node: named_tuple(**json.loads(node.value))
+    named_tuple.to_yaml = lambda representer, object_of_this_class: representer.represent_scalar(
+        tag=named_tuple.yaml_tag,
+        value=json.dumps(object_of_this_class._asdict()),
+        style=None,
+        anchor=None
+    )
+    
+    yaml.register_class(named_tuple)
+    return named_tuple
+
 SpacialInformation = namedtuple(
     "SpacialInformation",
     [ "x", "y", "angle", "velocity", "spin", "timestep" ]
@@ -730,7 +743,10 @@ ReactionClass = namedtuple(
     [ "relative_velocity", "relative_spin", ]
 )
 WaypointGap = create_named_list_class([ f"distance", f"angle_directly_towards_next", f"desired_angle_at_next", f"velocity" ])
+
+@yaml.register_class
 class Waypoint(numpy.ndarray):
+    yaml_tag = "!python/warthog/Waypoint"
     keys = [ "x", "y", "angle", "velocity" ]
     
     def __new__(cls, data):
@@ -759,6 +775,27 @@ class Waypoint(numpy.ndarray):
     
     def __repr__(self):
         return f'''Waypoint(x:{f"{self.x:.5f}".rjust(9)}, y:{f"{self.y:.5f}".rjust(9)}, angle:{f"{self.angle:.5f}".rjust(9)}, velocity:{f"{self.velocity:.5f}".rjust(9)})'''
+    
+    @classmethod
+    def from_yaml(cls, constructor, node):
+        data = json.loads(node.value)
+        return cls([data["x"],data["y"],data["angle"],data["velocity"]])
+    
+    @classmethod
+    def to_yaml(cls, representer, object_of_this_class):
+        representation = json.dumps(dict(
+            x=object_of_this_class.x,
+            y=object_of_this_class.y,
+            angle=object_of_this_class.angle,
+            velocity=object_of_this_class.velocity,
+        ))
+        # ^ needs to be a string (or some other yaml-primitive)
+        return representer.represent_scalar(
+            tag=cls.yaml_tag,
+            value=representation,
+            style=None,
+            anchor=None
+        )
 
 @yaml.register_class
 class Observation:
@@ -848,6 +885,9 @@ AdditionalInfo = namedtuple(
         "reward",
     ]
 )
+register_named_tuple(SpacialInformation)
+register_named_tuple(ReactionClass)
+register_named_tuple(AdditionalInfo)
 
 
 WarthogEnv.SpacialInformation = SpacialInformation
