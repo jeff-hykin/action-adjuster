@@ -694,10 +694,12 @@ def read_waypoint_file(filename):
     comments, column_names, rows = Csv.read(filename, separator=",", first_row_is_column_names=True, skip_empty_lines=True)
     desired_velocities = []
     waypoints_list = []
+    min_x = min(row.x for row in rows)
+    min_y = min(row.y for row in rows)
     for row in rows:
         desired_velocities.append(row.velocity)
         waypoints_list.append(
-            WarthogEnv.Waypoint([row.x, row.y, row.angle, row.velocity])
+            WarthogEnv.Waypoint([row.x-min_x, row.y-min_y, row.angle, row.velocity])
         )
     
     index = 0
