@@ -485,6 +485,16 @@ class WarthogEnv(gym.Env):
             ep_start=self.ep_start,
         )
         self.prev_closest_index = self.closest_index
+        # obs, self.closest_dist, self.closest_index = pure_get_observation(
+        pure_get_observation(
+            closest_dist=self.closest_dist,
+            closest_index=self.closest_index,
+            horizon=self.horizon,
+            number_of_waypoints=self.number_of_waypoints,
+            pose=self.pose,
+            twist=self.twist,
+            waypoints_list=self.waypoints_list,
+        )
         obs = self.get_observation()
         done = False
         if self.closest_index >= self.number_of_waypoints - 1:

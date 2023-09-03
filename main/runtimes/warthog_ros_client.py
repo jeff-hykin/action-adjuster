@@ -18,7 +18,7 @@ from __dependencies__.blissful_basics import LazyDict, stringify, Warnings, prin
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
 
-Warnings.disable()
+# Warnings.disable()
 
 debug = True
 config.ros_runtime.is_client = True

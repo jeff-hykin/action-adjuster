@@ -6,7 +6,7 @@ from __dependencies__.blissful_basics import FS, LazyDict, Warnings
 from __dependencies__.grug_test import GrugTest
 from __dependencies__.telepy_notify import Notifier
 
-Warnings.disable()
+# Warnings.disable()
 
 info = find_and_load(
     "main/config.yaml",
