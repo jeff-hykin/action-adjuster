@@ -56,7 +56,7 @@ class WarthogEnv(gym.Env):
         dtype=float,
     )
     
-    def __init__(self, waypoint_file_path, trajectory_output_path, recorder=None):
+    def __init__(self, waypoint_file_path, trajectory_output_path=None, recorder=None):
         super(WarthogEnv, self).__init__()
         self.waypoint_file_path = waypoint_file_path
         self.out_trajectory_file = trajectory_output_path
