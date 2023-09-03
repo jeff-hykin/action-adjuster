@@ -41,7 +41,7 @@ class WarthogEnv(gym.Env):
         self.num_steps = 0
         self.axis_size = 20
         if self.filename is not None:
-            self._read_waypoint_file(self.filename)
+            self.waypoints_list, self.ref_vel, self.num_waypoints = read_waypoint_file(self.filename)
         self.max_vel = 1
         self.fig = plt.figure(dpi=100, figsize=(10, 10))
         self.ax = self.fig.add_subplot(111)
@@ -416,34 +416,35 @@ class WarthogEnv(gym.Env):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-    def _read_waypoint_file(self, filename):
-        with open(filename) as csv_file:
-            pos = csv.reader(csv_file, delimiter=",")
-            for index, row in enumerate(pos):
-                if index == 0:
-                    continue
-                # utm_cord = utm.from_latlon(float(row[0]), float(row[1]))
-                utm_cord = [float(row[0]), float(row[1])]
-                # phi = math.pi/4
-                phi = 0.0
-                xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
-                ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
-                #   self.waypoints_list.append(np.array([xcoord, ycoord, float(row[2]),float(row[3])]))
-                # self.waypoints_list.append(np.array([xcoord, ycoord, float(row[2]),2.5]))
-                self.waypoints_list.append(
-                    np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])])
-                )
-                self.ref_vel.append(float(row[3]))
-            # self.waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
-            for i in range(0, len(self.waypoints_list) - 1):
-                xdiff = self.waypoints_list[i + 1][0] - self.waypoints_list[i][0]
-                ydiff = self.waypoints_list[i + 1][1] - self.waypoints_list[i][1]
-                self.waypoints_list[i][2] = zero_to_2pi(
-                    get_theta(xdiff, ydiff)
-                )
-            self.waypoints_list[i + 1][2] = self.waypoints_list[i][2]
-            self.num_waypoints = i + 2
-        pass
+
+def read_waypoint_file(self, filename):
+    num_waypoints = 0
+    waypoints_list = []
+    ref_vel = []
+    with open(filename) as csv_file:
+        pos = csv.reader(csv_file, delimiter=",")
+        for index, row in enumerate(pos):
+            if index == 0: # skip column names
+                continue
+            utm_cord = [float(row[0]), float(row[1])]
+            phi = 0.0
+            xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
+            ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
+            waypoints_list.append(
+                np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])])
+            )
+            ref_vel.append(float(row[3]))
+        # waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
+        for i in range(0, len(waypoints_list) - 1):
+            xdiff = waypoints_list[i + 1][0] - waypoints_list[i][0]
+            ydiff = waypoints_list[i + 1][1] - waypoints_list[i][1]
+            waypoints_list[i][2] = zero_to_2pi(
+                get_theta(xdiff, ydiff)
+            )
+        waypoints_list[i + 1][2] = waypoints_list[i][2]
+        num_waypoints = i + 2
+    
+    return waypoints_list, ref_vel, num_waypoints
 
 def zero_to_2pi(theta):
         if theta < 0:
