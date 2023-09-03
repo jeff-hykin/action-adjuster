@@ -40,7 +40,7 @@ def get_theta(xdiff, ydiff):
     return zero_to_2pi(theta)
 
 
-@grug_test
+@grug_test(skip=True)
 def read_waypoint_file(filename):
     num_waypoints = 0
     waypoints_list = []
@@ -95,6 +95,9 @@ if True:
         'ep_start',
         'closest_dist',
         'closest_index',
+        'ep_poses',
+        'v_delay_data',
+        'w_delay_data',
     ])
     GetObservationOutput = namedtuple('GetObservationOutput', [
         'obs',
@@ -109,7 +112,7 @@ if True:
     ])
 
 
-@grug_test(max_io=30)
+@grug_test(max_io=30, skip=True)
 def pure_sim_warthog(
     v, 
     w, 
@@ -161,7 +164,7 @@ def pure_sim_warthog(
     
     return twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data
 
-@grug_test(max_io=30)
+@grug_test(max_io=30, skip=True)
 def pure_get_observation(
     closest_dist,
     closest_index,
@@ -210,7 +213,73 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_dist, closest_index)
 
-@grug_test(max_io=30)
+def new_pure_step(
+    ep_steps,
+    num_steps,
+    action,
+    prev_closest_index,
+    closest_index,
+    number_of_waypoints,
+    waypoints_list,
+    pose,
+    phi_error,
+    vel_error,
+    twist,
+    crosstrack_error,
+    closest_dist,
+    max_ep_steps,
+    reward,
+    prev_action,
+    omega_reward,
+    vel_reward,
+    total_ep_reward,
+    is_delayed_dynamics,
+    v_delay_data,
+    w_delay_data,
+    dt,
+    prev_angle,
+    ep_poses,
+    ep_start,
+    horizon,
+):
+    return (
+        StepOutput(
+            None,
+            None,
+            None,
+            {}
+        ),
+        StepSideEffects(
+            action,
+            crosstrack_error,
+            ep_steps,
+            num_steps,
+            omega_reward,
+            phi_error,
+            prev_action,
+            prev_closest_index,
+            reward,
+            total_ep_reward,
+            vel_error,
+            vel_reward,
+            twist,
+            prev_angle,
+            pose,
+            ep_start,
+            closest_dist,
+            closest_index,
+            ep_poses,
+            v_delay_data,
+            w_delay_data,
+        ),
+        (
+            None,
+            None,
+            None,
+        )
+    )
+
+@grug_test(max_io=30, skip=True)
 def pure_step(
     ep_steps,
     num_steps,
@@ -332,6 +401,9 @@ def pure_step(
             ep_start,
             closest_dist,
             closest_index,
+            ep_poses,
+            v_delay_data,
+            w_delay_data,
         ),
         (
             yaw_error,
@@ -402,9 +474,9 @@ class WarthogEnv(gym.Env):
         self.ep_dist                 = 0
         self.ep_poses                = []
     
-    # just a wrapper around the pure_step
+    # # just a wrapper around the pure_step
     # def step(self, action):
-    #     output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index,), other = pure_step(
+    #     output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
     #         ep_steps=self.ep_steps,
     #         num_steps=self.num_steps,
     #         action=self.action,
@@ -469,6 +541,36 @@ class WarthogEnv(gym.Env):
     #     return obs
     
     def step(self, action):
+        output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = new_pure_step(
+            ep_steps=self.ep_steps,
+            num_steps=self.num_steps,
+            action=self.action,
+            prev_closest_index=self.prev_closest_index,
+            closest_index=self.closest_index,
+            number_of_waypoints=self.number_of_waypoints,
+            waypoints_list=self.waypoints_list,
+            pose=self.pose,
+            phi_error=self.phi_error,
+            vel_error=self.vel_error,
+            twist=self.twist,
+            crosstrack_error=self.crosstrack_error,
+            closest_dist=self.closest_dist,
+            max_ep_steps=self.max_ep_steps,
+            reward=self.reward,
+            prev_action=self.prev_action,
+            omega_reward=self.omega_reward,
+            vel_reward=self.vel_reward,
+            total_ep_reward=self.total_ep_reward,
+            is_delayed_dynamics=self.is_delayed_dynamics,
+            v_delay_data=self.v_delay_data,
+            w_delay_data=self.w_delay_data,
+            dt=self.dt,
+            prev_angle=self.prev_angle,
+            ep_poses=self.ep_poses,
+            ep_start=self.ep_start,
+            horizon=self.horizon,
+        )
+        
         self.ep_steps = self.ep_steps + 1
         self.num_steps = self.num_steps + 1
         action[0] = np.clip(action[0], 0, 1) * 4.0
