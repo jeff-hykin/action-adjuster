@@ -105,7 +105,7 @@ class WarthogEnv(gym.Env):
         self.simulated_battery_level = 1.0 # proportion 
         
         if self.waypoint_file_path is not None:
-            self._read_waypoint_file_path(self.waypoint_file_path)
+            self.desired_velocities, self.waypoints_list = self.read_waypoint_file(self.waypoint_file_path)
         
         self.prev_angle = 0
         self.x_pose = [0.0] * self.number_of_trajectories
@@ -689,27 +689,32 @@ class WarthogEnv(gym.Env):
             y.append(each_waypoint.y)
         self.ax.plot(x, y, "+r")
 
-    def _read_waypoint_file_path(self, filename):
-        comments, column_names, rows = Csv.read(filename, separator=",", first_row_is_column_names=True, skip_empty_lines=True)
-        for row in rows:
-            self.desired_velocities.append(row.velocity)
-            self.waypoints_list.append(
-                WarthogEnv.Waypoint([row.x, row.y, row.angle, row.velocity])
-            )
+@grug_test(max_io=10)
+def read_waypoint_file(filename):
+    comments, column_names, rows = Csv.read(filename, separator=",", first_row_is_column_names=True, skip_empty_lines=True)
+    desired_velocities = []
+    waypoints_list = []
+    for row in rows:
+        desired_velocities.append(row.velocity)
+        waypoints_list.append(
+            WarthogEnv.Waypoint([row.x, row.y, row.angle, row.velocity])
+        )
+    
+    index = 0
+    for index in range(0, len(waypoints_list) - 1):
+        current_waypoint = waypoints_list[index]
+        next_waypoint    = waypoints_list[index+1]
         
-        index = 0
-        for index in range(0, len(self.waypoints_list) - 1):
-            current_waypoint = self.waypoints_list[index]
-            next_waypoint    = self.waypoints_list[index+1]
-            
-            x_diff = next_waypoint.x - current_waypoint.x # meters
-            y_diff = next_waypoint.y - current_waypoint.y # meters
-            # angle radians
-            current_waypoint.angle = zero_to_2pi(get_angle_from_origin(x_diff, y_diff))
-        
-        assert self.waypoints_list[index+1].tolist() == self.waypoints_list[-1].tolist()
-        final_waypoint = self.waypoints_list[index + 1]
-        final_waypoint.angle = self.waypoints_list[-2].angle # fill in the blank value
+        x_diff = next_waypoint.x - current_waypoint.x # meters
+        y_diff = next_waypoint.y - current_waypoint.y # meters
+        # angle radians
+        current_waypoint.angle = zero_to_2pi(get_angle_from_origin(x_diff, y_diff))
+    
+    assert waypoints_list[index+1].tolist() == waypoints_list[-1].tolist()
+    final_waypoint = waypoints_list[index + 1]
+    final_waypoint.angle = waypoints_list[-2].angle # fill in the blank value
+    
+    return desired_velocities, waypoints_list
 
 # 
 # support classes (mostly wrappers around lists to make debugging easier)
