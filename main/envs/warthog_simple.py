@@ -135,30 +135,11 @@ class WarthogEnv(gym.Env):
     def close_files(self):
         self.traj_file.close()
 
-    def zero_to_2pi(self, theta):
-        if theta < 0:
-            theta = 2 * math.pi + theta
-        elif theta > 2 * math.pi:
-            theta = theta - 2 * math.pi
-        return theta
-
-    def pi_to_pi(self, theta):
-        if theta < -math.pi:
-            theta = theta + 2 * math.pi
-        elif theta > math.pi:
-            theta = theta - 2 * math.pi
-        return theta
-
-    def get_dist(self, waypoint, pose):
-        xdiff = pose[0] - waypoint[0]
-        ydiff = pose[1] - waypoint[1]
-        return math.sqrt(xdiff * xdiff + ydiff * ydiff)
-
     def update_closest_idx(self, pose):
         idx = self.closest_idx
         self.closest_dist = math.inf
         for i in range(self.closest_idx, self.num_waypoints):
-            dist = self.get_dist(self.waypoints_list[i], pose)
+            dist = get_dist(self.waypoints_list[i], pose)
             if dist <= self.closest_dist:
                 self.closest_dist = dist
                 idx = i
@@ -174,7 +155,7 @@ class WarthogEnv(gym.Env):
             closest_dist = math.inf
             pose = self.ep_poses[k][0:2]
             for i in range(idx, num_sup_waypoints):
-                dist = self.get_dist(self.sup_waypoint_list[i][0:2], pose)
+                dist = get_dist(self.sup_waypoint_list[i][0:2], pose)
                 if dist <= closest_dist:
                     closest_dist = dist
                     idx = i
@@ -185,7 +166,7 @@ class WarthogEnv(gym.Env):
 
     def get_theta(self, xdiff, ydiff):
         theta = math.atan2(ydiff, xdiff)
-        return self.zero_to_2pi(theta)
+        return zero_to_2pi(theta)
 
     def get_observation(self):
         obs = [0] * (self.horizon * 4 + 2)
@@ -196,17 +177,17 @@ class WarthogEnv(gym.Env):
         for i in range(0, self.horizon):
             k = i + self.closest_idx
             if k < self.num_waypoints:
-                r = self.get_dist(self.waypoints_list[k], pose)
+                r = get_dist(self.waypoints_list[k], pose)
                 xdiff = self.waypoints_list[k][0] - pose[0]
                 ydiff = self.waypoints_list[k][1] - pose[1]
                 th = self.get_theta(xdiff, ydiff)
-                vehicle_th = self.zero_to_2pi(pose[2])
+                vehicle_th = zero_to_2pi(pose[2])
                 # vehicle_th = -vehicle_th
                 # vehicle_th = 2*math.pi - vehicle_th
-                yaw_error = self.pi_to_pi(self.waypoints_list[k][2] - vehicle_th)
+                yaw_error = pi_to_pi(self.waypoints_list[k][2] - vehicle_th)
                 vel = self.waypoints_list[k][3]
                 obs[j] = r
-                obs[j + 1] = self.pi_to_pi(th - vehicle_th)
+                obs[j + 1] = pi_to_pi(th - vehicle_th)
                 obs[j + 2] = yaw_error
                 obs[j + 3] = vel - twist[0]
             else:
@@ -236,8 +217,8 @@ class WarthogEnv(gym.Env):
         xdiff = self.waypoints_list[k][0] - self.pose[0]
         ydiff = self.waypoints_list[k][1] - self.pose[1]
         th = self.get_theta(xdiff, ydiff)
-        yaw_error = self.pi_to_pi(th - self.pose[2])
-        self.phi_error = self.pi_to_pi(
+        yaw_error = pi_to_pi(th - self.pose[2])
+        self.phi_error = pi_to_pi(
             self.waypoints_list[self.closest_idx][2] - self.pose[2]
         )
         self.vel_error = self.waypoints_list[k][3] - self.twist[0]
@@ -311,17 +292,17 @@ class WarthogEnv(gym.Env):
             for i in range(0, self.horizon):
                 k = i + closest_id_data[m]
                 if k < len(self.sup_waypoint_list):
-                    r = self.get_dist(self.sup_waypoint_list[k], pose)
+                    r = get_dist(self.sup_waypoint_list[k], pose)
                     xdiff = self.sup_waypoint_list[k][0] - pose[0]
                     ydiff = self.sup_waypoint_list[k][1] - pose[1]
                     th = self.get_theta(xdiff, ydiff)
-                    vehicle_th = self.zero_to_2pi(pose[2])
+                    vehicle_th = zero_to_2pi(pose[2])
                     # vehicle_th = -vehicle_th
                     # vehicle_th = 2*math.pi - vehicle_th
-                    yaw_error = self.pi_to_pi(self.sup_waypoint_list[k][2] - vehicle_th)
+                    yaw_error = pi_to_pi(self.sup_waypoint_list[k][2] - vehicle_th)
                     vel = self.sup_waypoint_list[k][3]
                     obs[j] = r
-                    obs[j + 1] = self.pi_to_pi(th - vehicle_th)
+                    obs[j + 1] = pi_to_pi(th - vehicle_th)
                     obs[j + 2] = yaw_error
                     obs[j + 3] = vel - twist[0]
                 else:
@@ -459,9 +440,28 @@ class WarthogEnv(gym.Env):
             for i in range(0, len(self.waypoints_list) - 1):
                 xdiff = self.waypoints_list[i + 1][0] - self.waypoints_list[i][0]
                 ydiff = self.waypoints_list[i + 1][1] - self.waypoints_list[i][1]
-                self.waypoints_list[i][2] = self.zero_to_2pi(
+                self.waypoints_list[i][2] = zero_to_2pi(
                     self.get_theta(xdiff, ydiff)
                 )
             self.waypoints_list[i + 1][2] = self.waypoints_list[i][2]
             self.num_waypoints = i + 2
         pass
+
+def zero_to_2pi(theta):
+        if theta < 0:
+            theta = 2 * math.pi + theta
+        elif theta > 2 * math.pi:
+            theta = theta - 2 * math.pi
+        return theta
+
+def pi_to_pi(theta):
+    if theta < -math.pi:
+        theta = theta + 2 * math.pi
+    elif theta > math.pi:
+        theta = theta - 2 * math.pi
+    return theta
+
+def get_dist(waypoint, pose):
+    xdiff = pose[0] - waypoint[0]
+    ydiff = pose[1] - waypoint[1]
+    return math.sqrt(xdiff * xdiff + ydiff * ydiff)

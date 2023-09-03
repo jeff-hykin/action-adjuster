@@ -234,7 +234,7 @@ with notifier.when_done:
                         v_ = v_.detach().cpu().numpy()
                     data_buff.finish_path(v_)
                 if curr_time_step % 100_000 == 0:
-                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo__rew_{int(average)}_timestep_{curr_time_step}.pt"
+                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo__rew_{int(average(ep_rewards))}_timestep_{curr_time_step}.pt"
                     numpy_save_path = f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}"
                     FS.ensure_is_folder(FS.parent_path(torch_save_path))
                     FS.ensure_is_folder(FS.parent_path(numpy_save_path))
