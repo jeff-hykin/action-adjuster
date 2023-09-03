@@ -25,7 +25,6 @@ class WarthogEnv(gym.Env):
     def __init__(self, waypoint_file, file_name, **kwargs):
         super(WarthogEnv, self).__init__()
         self.filename = waypoint_file
-        self.out_traj_file = file_name
         plt.ion
         self.waypoints_list = []
         self.num_waypoints = 0
@@ -102,9 +101,6 @@ class WarthogEnv(gym.Env):
         self.w_delay_data = [0.0] * self.delay_steps
         self.save_data = False
         self.ep_start = 1
-        self.traj_file = None
-        if self.out_traj_file is not None:
-            self.traj_file = open(file_name, "w")
         self.ep_dist = 0
         self.ep_poses = []
         self.sup_waypoint_list = []
@@ -161,7 +157,6 @@ class WarthogEnv(gym.Env):
     
     def reset(self):
         self.get_waypoints_for_sup_learning()
-        self.save_obs_for_supervised_learning()
         self.ep_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
@@ -286,52 +281,6 @@ class WarthogEnv(gym.Env):
                 self.sup_waypoint_list.append(curr_waypoint)
                 prev_waypoint = curr_waypoint
             k = k + 1
-
-    def save_obs_for_supervised_learning(self):
-        if self.traj_file is None:
-            return
-        if (
-            len(self.sup_waypoint_list) < 25
-            or self.num_steps < self.start_step_for_sup_data
-        ):
-            return
-        fig_t = None
-        m = 0
-        closest_id_data = self.get_closest_index_for_supervised()
-        while m < len(self.ep_poses):
-            pose = self.ep_poses[m]
-            twist = [0, 0]
-            twist[0] = self.ep_poses[m][3]
-            twist[1] = self.ep_poses[m][4]
-            j = 0
-            obs = [0] * (self.horizon * 4 + 2)
-            for i in range(0, self.horizon):
-                k = i + closest_id_data[m]
-                if k < len(self.sup_waypoint_list):
-                    r = get_dist(self.sup_waypoint_list[k], pose)
-                    xdiff = self.sup_waypoint_list[k][0] - pose[0]
-                    ydiff = self.sup_waypoint_list[k][1] - pose[1]
-                    th = get_theta(xdiff, ydiff)
-                    vehicle_th = zero_to_2pi(pose[2])
-                    # vehicle_th = -vehicle_th
-                    # vehicle_th = 2*math.pi - vehicle_th
-                    yaw_error = pi_to_pi(self.sup_waypoint_list[k][2] - vehicle_th)
-                    vel = self.sup_waypoint_list[k][3]
-                    obs[j] = r
-                    obs[j + 1] = pi_to_pi(th - vehicle_th)
-                    obs[j + 2] = yaw_error
-                    obs[j + 3] = vel - twist[0]
-                else:
-                    obs[j] = 0.0
-                    obs[j + 1] = 0.0
-                    obs[j + 2] = 0.0
-                    obs[j + 3] = 0.0
-                j = j + 4
-                obs[j] = twist[0]
-            for ob in obs:
-                self.traj_file.writelines(f"{ob}, ")
-            self.traj_file.writelines(f"{pose[5]}, {pose[6]}\n")
-            m = m + 1
 
     def render(self, mode="human"):
         self.ax.set_xlim(
