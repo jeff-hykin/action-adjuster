@@ -195,7 +195,7 @@ with notifier.when_done:
         ep_rewards     = [0]
         ep_steps       = [0]
         start_time = time.time()
-        progress_notifications = iter(notifier.progress(train_time_steps, minutes_per_notify=60, percent_per_notify=10, smoothing_buffer_size=1000))
+        progress_notifications = iter(notifier.progress(train_time_steps, minutes_per_notify=60, percent_per_notify=10, smoothing_buffer_size=5))
         while curr_time_step < train_time_steps:
             for t in range(0, buff_size):
                 curr_time_step += 1
@@ -234,7 +234,7 @@ with notifier.when_done:
                         v_ = v_.detach().cpu().numpy()
                     data_buff.finish_path(v_)
                 if curr_time_step % 100_000 == 0:
-                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo__rew_{int(average(ep_rewards))}_timestep_{curr_time_step}.pt"
+                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo__rew_{int(sum(ep_rewards))}_timestep_{curr_time_step}.pt"
                     numpy_save_path = f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}"
                     FS.ensure_is_folder(FS.parent_path(torch_save_path))
                     FS.ensure_is_folder(FS.parent_path(numpy_save_path))
