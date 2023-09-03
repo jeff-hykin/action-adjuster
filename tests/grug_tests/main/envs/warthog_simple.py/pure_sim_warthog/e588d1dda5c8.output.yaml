@@ -1,0 +1,35 @@
+error_output: None
+normal_output:
+- - !<python/numpy/float64> 2.24
+  - !<python/numpy/float64> 1.4000000000000001
+- 0.0
+- - !<python/numpy/float64> 0.12
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.075
+- 0
+- - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+    - 2.24
+    - 1.4000000000000001
+- - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+- - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0

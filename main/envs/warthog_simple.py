@@ -89,7 +89,7 @@ if True:
     ])
 
 
-@grug_test(max_io=30, skip=True)
+@grug_test(max_io=30, skip=False)
 def pure_sim_warthog(
     v, 
     w, 
@@ -141,7 +141,7 @@ def pure_sim_warthog(
     
     return twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data
 
-@grug_test(max_io=30, skip=True)
+@grug_test(max_io=30, skip=False)
 def pure_get_observation(
     closest_dist,
     closest_index,
@@ -190,7 +190,7 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_dist, closest_index)
 
-@grug_test(max_io=30, skip=True)
+@grug_test(max_io=30, skip=False)
 def pure_reward(
     closest_waypoint,
     pose,
@@ -224,7 +224,7 @@ def pure_reward(
     
     return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
 
-@grug_test(max_io=30, skip=True)
+@grug_test(max_io=30, skip=False)
 def pure_reward_wrapper(
     total_ep_reward,
     closest_index,
@@ -233,7 +233,7 @@ def pure_reward_wrapper(
     twist,
     closest_dist,
     ep_steps,
-    max_ep_steps,
+    max_number_of_timesteps_per_episode,
     action,
     prev_action,
     done,
@@ -256,7 +256,7 @@ def pure_reward_wrapper(
     if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
         done = True
     
-    if ep_steps >= max_ep_steps:
+    if ep_steps >= max_number_of_timesteps_per_episode:
         done = True
         ep_steps = 0
     
@@ -266,7 +266,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
-@grug_test(max_io=60, skip=True)
+@grug_test(max_io=60, skip=False)
 def pure_step(
     action,
     closest_dist,
@@ -278,7 +278,7 @@ def pure_step(
     ep_steps,
     horizon,
     is_delayed_dynamics,
-    max_ep_steps,
+    max_number_of_timesteps_per_episode,
     num_steps,
     number_of_waypoints,
     omega_reward,
@@ -337,7 +337,7 @@ def pure_step(
         twist=twist,
         closest_dist=closest_dist,
         ep_steps=ep_steps,
-        max_ep_steps=max_ep_steps,
+        max_number_of_timesteps_per_episode=max_number_of_timesteps_per_episode,
         action=action,
         prev_action=prev_action,
         done=done,
@@ -405,9 +405,8 @@ class WarthogEnv(gym.Env):
         self.closest_dist = math.inf
         self.horizon = 10
         self.dt = 0.06
-        self.ref_vel = []
         self.num_steps = 0
-        self.ref_vel, self.waypoints_list = read_waypoint_file(waypoint_file)
+        self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file)
         self.number_of_waypoints = len(self.waypoints_list)
         self.max_vel = 1
         self.waypoints_dist = 0.5
@@ -419,14 +418,14 @@ class WarthogEnv(gym.Env):
         self.diag_angle              = math.atan2(self.warthog_length, self.warthog_width)
         self.prev_angle              = 0
         self.n_traj                  = 100
-        self.xpose                   = [0.0] * self.n_traj
-        self.ypose                   = [0.0] * self.n_traj
+        self.x_pose                   = [0.0] * self.n_traj
+        self.y_pose                   = [0.0] * self.n_traj
         self.crosstrack_error        = 0
         self.vel_error               = 0
         self.phi_error               = 0
         self.start_step_for_sup_data = 500000
         self.ep_steps                = 0
-        self.max_ep_steps            = 700
+        self.max_number_of_timesteps_per_episode            = 700
         self.tprev                   = time.time()
         self.total_ep_reward         = 0
         self.reward                  = 0
@@ -463,7 +462,7 @@ class WarthogEnv(gym.Env):
             self.ax.set_ylim([-4, 4])
             self.rect = Rectangle((0.0, 0.0), config.vehicle.render_width * 2, config.vehicle.render_length * 2, fill=False)
             self.ax.add_artist(self.rect)
-            (self.cur_pos,) = self.ax.plot(self.xpose, self.ypose, "+g")
+            (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
             self.text = self.ax.text(1, 2, f"vel_error={self.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
             x = []
             y = []
@@ -487,7 +486,7 @@ class WarthogEnv(gym.Env):
             ep_steps=self.ep_steps,
             horizon=self.horizon,
             is_delayed_dynamics=self.is_delayed_dynamics,
-            max_ep_steps=self.max_ep_steps,
+            max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
             num_steps=self.num_steps,
             number_of_waypoints=self.number_of_waypoints,
             omega_reward=self.omega_reward,
@@ -520,14 +519,14 @@ class WarthogEnv(gym.Env):
         self.pose[0] = self.waypoints_list[index][0] + 0.1
         self.pose[1] = self.waypoints_list[index][1] + 0.1
         self.pose[2] = self.waypoints_list[index][2] + 0.01
-        self.xpose = [self.pose[0]] * self.n_traj
-        self.ypose = [self.pose[1]] * self.n_traj
+        self.x_pose = [self.pose[0]] * self.n_traj
+        self.y_pose = [self.pose[1]] * self.n_traj
         self.twist = [0.0, 0.0, 0.0]
         for i in range(0, self.number_of_waypoints):
-            if self.ref_vel[i] > self.max_vel:
+            if self.desired_velocities[i] > self.max_vel:
                 self.waypoints_list[i][3] = self.max_vel
             else:
-                self.waypoints_list[i][3] = self.ref_vel[i]
+                self.waypoints_list[i][3] = self.desired_velocities[i]
         # self.max_vel = 2
         self.max_vel = self.max_vel + 1
         obs, self.closest_dist, self.closest_index = pure_get_observation(
@@ -573,18 +572,18 @@ class WarthogEnv(gym.Env):
         )
         self.prev_timestamp = time.time()
         self.ax.add_artist(self.rect)
-        self.xpose.append(spacial_info_x)
-        self.ypose.append(spacial_info_y)
-        del self.xpose[0]
-        del self.ypose[0]
-        self.cur_pos.set_xdata(self.xpose)
-        self.cur_pos.set_ydata(self.ypose)
+        self.x_pose.append(spacial_info_x)
+        self.y_pose.append(spacial_info_y)
+        del self.x_pose[0]
+        del self.y_pose[0]
+        self.cur_pos.set_xdata(self.x_pose)
+        self.cur_pos.set_ydata(self.y_pose)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
-    @grug_test(skip=True)
+    @grug_test(skip=False)
     def smoke_test_warthog(trajectory_file):
         actual_starting_setting = config.simulator.starting_waypoint
         config.simulator.starting_waypoint = 0 # force override it for test
@@ -603,7 +602,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     number_of_waypoints=env.number_of_waypoints,
                     horizon=env.horizon,
                     dt=env.dt,
-                    ref_vel=env.ref_vel,
+                    desired_velocities=env.desired_velocities,
                     num_steps=env.num_steps,
                     max_vel=env.max_vel,
                     waypoints_dist=env.waypoints_dist,
@@ -613,14 +612,14 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     diag_angle=env.diag_angle,
                     prev_angle=env.prev_angle,
                     n_traj=env.n_traj,
-                    xpose=env.xpose,
-                    ypose=env.ypose,
+                    x_pose=env.x_pose,
+                    y_pose=env.y_pose,
                     crosstrack_error=env.crosstrack_error,
                     vel_error=env.vel_error,
                     phi_error=env.phi_error,
                     start_step_for_sup_data=env.start_step_for_sup_data,
                     ep_steps=env.ep_steps,
-                    max_ep_steps=env.max_ep_steps,
+                    max_number_of_timesteps_per_episode=env.max_number_of_timesteps_per_episode,
                     total_ep_reward=env.total_ep_reward,
                     reward=env.reward,
                     action=env.action,
@@ -650,7 +649,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
         finally:
             config.simulator.starting_waypoint = actual_starting_setting
     
-    # smoke_test_warthog("real1.csv")
+    if grug_test.replay_inputs:
+        smoke_test_warthog("real1.csv")
     # exit()
 
 

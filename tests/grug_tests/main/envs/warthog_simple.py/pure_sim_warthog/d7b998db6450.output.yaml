@@ -1,0 +1,51 @@
+error_output: None
+normal_output:
+- - !<python/numpy/float64> 2.2712
+  - !<python/numpy/float64> 1.4195
+- !<python/numpy/float64> 0.159
+- - !<python/numpy/float64> 0.3883856787230399
+  - !<python/numpy/float64> 0.031616221507181845
+  - !<python/numpy/float64> 0.24405
+- 0
+- - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+    - 2.24
+    - 1.4000000000000001
+  - !<python/numpy/ndarray>
+    - 0.12
+    - 0.0
+    - 0.075
+    - 2.24
+    - 1.4000000000000001
+    - 2.268
+    - 1.4175
+  - !<python/numpy/ndarray>
+    - 0.25402217715428066
+    - 0.010070552657456572
+    - 0.159
+    - 2.268
+    - 1.4175
+    - 2.2712
+    - 1.4195
+- - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+- - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0

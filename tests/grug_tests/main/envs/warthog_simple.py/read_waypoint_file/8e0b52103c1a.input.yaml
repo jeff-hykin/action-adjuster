@@ -1,4 +1,0 @@
-args:
-- waypoint_paths/real1.csv
-kwargs: {}
-pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15\"\0\0\0\x05\0\0\0\0\f\x18w\x10aypoint\0_paths/\0real1.c\0sv\x14\x05\x14}\x14\\\x06\x14.\0\0\0\0\x03\x04"

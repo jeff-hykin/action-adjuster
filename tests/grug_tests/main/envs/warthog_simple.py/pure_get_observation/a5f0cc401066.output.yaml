@@ -1,0 +1,47 @@
+error_output: None
+normal_output: !python/named_tuple/GetObservationOutput
+   obs:
+   - 22.535511549249115
+   - !<python/numpy/float64> 0.32820256568325124
+   - !<python/numpy/float64> 0.6383302889220217
+   - !<python/numpy/float64> -2.2609667410276613
+   - 23.013870774651462
+   - !<python/numpy/float64> 0.33485667624129345
+   - !<python/numpy/float64> 2.619614920612085
+   - !<python/numpy/float64> -2.265749035460548
+   - 22.643729330129087
+   - !<python/numpy/float64> 0.35393388362465006
+   - !<python/numpy/float64> 2.9341399874446505
+   - !<python/numpy/float64> -1.35620775820626
+   - 22.09878269971956
+   - !<python/numpy/float64> 0.3695188712736266
+   - !<python/numpy/float64> 2.9410182906749083
+   - !<python/numpy/float64> -0.8890679048045422
+   - 21.552111931523438
+   - !<python/numpy/float64> 0.3858668132990041
+   - !<python/numpy/float64> 2.8353159825827383
+   - !<python/numpy/float64> -0.38082172942057024
+   - 21.136895750303932
+   - !<python/numpy/float64> 0.4022629034281019
+   - !<python/numpy/float64> 2.8315268334527413
+   - !<python/numpy/float64> -0.25938961099224445
+   - 20.751304254285067
+   - !<python/numpy/float64> 0.4184231381359347
+   - !<python/numpy/float64> 2.929408869543286
+   - !<python/numpy/float64> -0.20480607786775717
+   - 20.327770674833484
+   - !<python/numpy/float64> 0.43371978593575916
+   - !<python/numpy/float64> 2.742070216183943
+   - !<python/numpy/float64> -0.16245746344477352
+   - 19.894961590974404
+   - !<python/numpy/float64> 0.4579889981789859
+   - !<python/numpy/float64> 2.7024112361457946
+   - !<python/numpy/float64> -0.06752305151083915
+   - 19.575898883364616
+   - !<python/numpy/float64> 0.47867869071970165
+   - !<python/numpy/float64> 2.8092309479668294
+   - !<python/numpy/float64> -0.035781468364914026
+   - !<python/numpy/float64> 2.24
+   - !<python/numpy/float64> 1.4000000000000001
+   closest_dist: 22.535511549249115
+   closest_index: 0

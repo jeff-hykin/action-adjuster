@@ -1,0 +1,17 @@
+error_output: None
+normal_output:
+- 0
+- 5.459971510259269
+- !<python/numpy/float64> 20.594347205982462
+- !<python/numpy/float64> 8.83210019340822
+- !<python/numpy/float64> 0.2461359005068496
+- !<python/numpy/float64> 0.5543302889220216
+- !<python/numpy/float64> -2.288966741027661
+- true
+- 3
+- -2.835
+- -0.02799999999999958
+- !python/named_tuple/Action
+  velocity: !<python/numpy/float64> 2.268
+  spin: !<python/numpy/float64> 1.4175
+- 0

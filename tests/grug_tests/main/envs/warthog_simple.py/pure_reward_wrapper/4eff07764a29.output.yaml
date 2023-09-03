@@ -1,2 +1,0 @@
-error_output: "TypeError(\"pure_reward_wrapper() missing 2 required positional arguments: 'prev_action' and 'done'\")"
-normal_output: null
