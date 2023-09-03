@@ -31,139 +31,222 @@ from .__dependencies__.informative_iterator import ProgressBar
 
 yaml.width = 999999999999999
 
-@yaml.register_class
-class YamlPickled:
-    yaml_tag = "!python/pickled"
-    delimiter = ":"
-    
-    def __init__(self, value):
-        self.value = value
-    
-    @classmethod
-    def from_yaml(cls, constructor, node):
-        string = node.value[node.value.index(YamlPickled.delimiter)+1:]
-        # node.value is the python-value
-        return pickle.loads(valid_string_to_bytes(string))
-    
-    @classmethod
-    def to_yaml(cls, representer, data):
-        prefix = f"{type(data.value)}".replace(YamlPickled.delimiter, "")
-        if prefix.startswith("<class '") and prefix.endswith("'>"):
-            prefix = prefix[8:-2]
+# 
+# 
+# extend yaml support
+# 
+# 
+if True:
+    # 
+    # fallback for anything to be pickled
+    # 
+    @yaml.register_class
+    class YamlPickled:
+        yaml_tag = "!python/pickled"
+        delimiter = ":"
+        
+        def __init__(self, value):
+            self.value = value
+        
+        @classmethod
+        def from_yaml(cls, constructor, node):
+            string = node.value[node.value.index(YamlPickled.delimiter)+1:]
+            # node.value is the python-value
+            return pickle.loads(valid_string_to_bytes(string))
+        
+        @classmethod
+        def to_yaml(cls, representer, data):
+            prefix = f"{type(data.value)}".replace(YamlPickled.delimiter, "")
+            if prefix.startswith("<class '") and prefix.endswith("'>"):
+                prefix = prefix[8:-2]
+                
+            # value needs to be a string (or some other yaml-primitive)
+            return representer.represent_scalar(
+                tag=cls.yaml_tag,
+                value=prefix + YamlPickled.delimiter + bytes_to_valid_string(
+                    pickle.dumps(data.value, protocol=4)
+                ),
+                style=None,
+                anchor=None
+            )
+        
+    # 
+    # named_tuple support
+    # 
+    if True:
+        def is_probably_named_tuple(obj):
+            return (
+                isinstance(obj, tuple) and
+                hasattr(obj.__class__, '_asdict') and
+                hasattr(obj.__class__, '_fields')
+            )
+        
+        named_tuple_name_registry = {}
+        named_tuple_class_registry = {}
+        def named_tuple_summary(named_tuple):
+            the_class = named_tuple.__class__
+            fields          = getattr(the_class, "_fields", None)
+            field_defaults  = getattr(the_class, "_field_defaults", getattr(getattr(the_class, '__new__', None), '__defaults__', {})) # fallback is for python 3.6
+            no_defaults = len(field_defaults.keys()) == 0
+            if no_defaults:
+                return f'{the_class.__name__}{repr(fields)}'
+            else:
+                fields_without_default = tuple(each for each in fields if each not in field_defaults)
+                fields_with_default = tuple(f"{each_key}={repr(each_value)}" for each_key, each_value in field_defaults.items())
+                fields = fields_with_default + fields_with_default
+                field_summary = ",".join(fields)
+                return f'{the_class.__name__}({field_summary})'
+        
+        def register_named_tuple(named_tuple_class, yaml_name=None):
+            # already registered
+            if named_tuple_class_registry.get(named_tuple_class, None):
+                return named_tuple_class
+                
+            name = yaml_name or named_tuple_class.__name__
+            if name in named_tuple_name_registry and named_tuple_class not in named_tuple_class_registry:
+                named_tuple_class_registry[the_class] = None
+                warn(f"(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}. Please rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple(SomeNamedTupleClass, 'SomeNamedTupleClass1234')")
             
-        # value needs to be a string (or some other yaml-primitive)
-        return representer.represent_scalar(
-            tag=cls.yaml_tag,
-            value=prefix + YamlPickled.delimiter + bytes_to_valid_string(
-                pickle.dumps(data.value, protocol=4)
-            ),
-            style=None,
-            anchor=None
-        )
-
-# def is_probably_named_tuple(obj):
-#     return (
-#         isinstance(obj, tuple) and
-#         hasattr(obj, '_asdict') and
-#         hasattr(obj, '_fields')
-#     )
-
-# def to_yaml(obj):
-#     if isinstance(obj, (tuple, list)):
-#         return tuple(to_yaml(each) for each in obj)
-#     elif isinstance(obj, (dict)):
-#         return tuple(to_yaml(each) for each in obj)
-#     else:
-        
-        
-# 
-# add yaml representations for numpy values if possible
-# 
-try:
-    import numpy
-    ez_yaml.yaml.Representer.add_representer(
-        numpy.ndarray,
-        lambda dumper, data: dumper.represent_sequence(tag='python/numpy/ndarray', sequence=data.tolist()), 
-    )
-    ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
-        'python/numpy/ndarray',
-        lambda loader, node: numpy.array(loader.construct_sequence(node, deep=True)),
-    )
+            named_tuple_name_registry[name] = True
+            named_tuple_class_registry[the_class] = True
+            named_tuple_class.yaml_tag = f"!python/named_tuple/{name}"
+            named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**json.loads(node.value))
+            named_tuple_class.to_yaml = lambda representer, object_of_this_class: representer.represent_scalar(
+                tag=named_tuple_class.yaml_tag,
+                value=json.dumps(object_of_this_class._asdict()),
+                style=None,
+                anchor=None
+            )
+            
+            yaml.register_class(named_tuple_class)
+            return named_tuple_class
     
-    # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
-    for each in [
-        # "float",
-        'double',
-        # "cfloat",
-        # 'cdouble',
-        'float8',
-        'float16',
-        'float32',
-        'float64',
-        # 'float128',
-        # 'float256',
-        # "longdouble",
-        # "longfloat",
-        # "clongdouble",
-        # "clongfloat",
-    ]:
-        the_type = getattr(numpy, each, None)
-        if the_type:
-            the_tag = f'python/numpy/{each}'
-            ez_yaml.yaml.Representer.add_representer(
-                the_type,
-                lambda dumper, data: dumper.represent_scalar(
-                    tag=the_tag,
-                    value=str(float(data)),
-                    style=None,
-                    anchor=None
-                ),
-            )
-            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
-                the_tag,
-                lambda loader, node: the_type(node.value),
-            )
+    # 
+    # todo: from dataclasses import dataclass
+    #
+                
+            
+    # 
+    # numpy support
+    # 
+    if True:
+        has_numpy = False
+        try:
+            import numpy
+            has_numpy = True
+        except Exception as error:
+            pass
+        
+        if has_numpy:
+            try:
+                import numpy
+                ez_yaml.yaml.Representer.add_representer(
+                    numpy.ndarray,
+                    lambda dumper, data: dumper.represent_sequence(tag='python/numpy/ndarray', sequence=data.tolist()), 
+                )
+                ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+                    'python/numpy/ndarray',
+                    lambda loader, node: numpy.array(loader.construct_sequence(node, deep=True)),
+                )
+                
+                # some types are commented out because I'm unsure about them loosing precision when being re-created and I didn't feel like testing to find out
+                for each in [
+                    # "float",
+                    'double',
+                    # "cfloat",
+                    # 'cdouble',
+                    'float8',
+                    'float16',
+                    'float32',
+                    'float64',
+                    # 'float128',
+                    # 'float256',
+                    # "longdouble",
+                    # "longfloat",
+                    # "clongdouble",
+                    # "clongfloat",
+                ]:
+                    def _():
+                        the_type = getattr(numpy, each, None)
+                        if the_type:
+                            the_tag = f'python/numpy/{each}'
+                            ez_yaml.yaml.Representer.add_representer(
+                                the_type,
+                                lambda dumper, data: dumper.represent_scalar(
+                                    tag=the_tag,
+                                    value=str(float(data)),
+                                    style=None,
+                                    anchor=None
+                                ),
+                            )
+                            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+                                the_tag,
+                                lambda loader, node: the_type(node.value),
+                            )
+                    _() # for scoping
 
-    for each in [
-        # "intp",
-        # "uintp",
-        # "intc",
-        # "uintc",
-        # "longlong",
-        # "ulonglong",
-        "uint",
-        "uint8",
-        "uint16",
-        "uint32",
-        "uint64",
-        "uint128",
-        "uint256",
-        # "int",
-        "int8",
-        "int16",
-        "int32",
-        "int64",
-        "int128",
-        "int256",
-    ]:
-        the_type = getattr(numpy, each, None)
-        if the_type:
-            the_tag = f'python/numpy/{each}'
-            ez_yaml.yaml.Representer.add_representer(
-                the_type,
-                lambda dumper, data: dumper.represent_scalar(
-                    tag=the_tag,
-                    value=str(int(data)),
-                    style=None,
-                    anchor=None
-                ),
-            )
-            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
-                the_tag,
-                lambda loader, node: the_type(node.value),
-            )
-except Exception as error:
-    pass
+                for each in [
+                    # "intp",
+                    # "uintp",
+                    # "intc",
+                    # "uintc",
+                    # "longlong",
+                    # "ulonglong",
+                    "uint",
+                    "uint8",
+                    "uint16",
+                    "uint32",
+                    "uint64",
+                    "uint128",
+                    "uint256",
+                    # "int",
+                    "int8",
+                    "int16",
+                    "int32",
+                    "int64",
+                    "int128",
+                    "int256",
+                ]:
+                    def _():
+                        the_type = getattr(numpy, each, None)
+                        if the_type != None:
+                            the_tag = f'python/numpy/{each}'
+                            ez_yaml.yaml.Representer.add_representer(
+                                the_type,
+                                lambda dumper, data: dumper.represent_scalar(
+                                    tag=the_tag,
+                                    value=str(int(data)),
+                                    style=None,
+                                    anchor=None
+                                ),
+                            )
+                            ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+                                the_tag,
+                                lambda loader, node: the_type(node.value.split(".")[0]),
+                            )
+                    _() # for scoping reasons
+            except Exception as error:
+                warn(f"\n\n(from grug_test) It looks like you have numpy so I tried to add yaml-seralization support for it but I hit this error:{error}\n\nYou can manually add yaml-seralization for numpy if you like (from grug_test import yaml, its from the ruamel.yaml library)\nHowever you don't have to, grug_test will still work, the numpy arrays will just look like an ugly binary/hex blob")
+    
+    # 
+    # helper
+    # 
+    def to_yaml(obj):
+        if isinstance(obj, (tuple, list)):
+            return tuple(to_yaml(each) for each in obj)
+        elif isinstance(obj, dict):
+            return { 
+                to_yaml(each_key): to_yaml(each_value)
+                    for each_key, each_value in obj.items()
+            }
+        else:
+            if is_probably_named_tuple(obj):
+                register_named_tuple(obj.__class__)
+            try:
+                ez_yaml.to_string(obj)
+                return obj
+            except Exception as error:
+                return YamlPickled(obj)
 
 class GrugTest:
     """
@@ -230,7 +313,7 @@ class GrugTest:
     # 
     # decorator
     # 
-    def __call__(self, *args, func_name=None, max_io=None, record_io=None, additional_io_per_run=None, **kwargs):
+    def __call__(self, *args, save_to=None, func_name=None, max_io=None, record_io=None, additional_io_per_run=None, **kwargs):
         """
         Example:
             grug_test = GrugTest(
@@ -259,6 +342,7 @@ class GrugTest:
         source = _get_path_of_caller()
         def decorator(function_being_wrapped):
             nonlocal max_io
+            nonlocal save_to
             if self.fully_disable:
                 # no wrapping
                 return function_being_wrapped
@@ -271,11 +355,13 @@ class GrugTest:
                 # 
                 # setup name/folder
                 # 
-                relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=source))
-                relative_path_to_test = self.test_folder+"/"+relative_path_to_function
+                if not save_to:
+                    relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=source))
+                    relative_path_to_test = self.test_folder+"/"+relative_path_to_function
+                    save_to = relative_path_to_test
                 function_name = func_name or getattr(function_being_wrapped, "__name__", "<unknown_func>")
                 function_id = f"{relative_path_to_function}:{function_name}"
-                grug_folder_for_this_func = relative_path_to_test+"/"+function_name
+                grug_folder_for_this_func = save_to+"/"+function_name
                 if function_id not in self.grug_info["functions_with_tests"]:
                     self.grug_info["functions_with_tests"].append(function_id)
                 
@@ -303,9 +389,13 @@ class GrugTest:
                                 path=path[0:-len(self.input_file_extension)] + self.output_file_extension,
                                 function_name=function_name,
                                 source=source,
+                                verbose=True,
                             )
                         except Exception as error:
-                            warn(f"corrupted_input: {path}\n    {error}")
+                            if self.verbose:
+                                print(f"corrupted_input: {path}\n    {error}")
+                            else:
+                                warn(f"corrupted_input: {path}\n    {error}")
                     decorator.replaying_inputs = False
                     self.has_been_tested[function_id] = True
             
@@ -357,37 +447,14 @@ class GrugTest:
                         # encase its a folder for some reason
                         FS.remove(input_file_path)
                         # if all the args are yaml-able this will work
-                        try:
-                            ez_yaml.to_file(
-                                file_path=input_file_path,
-                                obj=dict(
-                                    args=args,
-                                    kwargs=kwargs,
-                                    pickled_args_and_kwargs=YamlPickled(arg),
-                                ),
-                            )
-                        except Exception as error:
-                            # if all the args are at least pickle-able, this will work
-                            converted_args = list(args)
-                            converted_kwargs = dict(kwargs)
-                            for index,each in enumerate(converted_args):
-                                try:
-                                    ez_yaml.to_string(each)
-                                except Exception as error:
-                                    converted_args[index] = YamlPickled(each)
-                            for each_key, each_value in converted_kwargs.items():
-                                try:
-                                    ez_yaml.to_string(each_value)
-                                except Exception as error:
-                                    converted_kwargs[each_key] = YamlPickled(each_value)
-                            ez_yaml.to_file(
-                                file_path=input_file_path,
-                                obj=dict(
-                                    args=converted_args,
-                                    kwargs=converted_kwargs,
-                                    pickled_args_and_kwargs=YamlPickled(arg),
-                                )
-                            )
+                        ez_yaml.to_file(
+                            file_path=input_file_path,
+                            obj=dict(
+                                args=to_yaml(args),
+                                kwargs=to_yaml(kwargs),
+                                pickled_args_and_kwargs=YamlPickled(arg),
+                            ),
+                        )
                         input_files.append(input_file_path)
                 except Exception as error:
                     FS.remove(input_file_path)
@@ -405,6 +472,7 @@ class GrugTest:
                     path=output_file_path,
                     function_name=function_name,
                     source=source,
+                    verbose=self.verbose,
                 )
                 
                 # raise errors like normal
@@ -426,7 +494,7 @@ class GrugTest:
             return decorator
     
     @staticmethod
-    def record_output(func, args, kwargs, path, function_name, source):
+    def record_output(func, args, kwargs, path, function_name, source, verbose):
         the_error = None
         output = None
         try:
@@ -443,38 +511,15 @@ class GrugTest:
                 file_path=path,
                 obj={
                     "error_output": repr(the_error),
-                    "normal_output": output,
+                    "normal_output": to_yaml(output),
                 },
             )
         except Exception as error:
-            try:
-                # try to be informative if possible
-                if type(output) == tuple:
-                    new_output = list(output)
-                    for index, each in enumerate(output):
-                        try:
-                            ez_yaml.to_string(each)
-                        except Exception as error:
-                            new_output[index] = YamlPickled(each)
-                                    
-                    ez_yaml.to_file(
-                        file_path=path,
-                        obj={
-                            "error_output": repr(the_error),
-                            "normal_output": new_output,
-                        },
-                    )
-                else:
-                    ez_yaml.to_file(
-                        file_path=path,
-                        obj={
-                            "error_output": repr(the_error),
-                            "normal_output": YamlPickled(output),
-                        },
-                    )
-            except Exception as error:
-                FS.remove(path)
-                warn(f"\n\n\nFor a grug test on this function: {repr(function_name)}\n"+ indent(f"I tried to seralize the output but I wasn't able to.\nHere is the output type:\n    output: {type(output)}\nAnd here's the error: {indent(error)}\n"), category=None, stacklevel=1, source=source)
+            message = f"\n\n\nFor a grug test on this function: {repr(function_name)}\n"+ indent(f"I tried to seralize the output but I wasn't able to.\nHere is the output type:\n    output: {type(output)}\nAnd here's the error: {indent(error)}\n")
+            if verbose:
+                print(message)
+            else:
+                warn(message, category=None, stacklevel=1, source=source)
     
         return output, the_error
         
