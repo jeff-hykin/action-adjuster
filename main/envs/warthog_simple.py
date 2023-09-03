@@ -120,6 +120,18 @@ def pure_sim_warthog(
     ep_poses,
     ep_start,
 ):
+    v                   = deepcopy(v)
+    w                   = deepcopy(w)
+    pose                = deepcopy(pose)
+    twist               = deepcopy(twist)
+    is_delayed_dynamics = deepcopy(is_delayed_dynamics)
+    v_delay_data        = deepcopy(v_delay_data)
+    w_delay_data        = deepcopy(w_delay_data)
+    dt                  = deepcopy(dt)
+    prev_angle          = deepcopy(prev_angle)
+    ep_poses            = deepcopy(ep_poses)
+    ep_start            = deepcopy(ep_start)
+    
     x = pose[0]
     y = pose[1]
     th = pose[2]
@@ -145,6 +157,8 @@ def pure_sim_warthog(
     ep_start = 0
     
     return twist, prev_angle, pose, ep_start
+
+print("finished pure_sim_warthog")
 
 @grug_test(max_io=30)
 def pure_get_observation(
@@ -388,27 +402,84 @@ class WarthogEnv(gym.Env):
         self.ep_poses                = []
     
     # just a wrapper around the pure_step
+    # def step(self, action):
+    #     output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index,), other = pure_step(
+    #         ep_steps=self.ep_steps,
+    #         num_steps=self.num_steps,
+    #         action=self.action,
+    #         prev_closest_index=self.prev_closest_index,
+    #         closest_index=self.closest_index,
+    #         number_of_waypoints=self.number_of_waypoints,
+    #         waypoints_list=self.waypoints_list,
+    #         pose=self.pose,
+    #         phi_error=self.phi_error,
+    #         vel_error=self.vel_error,
+    #         twist=self.twist,
+    #         crosstrack_error=self.crosstrack_error,
+    #         closest_dist=self.closest_dist,
+    #         max_ep_steps=self.max_ep_steps,
+    #         reward=self.reward,
+    #         prev_action=self.prev_action,
+    #         omega_reward=self.omega_reward,
+    #         vel_reward=self.vel_reward,
+    #         total_ep_reward=self.total_ep_reward,
+    #         is_delayed_dynamics=self.is_delayed_dynamics,
+    #         v_delay_data=self.v_delay_data,
+    #         w_delay_data=self.w_delay_data,
+    #         dt=self.dt,
+    #         prev_angle=self.prev_angle,
+    #         ep_poses=self.ep_poses,
+    #         ep_start=self.ep_start,
+    #         horizon=self.horizon,
+    #     )
+    #     return output
+    
+    # def reset(self):
+    #     self.ep_start = 1
+    #     self.ep_poses = []
+    #     self.total_ep_reward = 0
+    #     if self.max_vel >= 5:
+    #         self.max_vel = 1
+    #     index = np.random.randint(self.number_of_waypoints, size=1)[0]
+    #     self.closest_index = index
+    #     self.prev_closest_index = index
+    #     self.pose[0] = self.waypoints_list[index][0] + 0.1
+    #     self.pose[1] = self.waypoints_list[index][1] + 0.1
+    #     self.pose[2] = self.waypoints_list[index][2] + 0.01
+    #     self.xpose = [self.pose[0]] * self.n_traj
+    #     self.ypose = [self.pose[1]] * self.n_traj
+    #     self.twist = [0.0, 0.0, 0.0]
+    #     for i in range(0, self.number_of_waypoints):
+    #         if self.ref_vel[i] > self.max_vel:
+    #             self.waypoints_list[i][3] = self.max_vel
+    #         else:
+    #             self.waypoints_list[i][3] = self.ref_vel[i]
+    #     # self.max_vel = 2
+    #     self.max_vel = self.max_vel + 1
+    #     obs, self.closest_dist, self.closest_index = pure_get_observation(
+    #         closest_dist=self.closest_dist,
+    #         closest_index=self.closest_index,
+    #         horizon=self.horizon,
+    #         number_of_waypoints=self.number_of_waypoints,
+    #         pose=self.pose,
+    #         twist=self.twist,
+    #         waypoints_list=self.waypoints_list,
+    #     )
+    #     return obs
+    
     def step(self, action):
-        output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index,), other = pure_step(
-            ep_steps=self.ep_steps,
-            num_steps=self.num_steps,
-            action=self.action,
-            prev_closest_index=self.prev_closest_index,
-            closest_index=self.closest_index,
-            number_of_waypoints=self.number_of_waypoints,
-            waypoints_list=self.waypoints_list,
+        self.ep_steps = self.ep_steps + 1
+        self.num_steps = self.num_steps + 1
+        action[0] = np.clip(action[0], 0, 1) * 4.0
+        action[1] = np.clip(action[1], -1, 1) * 2.5
+        self.action = action
+        self.sim_warthog(action[0], action[1])
+        # self.twist, self.prev_angle, self.pose, self.ep_start = pure_sim_warthog(
+        pure_sim_warthog(
+            v=action[0],
+            w=action[1], 
             pose=self.pose,
-            phi_error=self.phi_error,
-            vel_error=self.vel_error,
             twist=self.twist,
-            crosstrack_error=self.crosstrack_error,
-            closest_dist=self.closest_dist,
-            max_ep_steps=self.max_ep_steps,
-            reward=self.reward,
-            prev_action=self.prev_action,
-            omega_reward=self.omega_reward,
-            vel_reward=self.vel_reward,
-            total_ep_reward=self.total_ep_reward,
             is_delayed_dynamics=self.is_delayed_dynamics,
             v_delay_data=self.v_delay_data,
             w_delay_data=self.w_delay_data,
@@ -416,9 +487,49 @@ class WarthogEnv(gym.Env):
             prev_angle=self.prev_angle,
             ep_poses=self.ep_poses,
             ep_start=self.ep_start,
-            horizon=self.horizon,
         )
-        return output
+        self.prev_closest_index = self.closest_index
+        obs = self.get_observation()
+        done = False
+        if self.closest_index >= self.number_of_waypoints - 1:
+            done = True
+        
+        # 
+        # Calculating reward
+        # 
+        k = self.closest_index
+        xdiff = self.waypoints_list[k][0] - self.pose[0]
+        ydiff = self.waypoints_list[k][1] - self.pose[1]
+        th = get_theta(xdiff, ydiff)
+        yaw_error = pi_to_pi(th - self.pose[2])
+        self.phi_error = pi_to_pi(
+            self.waypoints_list[self.closest_index][2] - self.pose[2]
+        )
+        self.vel_error = self.waypoints_list[k][3] - self.twist[0]
+        self.crosstrack_error = self.closest_dist * math.sin(yaw_error)
+        if math.fabs(self.crosstrack_error) > 1.5 or math.fabs(self.phi_error) > 1.4:
+            done = True
+        if self.ep_steps == self.max_ep_steps:
+            done = True
+            self.ep_steps = 0
+        self.reward = (
+            (2.0 - math.fabs(self.crosstrack_error))
+            * (4.5 - math.fabs(self.vel_error))
+            * (math.pi / 3.0 - math.fabs(self.phi_error))
+            - math.fabs(self.action[0] - self.prev_action[0])
+            - 2 * math.fabs(self.action[1])
+        )
+        self.omega_reward = -2 * math.fabs(self.action[1])
+        self.vel_reward = -math.fabs(self.action[0] - self.prev_action[0])
+        self.prev_action = self.action
+        if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
+            self.reward = 0
+        elif self.waypoints_list[k][3] < 2.5 and math.fabs(self.vel_error) > 0.5:
+            self.reward = 0
+            
+        self.total_ep_reward = self.total_ep_reward + self.reward
+        return obs, self.reward, done, {}
+
     
     def reset(self):
         self.ep_start = 1
@@ -442,15 +553,75 @@ class WarthogEnv(gym.Env):
                 self.waypoints_list[i][3] = self.ref_vel[i]
         # self.max_vel = 2
         self.max_vel = self.max_vel + 1
-        obs, self.closest_dist, self.closest_index = pure_get_observation(
-            closest_dist=self.closest_dist,
-            closest_index=self.closest_index,
-            horizon=self.horizon,
-            number_of_waypoints=self.number_of_waypoints,
-            pose=self.pose,
-            twist=self.twist,
-            waypoints_list=self.waypoints_list,
-        )
+        obs = self.get_observation()
+        return obs
+        
+    def sim_warthog(self, v, w):
+        x = self.pose[0]
+        y = self.pose[1]
+        th = self.pose[2]
+        v_ = self.twist[0]
+        w_ = self.twist[1]
+        self.twist[0] = v
+        self.twist[1] = w
+        if self.is_delayed_dynamics:
+            v_ = self.v_delay_data[0]
+            w_ = self.w_delay_data[0]
+            del self.v_delay_data[0]
+            del self.w_delay_data[0]
+            self.v_delay_data.append(v)
+            self.w_delay_data.append(w)
+            self.twist[0] = self.v_delay_data[0]
+            self.twist[1] = self.v_delay_data[1]
+        dt = self.dt
+        self.prev_angle = self.pose[2]
+        self.pose[0] = x + v_ * math.cos(th) * dt
+        self.pose[1] = y + v_ * math.sin(th) * dt
+        self.pose[2] = th + w_ * dt
+        self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
+        self.ep_start = 0
+
+    def get_observation(self):
+        obs   = [0] * (self.horizon * 4 + 2)
+        pose  = self.pose
+        twist = self.twist
+        index   = self.closest_index
+        
+        self.closest_dist = math.inf
+        for i in range(self.closest_index, self.number_of_waypoints):
+            dist = get_dist(self.waypoints_list[i], pose)
+            if dist <= self.closest_dist:
+                self.closest_dist = dist
+                index = i
+            else:
+                break
+        self.closest_index = index
+        
+        j = 0
+        for i in range(0, self.horizon):
+            k = i + self.closest_index
+            if k < self.number_of_waypoints:
+                r = get_dist(self.waypoints_list[k], pose)
+                xdiff = self.waypoints_list[k][0] - pose[0]
+                ydiff = self.waypoints_list[k][1] - pose[1]
+                th = get_theta(xdiff, ydiff)
+                vehicle_th = zero_to_2pi(pose[2])
+                # vehicle_th = -vehicle_th
+                # vehicle_th = 2*math.pi - vehicle_th
+                yaw_error = pi_to_pi(self.waypoints_list[k][2] - vehicle_th)
+                vel = self.waypoints_list[k][3]
+                obs[j] = r
+                obs[j + 1] = pi_to_pi(th - vehicle_th)
+                obs[j + 2] = yaw_error
+                obs[j + 3] = vel - twist[0]
+            else:
+                obs[j] = 0.0
+                obs[j + 1] = 0.0
+                obs[j + 2] = 0.0
+                obs[j + 3] = 0.0
+            j = j + 4
+        obs[j] = twist[0]
+        obs[j + 1] = twist[1]
         return obs
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
@@ -487,7 +658,6 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                 start_step_for_sup_data=env.start_step_for_sup_data,
                 ep_steps=env.ep_steps,
                 max_ep_steps=env.max_ep_steps,
-                tprev=env.tprev,
                 total_ep_reward=env.total_ep_reward,
                 reward=env.reward,
                 action=env.action,
