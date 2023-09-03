@@ -32,6 +32,7 @@ FS.write(data=commit_hash, to=f"{config.output_folder}/commit_hash.log")
 project_folder = FS.parent_path(FS.parent_path(absolute_path_to.main))
 grug_test = GrugTest(
     project_folder=project_folder,
+    redo_inputs=True,
     test_folder=f"{project_folder}/tests/grug_tests",
     fully_disable=config.grug_test.disable,
     replay_inputs=config.grug_test.replay_inputs or os.getenv("GRUG_TEST"),

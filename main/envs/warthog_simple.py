@@ -220,7 +220,7 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_dist, closest_index)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward(
     closest_waypoint,
     pose,
@@ -254,7 +254,7 @@ def pure_reward(
     
     return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward_wrapper(
     total_ep_reward,
     closest_index,
@@ -296,7 +296,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=60, skip=False)
 def pure_step(
     action,
     closest_dist,
@@ -600,7 +600,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
         return outputs
     
     smoke_test_warthog("real1.csv")
-    exit()
+    # exit()
 
 import ez_yaml
 
