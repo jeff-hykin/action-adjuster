@@ -110,6 +110,12 @@ if True:
         'pose',
         'ep_start',
     ])
+    RewardOutput = namedtuple('RewardOutput', [
+        "running_reward",
+        "velocity_error",
+        "crosstrack_error",
+        "phi_error"
+    ])
 
 
 @grug_test(max_io=30, skip=True)
@@ -213,7 +219,92 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_dist, closest_index)
 
-@grug_test(max_io=30, skip=True)
+@grug_test(max_io=30, skip=False)
+def pure_reward(
+    closest_index,
+    waypoints_list,
+    pose,
+    twist,
+    closest_dist,
+    action,
+    prev_action,
+):
+    closest_waypoint = waypoints_list[closest_index]
+    waypoint_x, waypoint_y, waypoint_phi, waypoint_velocity, *_ = closest_waypoint
+    pose_x, pose_y, pose_phi, *_ = pose
+    
+    x_diff = waypoint_x - pose_x
+    y_diff = waypoint_y - pose_y
+    yaw_error = pi_to_pi(get_theta(x_diff, y_diff) - pose_phi)
+    phi_error = pi_to_pi(
+        waypoint_phi - pose_phi
+    )
+    vel_error = waypoint_velocity - twist[0]
+    crosstrack_error = closest_dist * math.sin(yaw_error)
+    reward = (
+        (2.0 - math.fabs(crosstrack_error))
+        * (4.5 - math.fabs(vel_error))
+        * (math.pi / 3.0 - math.fabs(phi_error))
+        - math.fabs(action[0] - prev_action[0])
+        - 2 * math.fabs(action[1])
+    )
+    if waypoint_velocity >= 2.5 and math.fabs(vel_error) > 1.5:
+        reward = 0
+    elif waypoint_velocity < 2.5 and math.fabs(vel_error) > 0.5:
+        reward = 0
+    
+    return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
+
+@grug_test(max_io=30, skip=False)
+def pure_reward_wrapper(
+    total_ep_reward,
+    closest_index,
+    waypoints_list,
+    pose,
+    twist,
+    closest_dist,
+    ep_steps,
+    max_ep_steps,
+    action,
+    prev_action,
+    done,
+):
+    k = closest_index
+    xdiff = waypoints_list[k][0] - pose[0]
+    ydiff = waypoints_list[k][1] - pose[1]
+    th = get_theta(xdiff, ydiff)
+    yaw_error = pi_to_pi(th - pose[2])
+    phi_error = pi_to_pi(
+        waypoints_list[closest_index][2] - pose[2]
+    )
+    vel_error = waypoints_list[k][3] - twist[0]
+    crosstrack_error = closest_dist * math.sin(yaw_error)
+    if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
+        done = True
+    if ep_steps == max_ep_steps:
+        done = True
+        ep_steps = 0
+    reward = (
+        (2.0 - math.fabs(crosstrack_error))
+        * (4.5 - math.fabs(vel_error))
+        * (math.pi / 3.0 - math.fabs(phi_error))
+        - math.fabs(action[0] - prev_action[0])
+        - 2 * math.fabs(action[1])
+    )
+    omega_reward = -2 * math.fabs(action[1])
+    vel_reward = -math.fabs(action[0] - prev_action[0])
+    prev_action = action
+    if waypoints_list[k][3] >= 2.5 and math.fabs(vel_error) > 1.5:
+        reward = 0
+    elif waypoints_list[k][3] < 2.5 and math.fabs(vel_error) > 0.5:
+        reward = 0
+        
+    total_ep_reward = total_ep_reward + reward
+    
+    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
+
+
+@grug_test(max_io=30, skip=False)
 def pure_step(
     action,
     closest_dist,
@@ -274,40 +365,20 @@ def pure_step(
     if closest_index >= number_of_waypoints - 1:
         done = True
     
-    # 
-    # Calculating reward
-    # 
-    k = closest_index
-    xdiff = waypoints_list[k][0] - pose[0]
-    ydiff = waypoints_list[k][1] - pose[1]
-    th = get_theta(xdiff, ydiff)
-    yaw_error = pi_to_pi(th - pose[2])
-    phi_error = pi_to_pi(
-        waypoints_list[closest_index][2] - pose[2]
+    reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward = pure_reward_wrapper(
+        total_ep_reward=total_ep_reward,
+        closest_index=closest_index,
+        waypoints_list=waypoints_list,
+        pose=pose,
+        twist=twist,
+        closest_dist=closest_dist,
+        ep_steps=ep_steps,
+        max_ep_steps=max_ep_steps,
+        action=action,
+        prev_action=prev_action,
+        done=done,
     )
-    vel_error = waypoints_list[k][3] - twist[0]
-    crosstrack_error = closest_dist * math.sin(yaw_error)
-    if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
-        done = True
-    if ep_steps == max_ep_steps:
-        done = True
-        ep_steps = 0
-    reward = (
-        (2.0 - math.fabs(crosstrack_error))
-        * (4.5 - math.fabs(vel_error))
-        * (math.pi / 3.0 - math.fabs(phi_error))
-        - math.fabs(action[0] - prev_action[0])
-        - 2 * math.fabs(action[1])
-    )
-    omega_reward = -2 * math.fabs(action[1])
-    vel_reward = -math.fabs(action[0] - prev_action[0])
-    prev_action = action
-    if waypoints_list[k][3] >= 2.5 and math.fabs(vel_error) > 1.5:
-        reward = 0
-    elif waypoints_list[k][3] < 2.5 and math.fabs(vel_error) > 0.5:
-        reward = 0
-        
-    total_ep_reward = total_ep_reward + reward
+    
     return (
         StepOutput(
             obs,
@@ -619,4 +690,4 @@ def original_reward_function(*, spacial_info, closest_distance, relative_velocit
                     running_reward = 0
                     break
     
-    return running_reward, velocity_error, crosstrack_error, phi_error
+    return RewardOutput(running_reward, velocity_error, crosstrack_error, phi_error)
