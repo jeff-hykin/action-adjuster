@@ -11,13 +11,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from torch.distributions import Normal
-from envs.warthog import WarthogEnv
+# from envs.warthog import WarthogEnv
+from envs.warthog_simple import WarthogEnv
 import scipy.signal
 import time
 
 from config import config, path_to, notifier
 from blissful_basics import FS, print, randomly_pick_from
+from statistics import mean as average
 
+def to_numpy(value):
+    if hasattr(value, "to_numpy"):
+        return value.to_numpy()
+    else:
+        return value
 
 with notifier.when_done:
     waypoint_path_options = [ 
@@ -182,7 +189,7 @@ with notifier.when_done:
         data_buff  = PPOBuffer(*obs_dim, *action_dim, buff_size)
         policy_opt = optim.Adam(pi.parameters(), lr=lr_pi)
         value_opt  = optim.Adam(vi.parameters(), lr=lr_vf)
-        obs            = env.reset().to_numpy()
+        obs            = to_numpy(env.reset())
         curr_time_step = 0
         num_episode    = 0
         ep_rewards     = [0]
@@ -201,7 +208,7 @@ with notifier.when_done:
                     action = action.cpu().numpy()
                     clipped_action = np.clip(action, env.action_space.low, env.action_space.high)
                     obs_new, rew, done, _ = env.step(clipped_action[0])
-                    obs_new = obs_new.to_numpy()
+                    obs_new = to_numpy(obs_new)
                     ep_rewards[num_episode] += rew
                     ep_steps[num_episode] += 1
                     v = vi(torch.as_tensor(obs, dtype=torch.float32).to(device))
@@ -214,7 +221,7 @@ with notifier.when_done:
                         # pick another waypoint file
                         env = WarthogEnv(path_to.waypoints_folder + randomly_pick_from(waypoint_path_options), None, recorder=None)
                         obs = env.reset()
-                        obs = obs.to_numpy()
+                        obs = to_numpy(obs)
                         done = False
                         num_episode += 1
                         ep_rewards.append(0)
@@ -227,7 +234,7 @@ with notifier.when_done:
                         v_ = v_.detach().cpu().numpy()
                     data_buff.finish_path(v_)
                 if curr_time_step % 100_000 == 0:
-                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo_{curr_time_step}.pt"
+                    torch_save_path = f"{path_to.temp_policy_folder}/manaul_ppo__rew_{int(average)}_timestep_{curr_time_step}.pt"
                     numpy_save_path = f"{path_to.temp_policy_folder}/avg_rew_{curr_time_step}"
                     FS.ensure_is_folder(FS.parent_path(torch_save_path))
                     FS.ensure_is_folder(FS.parent_path(numpy_save_path))
@@ -282,3 +289,4 @@ with notifier.when_done:
             torch_save_path = f"{path_to.temp_policy_folder}/final_ppo.pt"
             FS.ensure_is_folder(FS.parent_path(torch_save_path))
             torch.save(pi,torch_save_path)
+

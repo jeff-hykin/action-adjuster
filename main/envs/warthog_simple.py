@@ -10,7 +10,7 @@ import time
 
 
 class WarthogEnv(gym.Env):
-    def __init__(self, waypoint_file, file_name):
+    def __init__(self, waypoint_file, file_name, **kwargs):
         super(WarthogEnv, self).__init__()
         self.action_space = spaces.Box(
             low=np.array([0.0, -1.5]), high=np.array([1.0, 1.5]), shape=(2,)
@@ -95,9 +95,6 @@ class WarthogEnv(gym.Env):
         self.ep_dist = 0
         self.ep_poses = []
         self.sup_waypoint_list = []
-
-    def set_pose(self, x, y, th):
-        self.pose = [x, y, th]
 
     def set_twist(self, v, w):
         self.tiwst = [v, w]
@@ -443,7 +440,9 @@ class WarthogEnv(gym.Env):
     def _read_waypoint_file(self, filename):
         with open(filename) as csv_file:
             pos = csv.reader(csv_file, delimiter=",")
-            for row in pos:
+            for index, row in enumerate(pos):
+                if index == 0:
+                    continue
                 # utm_cord = utm.from_latlon(float(row[0]), float(row[1]))
                 utm_cord = [float(row[0]), float(row[1])]
                 # phi = math.pi/4
