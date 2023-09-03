@@ -156,9 +156,7 @@ def pure_sim_warthog(
     ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
     ep_start = 0
     
-    return twist, prev_angle, pose, ep_start
-
-print("finished pure_sim_warthog")
+    return twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data
 
 @grug_test(max_io=30)
 def pure_get_observation(
@@ -244,7 +242,7 @@ def pure_step(
     action[0] = np.clip(action[0], 0, 1) * 4.0
     action[1] = np.clip(action[1], -1, 1) * 2.5
     action = action
-    twist, prev_angle, pose, ep_start = pure_sim_warthog(
+    twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
         v=action[0],
         w=action[1],
         pose=pose,
@@ -473,9 +471,7 @@ class WarthogEnv(gym.Env):
         action[0] = np.clip(action[0], 0, 1) * 4.0
         action[1] = np.clip(action[1], -1, 1) * 2.5
         self.action = action
-        self.sim_warthog(action[0], action[1])
-        # self.twist, self.prev_angle, self.pose, self.ep_start = pure_sim_warthog(
-        pure_sim_warthog(
+        self.twist, self.prev_angle, self.pose, self.ep_start, self.ep_poses, self.v_delay_data, self.w_delay_data = pure_sim_warthog(
             v=action[0],
             w=action[1], 
             pose=self.pose,
