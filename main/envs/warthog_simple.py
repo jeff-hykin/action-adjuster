@@ -11,6 +11,62 @@ import matplotlib as mpl
 import numpy as np
 from config import grug_test, path_to
 
+def zero_to_2pi(theta):
+        if theta < 0:
+            theta = 2 * math.pi + theta
+        elif theta > 2 * math.pi:
+            theta = theta - 2 * math.pi
+        return theta
+
+def pi_to_pi(theta):
+    if theta < -math.pi:
+        theta = theta + 2 * math.pi
+    elif theta > math.pi:
+        theta = theta - 2 * math.pi
+    return theta
+
+def get_dist(waypoint, pose):
+    xdiff = pose[0] - waypoint[0]
+    ydiff = pose[1] - waypoint[1]
+    return math.sqrt(xdiff * xdiff + ydiff * ydiff)
+
+
+def get_theta(xdiff, ydiff):
+    theta = math.atan2(ydiff, xdiff)
+    return zero_to_2pi(theta)
+
+
+@grug_test
+def read_waypoint_file(filename):
+    num_waypoints = 0
+    waypoints_list = []
+    ref_vel = []
+    with open(filename) as csv_file:
+        pos = csv.reader(csv_file, delimiter=",")
+        for index, row in enumerate(pos):
+            if index == 0: # skip column names
+                continue
+            utm_cord = [float(row[0]), float(row[1])]
+            phi = 0.0
+            xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
+            ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
+            waypoints_list.append(
+                np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])])
+            )
+            ref_vel.append(float(row[3]))
+        # waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
+        for i in range(0, len(waypoints_list) - 1):
+            xdiff = waypoints_list[i + 1][0] - waypoints_list[i][0]
+            ydiff = waypoints_list[i + 1][1] - waypoints_list[i][1]
+            waypoints_list[i][2] = zero_to_2pi(
+                get_theta(xdiff, ydiff)
+            )
+        waypoints_list[i + 1][2] = waypoints_list[i][2]
+        num_waypoints = i + 2
+    
+    return waypoints_list, ref_vel, num_waypoints
+
+
 class WarthogEnv(gym.Env):
     action_space = spaces.Box(
         low=np.array([0.0, -1.5]),
@@ -216,7 +272,7 @@ class WarthogEnv(gym.Env):
         obs[j + 1] = twist[1]
         return obs
 
-if not grug_test.disable and (grug_test.replay_inputs or grug_test.record_io):
+if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
     @grug_test
     def smoke_test_warthog(trajectory_file):
         env = WarthogEnv(path_to.waypoints_folder+f"/{trajectory_file}")
@@ -268,73 +324,17 @@ if not grug_test.disable and (grug_test.replay_inputs or grug_test.record_io):
             ))
         
         outputs.append(env_snapshot(env))
-        env.step(0.5, 0.5)
+        env.step([0.5, 0.5])
         outputs.append(env_snapshot(env))
-        env.step(0.56, 0.56)
+        env.step([0.56, 0.56])
         outputs.append(env_snapshot(env))
-        env.step(0.567, 0.567)
+        env.step([0.567, 0.567])
         outputs.append(env_snapshot(env))
-        env.step(0.5678, 0.5678)
+        env.step([0.5678, 0.5678])
         outputs.append(env_snapshot(env))
         return outputs
     
-    smoke_test_warthog(path_to.waypoints_for_real1)
-
-@grug_test
-def read_waypoint_file(filename):
-    num_waypoints = 0
-    waypoints_list = []
-    ref_vel = []
-    with open(filename) as csv_file:
-        pos = csv.reader(csv_file, delimiter=",")
-        for index, row in enumerate(pos):
-            if index == 0: # skip column names
-                continue
-            utm_cord = [float(row[0]), float(row[1])]
-            phi = 0.0
-            xcoord = utm_cord[0] * math.cos(phi) + utm_cord[1] * math.sin(phi)
-            ycoord = -utm_cord[0] * math.sin(phi) + utm_cord[1] * math.cos(phi)
-            waypoints_list.append(
-                np.array([utm_cord[0], utm_cord[1], float(row[2]), float(row[3])])
-            )
-            ref_vel.append(float(row[3]))
-        # waypoints_list.append(np.array([utm_cord[0], utm_cord[1], float(row[2]), 1.5]))
-        for i in range(0, len(waypoints_list) - 1):
-            xdiff = waypoints_list[i + 1][0] - waypoints_list[i][0]
-            ydiff = waypoints_list[i + 1][1] - waypoints_list[i][1]
-            waypoints_list[i][2] = zero_to_2pi(
-                get_theta(xdiff, ydiff)
-            )
-        waypoints_list[i + 1][2] = waypoints_list[i][2]
-        num_waypoints = i + 2
-    
-    return waypoints_list, ref_vel, num_waypoints
-
-def zero_to_2pi(theta):
-        if theta < 0:
-            theta = 2 * math.pi + theta
-        elif theta > 2 * math.pi:
-            theta = theta - 2 * math.pi
-        return theta
-
-def pi_to_pi(theta):
-    if theta < -math.pi:
-        theta = theta + 2 * math.pi
-    elif theta > math.pi:
-        theta = theta - 2 * math.pi
-    return theta
-
-def get_dist(waypoint, pose):
-    xdiff = pose[0] - waypoint[0]
-    ydiff = pose[1] - waypoint[1]
-    return math.sqrt(xdiff * xdiff + ydiff * ydiff)
-
-
-def get_theta(xdiff, ydiff):
-    theta = math.atan2(ydiff, xdiff)
-    return zero_to_2pi(theta)
-
-
+    smoke_test_warthog("real1.csv")
 
 import ez_yaml
 
