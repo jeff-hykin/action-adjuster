@@ -1,0 +1,2 @@
+error_output: "TypeError(\"pure_reward_wrapper() missing 1 required positional argument: 'done'\")"
+normal_output: null
