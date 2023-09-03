@@ -21,6 +21,7 @@ class WarthogEnv(gym.Env):
         shape=(42,),
         dtype=np.float,
     )
+    
     def __init__(self, waypoint_file, file_name, **kwargs):
         super(WarthogEnv, self).__init__()
         self.filename = waypoint_file
@@ -101,9 +102,88 @@ class WarthogEnv(gym.Env):
         self.ep_poses = []
         self.sup_waypoint_list = []
 
-    def set_twist(self, v, w):
-        self.tiwst = [v, w]
+    def step(self, action):
+        self.ep_steps = self.ep_steps + 1
+        self.num_steps = self.num_steps + 1
+        action[0] = np.clip(action[0], 0, 1) * 4.0
+        action[1] = np.clip(action[1], -1, 1) * 2.5
+        self.action = action
+        self.sim_warthog(action[0], action[1])
+        self.prev_closest_index = self.closest_index
+        obs = self.get_observation()
+        done = False
+        if self.closest_index >= self.num_waypoints - 1:
+            done = True
+        # Calculating reward
+        k = self.closest_index
+        xdiff = self.waypoints_list[k][0] - self.pose[0]
+        ydiff = self.waypoints_list[k][1] - self.pose[1]
+        th = get_theta(xdiff, ydiff)
+        yaw_error = pi_to_pi(th - self.pose[2])
+        self.phi_error = pi_to_pi(
+            self.waypoints_list[self.closest_index][2] - self.pose[2]
+        )
+        self.vel_error = self.waypoints_list[k][3] - self.twist[0]
+        self.crosstrack_error = self.closest_dist * math.sin(yaw_error)
+        if math.fabs(self.crosstrack_error) > 1.5 or math.fabs(self.phi_error) > 1.4:
+            done = True
+        if self.ep_steps == self.max_ep_steps:
+            done = True
+            self.ep_steps = 0
+        self.reward = (
+            (2.0 - math.fabs(self.crosstrack_error))
+            * (4.5 - math.fabs(self.vel_error))
+            * (math.pi / 3.0 - math.fabs(self.phi_error))
+            - math.fabs(self.action[0] - self.prev_action[0])
+            - 2 * math.fabs(self.action[1])
+        )
+        self.omega_reward = -2 * math.fabs(self.action[1])
+        self.vel_reward = -math.fabs(self.action[0] - self.prev_action[0])
+        # self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (
+        #    4.0 - math.fabs(self.vel_error)) * (math.pi / 3. -
+        #                                        math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 1.3*math.fabs(self.action[1] - self.prev_action[1])
+        self.prev_action = self.action
+        # if (self.prev_closest_index == self.closest_index
+        #        or math.fabs(self.vel_error) > 1.5):
+        if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
+            self.reward = 0
+        elif self.waypoints_list[k][3] < 2.5 and math.fabs(self.vel_error) > 0.5:
+            self.reward = 0
+        self.total_ep_reward = self.total_ep_reward + self.reward
+        # self.render()
+        return obs, self.reward, done, {}
 
+    
+    def reset(self):
+        self.get_waypoints_for_sup_learning()
+        self.save_obs_for_supervised_learning()
+        self.ep_start = 1
+        self.ep_poses = []
+        self.total_ep_reward = 0
+        if self.max_vel >= 5:
+            self.max_vel = 1
+        idx = np.random.randint(self.num_waypoints, size=1)
+        # idx = [0]
+        idx = idx[0]
+        # idx = 880
+        self.closest_index = idx
+        self.prev_closest_index = idx
+        self.pose[0] = self.waypoints_list[idx][0] + 0.1
+        self.pose[1] = self.waypoints_list[idx][1] + 0.1
+        self.pose[2] = self.waypoints_list[idx][2] + 0.01
+        self.xpose = [self.pose[0]] * self.n_traj
+        self.ypose = [self.pose[1]] * self.n_traj
+        self.twist = [0.0, 0.0, 0.0]
+        for i in range(0, self.num_waypoints):
+            if self.ref_vel[i] > self.max_vel:
+                self.waypoints_list[i][3] = self.max_vel
+            else:
+                self.waypoints_list[i][3] = self.ref_vel[i]
+        # self.max_vel = 2
+        self.max_vel = self.max_vel + 1
+        obs = self.get_observation()
+        return obs
+        
     def plot_waypoints(self):
         x = []
         y = []
@@ -154,10 +234,6 @@ class WarthogEnv(gym.Env):
             closest_id_data.append(idx)
         return closest_id_data
 
-    def get_theta(self, xdiff, ydiff):
-        theta = math.atan2(ydiff, xdiff)
-        return zero_to_2pi(theta)
-
     def get_observation(self):
         obs   = [0] * (self.horizon * 4 + 2)
         pose  = self.pose
@@ -181,7 +257,7 @@ class WarthogEnv(gym.Env):
                 r = get_dist(self.waypoints_list[k], pose)
                 xdiff = self.waypoints_list[k][0] - pose[0]
                 ydiff = self.waypoints_list[k][1] - pose[1]
-                th = self.get_theta(xdiff, ydiff)
+                th = get_theta(xdiff, ydiff)
                 vehicle_th = zero_to_2pi(pose[2])
                 # vehicle_th = -vehicle_th
                 # vehicle_th = 2*math.pi - vehicle_th
@@ -200,57 +276,6 @@ class WarthogEnv(gym.Env):
         obs[j] = twist[0]
         obs[j + 1] = twist[1]
         return obs
-
-    def step(self, action):
-        self.ep_steps = self.ep_steps + 1
-        self.num_steps = self.num_steps + 1
-        action[0] = np.clip(action[0], 0, 1) * 4.0
-        action[1] = np.clip(action[1], -1, 1) * 2.5
-        self.action = action
-        self.sim_warthog(action[0], action[1])
-        self.prev_closest_index = self.closest_index
-        obs = self.get_observation()
-        done = False
-        if self.closest_index >= self.num_waypoints - 1:
-            done = True
-        # Calculating reward
-        k = self.closest_index
-        xdiff = self.waypoints_list[k][0] - self.pose[0]
-        ydiff = self.waypoints_list[k][1] - self.pose[1]
-        th = self.get_theta(xdiff, ydiff)
-        yaw_error = pi_to_pi(th - self.pose[2])
-        self.phi_error = pi_to_pi(
-            self.waypoints_list[self.closest_index][2] - self.pose[2]
-        )
-        self.vel_error = self.waypoints_list[k][3] - self.twist[0]
-        self.crosstrack_error = self.closest_dist * math.sin(yaw_error)
-        if math.fabs(self.crosstrack_error) > 1.5 or math.fabs(self.phi_error) > 1.4:
-            done = True
-        if self.ep_steps == self.max_ep_steps:
-            done = True
-            self.ep_steps = 0
-        self.reward = (
-            (2.0 - math.fabs(self.crosstrack_error))
-            * (4.5 - math.fabs(self.vel_error))
-            * (math.pi / 3.0 - math.fabs(self.phi_error))
-            - math.fabs(self.action[0] - self.prev_action[0])
-            - 2 * math.fabs(self.action[1])
-        )
-        self.omega_reward = -2 * math.fabs(self.action[1])
-        self.vel_reward = -math.fabs(self.action[0] - self.prev_action[0])
-        # self.reward = (2.0 - math.fabs(self.crosstrack_error)) * (
-        #    4.0 - math.fabs(self.vel_error)) * (math.pi / 3. -
-        #                                        math.fabs(self.phi_error)) - math.fabs(self.action[0] - self.prev_action[0]) - 1.3*math.fabs(self.action[1] - self.prev_action[1])
-        self.prev_action = self.action
-        # if (self.prev_closest_index == self.closest_index
-        #        or math.fabs(self.vel_error) > 1.5):
-        if self.waypoints_list[k][3] >= 2.5 and math.fabs(self.vel_error) > 1.5:
-            self.reward = 0
-        elif self.waypoints_list[k][3] < 2.5 and math.fabs(self.vel_error) > 0.5:
-            self.reward = 0
-        self.total_ep_reward = self.total_ep_reward + self.reward
-        # self.render()
-        return obs, self.reward, done, {}
 
     def get_waypoints_for_sup_learning(self):
         num_st = len(self.ep_poses)
@@ -296,7 +321,7 @@ class WarthogEnv(gym.Env):
                     r = get_dist(self.sup_waypoint_list[k], pose)
                     xdiff = self.sup_waypoint_list[k][0] - pose[0]
                     ydiff = self.sup_waypoint_list[k][1] - pose[1]
-                    th = self.get_theta(xdiff, ydiff)
+                    th = get_theta(xdiff, ydiff)
                     vehicle_th = zero_to_2pi(pose[2])
                     # vehicle_th = -vehicle_th
                     # vehicle_th = 2*math.pi - vehicle_th
@@ -338,35 +363,7 @@ class WarthogEnv(gym.Env):
         plt.pause(0.001)
         plt.clf()
 
-    def reset(self):
-        self.get_waypoints_for_sup_learning()
-        self.save_obs_for_supervised_learning()
-        self.ep_start = 1
-        self.ep_poses = []
-        self.total_ep_reward = 0
-        if self.max_vel >= 5:
-            self.max_vel = 1
-        idx = np.random.randint(self.num_waypoints, size=1)
-        # idx = [0]
-        idx = idx[0]
-        # idx = 880
-        self.closest_index = idx
-        self.prev_closest_index = idx
-        self.pose[0] = self.waypoints_list[idx][0] + 0.1
-        self.pose[1] = self.waypoints_list[idx][1] + 0.1
-        self.pose[2] = self.waypoints_list[idx][2] + 0.01
-        self.xpose = [self.pose[0]] * self.n_traj
-        self.ypose = [self.pose[1]] * self.n_traj
-        self.twist = [0.0, 0.0, 0.0]
-        for i in range(0, self.num_waypoints):
-            if self.ref_vel[i] > self.max_vel:
-                self.waypoints_list[i][3] = self.max_vel
-            else:
-                self.waypoints_list[i][3] = self.ref_vel[i]
-        # self.max_vel = 2
-        self.max_vel = self.max_vel + 1
-        obs = self.get_observation()
-        return obs
+    
 
     def render(self, mode="human"):
         self.ax.set_xlim(
@@ -442,7 +439,7 @@ class WarthogEnv(gym.Env):
                 xdiff = self.waypoints_list[i + 1][0] - self.waypoints_list[i][0]
                 ydiff = self.waypoints_list[i + 1][1] - self.waypoints_list[i][1]
                 self.waypoints_list[i][2] = zero_to_2pi(
-                    self.get_theta(xdiff, ydiff)
+                    get_theta(xdiff, ydiff)
                 )
             self.waypoints_list[i + 1][2] = self.waypoints_list[i][2]
             self.num_waypoints = i + 2
@@ -466,3 +463,8 @@ def get_dist(waypoint, pose):
     xdiff = pose[0] - waypoint[0]
     ydiff = pose[1] - waypoint[1]
     return math.sqrt(xdiff * xdiff + ydiff * ydiff)
+
+
+def get_theta(xdiff, ydiff):
+    theta = math.atan2(ydiff, xdiff)
+    return zero_to_2pi(theta)
