@@ -557,6 +557,7 @@ class ActionAdjustedAgent(Skeleton):
         pass
 
 
+shared_thread_data = {}
 # this little thing is because python multithreading is stupid and needs to have Manager() created in the main file
 # this is just a hacky way around that
 @bb.run_in_main

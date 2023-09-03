@@ -64,26 +64,26 @@ agent = ActionAdjustedAgent(
 # 
 # Runtime
 # 
-with print.indent:
-    if config.should_use_ros:
-        from runtimes.warthog_ros_client import RosRuntime, rospy
-        if __name__ == '__main__':
+if __name__ == '__main__':
+    with print.indent:
+        if config.should_use_ros:
+            from runtimes.warthog_ros_client import RosRuntime, rospy
             rospy.init_node(config.ros_runtime.main_node_name)
             RosRuntime(agent=agent, env=env)
             rospy.spin()
-    else:
-        # basic runtime
-        for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=config.simulator.max_number_of_timesteps_per_episode):
-            pass
-        
-        print("done")
-        import subprocess
-        # for some multi-threading reason this process doesn't close after exit
-        pid = os.getpid()
-        print(f"called kill on self {os.getpid()}, now exiting")
-        stdout = subprocess.check_output(['kill', f"{pid}"]).decode('utf-8')[0:-1]
-        
-        from time import sleep
-        sleep(1)
-        print(f"calling kill -9 on self {pid}")
-        stdout = subprocess.check_output(['kill', '-9', f"{pid}"]).decode('utf-8')[0:-1]
+        else:
+            # basic runtime
+            for episode_index, timestep_index, observation, reward, is_last_step in runtimes.basic(agent=agent, env=env, max_timestep_index=config.simulator.max_number_of_timesteps_per_episode):
+                pass
+            
+            print("done")
+            import subprocess
+            # for some multi-threading reason this process doesn't close after exit
+            pid = os.getpid()
+            print(f"called kill on self {os.getpid()}, now exiting")
+            stdout = subprocess.check_output(['kill', f"{pid}"]).decode('utf-8')[0:-1]
+            
+            from time import sleep
+            sleep(1)
+            print(f"calling kill -9 on self {pid}")
+            stdout = subprocess.check_output(['kill', '-9', f"{pid}"]).decode('utf-8')[0:-1]
