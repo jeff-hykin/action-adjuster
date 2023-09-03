@@ -12,12 +12,15 @@ import matplotlib as mpl
 import numpy as np
 from config import grug_test, path_to
 
+
+from generic_tools.plotting import create_slider_from_traces
+
 def zero_to_2pi(theta):
-        if theta < 0:
-            theta = 2 * math.pi + theta
-        elif theta > 2 * math.pi:
-            theta = theta - 2 * math.pi
-        return theta
+    if theta < 0:
+        theta = 2 * math.pi + theta
+    elif theta > 2 * math.pi:
+        theta = theta - 2 * math.pi
+    return theta
 
 def pi_to_pi(theta):
     if theta < -math.pi:
@@ -485,8 +488,7 @@ class WarthogEnv(gym.Env):
             ep_start=self.ep_start,
         )
         self.prev_closest_index = self.closest_index
-        # obs, self.closest_dist, self.closest_index = pure_get_observation(
-        pure_get_observation(
+        obs, self.closest_dist, self.closest_index = pure_get_observation(
             closest_dist=self.closest_dist,
             closest_index=self.closest_index,
             horizon=self.horizon,
@@ -495,7 +497,6 @@ class WarthogEnv(gym.Env):
             twist=self.twist,
             waypoints_list=self.waypoints_list,
         )
-        obs = self.get_observation()
         done = False
         if self.closest_index >= self.number_of_waypoints - 1:
             done = True
@@ -586,7 +587,7 @@ class WarthogEnv(gym.Env):
         self.pose[2] = th + w_ * dt
         self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
         self.ep_start = 0
-
+    
     def get_observation(self):
         obs   = [0] * (self.horizon * 4 + 2)
         pose  = self.pose

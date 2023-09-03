@@ -239,3 +239,31 @@ def graph_groups(
         **kwargs,
     )
 
+
+def create_slider_from_traces(traces):
+    import plotly.graph_objects as go
+    fig = go.Figure()
+    for each in traces:
+        fig.add_trace(each)
+
+    # Create and add slider
+    steps = []
+    for index in range(len(fig.data)):
+        step = dict(
+            method="update",
+            args=[
+                {"visible": [False] * len(fig.data)},
+                {"title": "Timestep: " + str(index)},
+            ],  # layout attribute
+        )
+        step["args"][0]["visible"][index] = True  # Toggle i'th trace to "visible"
+        steps.append(step)
+
+    sliders = [
+        dict(
+            steps=steps,
+        )
+    ]
+
+    fig.update_layout(sliders=sliders)
+    return fig
