@@ -100,7 +100,6 @@ class WarthogEnv(gym.Env):
         self.is_episode_start        = 1
         self.trajectory_file         = None
         self.global_timestep         = 0
-        self.episode_timestep        = 0
         self.action_buffer           = [ (0,0) ] * config.simulator.action_delay # seed the buffer with delays
         self.simulated_battery_level = 1.0 # proportion 
         
@@ -403,7 +402,6 @@ class WarthogEnv(gym.Env):
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self.original_relative_spin}, {self.is_episode_start}\n")
         self.global_timestep += 1
-        self.episode_timestep += 1
         self.episode_steps = self.episode_steps + 1
         self.is_episode_start = 0
         
@@ -591,7 +589,6 @@ class WarthogEnv(gym.Env):
     def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
         self.total_episode_reward = 0
-        self.episode_timestep = 0
         
         index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
