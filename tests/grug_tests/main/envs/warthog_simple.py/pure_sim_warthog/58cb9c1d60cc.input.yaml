@@ -1,0 +1,43 @@
+args: []
+kwargs:
+   v: !<python/numpy/int64> 0.0
+   w: !<python/numpy/int64> 0.0
+   pose:
+   - !<python/numpy/int64> -104.64402780786043
+   - !<python/numpy/int64> 52.71486014654178
+   - !<python/numpy/int64> 3.5099006729021065
+   twist:
+   - 0.0
+   - 0.0
+   - 0.0
+   is_delayed_dynamics: false
+   v_delay_data:
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   w_delay_data:
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   - 0.0
+   dt: 0.06
+   prev_angle: 0
+   ep_poses: []
+   ep_start: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15D\x01\0\0\r\0\0\0\0)}\x14\
+   @(\f\x01v\x14\f\x152numpy.c\0ore.mul\0tiarray\0\x14\f\x06scal\x03ar\x14\x13\x14\
+   \f\x05<numpy\x14\f`\x05dtype\x14@\x13\x14\f\x02f8\x14G\t\b\a\x14R\x14(/K\x03\f\x01\
+   <\x14N$NNJ\x7F\x7F\x7F\x7FxJ\x7F\x7F\x7F\x7FK\0\x1Et\x14bC\b\0\0\x02\0\0\0\0\0\0\
+   \x14@\x06\x14R\x14\f\x01w\e\x14h\x04h\nC\b\x01\0\0\0\0\0\0\0\0\0\x14\x06\x14R\x14\
+   \fn\x04pose\x14] \x14(h\x04h\nC\x01\bh\x1Ei@7)\x10Z@\x14\x06\x14R\x14^h\x04h\n\
+   C\b,\0N\v\t\0[J@\x0E\x14\x06\x14R\x14h\x04\x17h\nC\bb\x15R`MF\x14\f@\x14\x06a\x14\
+   R\x14e\f\x05t\x15wist\x14]\x14P(G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\
+   \0\0\0\0\0\0e\f\x13is_d\x02elayed_\0dynamic\0s\x14\t\f\fv_\x0Edelay_d\0ata\x14\
+   ]\x14((G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\
+   \0\0\0G\0\0\0\0\0\0\0\0\0e\f\fw\x10_delay_\0data\x14]\x14P(G\0\0\0\0\0\0\0\0\0\
+   G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\
+   e\f\x02 dt\x14G?.8dQk\x05\x1E8\f\n6prev_an\0gle\x14K\0\fH\bep_pos\0es\x14]\x14\f\
+   \b4ep_star\0t\x14K\x01u\x06\x14b.\0\0\0\0\0\0\0\x06"
