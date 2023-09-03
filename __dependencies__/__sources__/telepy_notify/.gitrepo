@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/telepy_notify.git
 	branch = master
-	commit = 7dbd16515bd5f29590090f4773d30de2675d6f39
-	parent = e46cd652e2c5f15de9aaffe4ca5b9ad71734afdf
+	commit = 9395ac07367eb7dcbf8e0c56b874bf10da7d219c
+	parent = 6385cf3d955ac96dfa90011c8ff8ac0f31888a5d
 	method = merge
 	cmdver = 0.4.1

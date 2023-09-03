@@ -1,6 +1,6 @@
 # What is this?
 
-Super fast (<5min setup) telegram notifications for task-completion, task progress, errors and more. This is an minimal module; no pip dependencies at all.
+Super fast (<5min setup) telegram notifications for task-completion, task progress, errors and more. This is a minimal module (one file, no pip dependencies).
 
 # How do I use this?
 
