@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:jeff-hykin/grug_test_py.git
 	branch = master
-	commit = 907f5b3e8b83c5d781914526f69e1812df8a7699
+	commit = e64c44b8567c7a35e9dec7ff536ff73d5d1c3f64
 	parent = 8ff5d281a7f244aeaa7ec5e9e952718a265ef3d1
 	method = merge
 	cmdver = 0.4.1

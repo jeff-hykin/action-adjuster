@@ -4,6 +4,7 @@ import os
 import math
 import random
 import functools
+import json
 
 from .__dependencies__.ez_yaml import yaml
 from .__dependencies__ import ez_yaml
@@ -11,7 +12,15 @@ from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_s
 from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
+    # make API more local:
+        # grug_test(record=True, test=True, max=10, path="override/path")
+        # grug_test.force_disable_all = False
+        # grug_test.force_record_all = False
+        # grug_test.force_test_all = False
     # DONE: add counting-caps (max IO for a particular function, or in-general)
+    # add a generated-time somewhere in the output to show when a test was last updated (maybe a .touch.yaml with commit hash, date and epoch)
+    # check in-memory hash of prev-output and use that to not-overwrite outputs if they're the same
+    # write to a temp file then move it to reduce partial-write problems
     # improve to_yaml(), allow deep recursion to make as much of the structure visible as possible
         # maybe add named tuple support
         # maybe add pandas dataframe support
@@ -59,7 +68,7 @@ if True:
             prefix = f"{type(data.value)}".replace(YamlPickled.delimiter, "")
             if prefix.startswith("<class '") and prefix.endswith("'>"):
                 prefix = prefix[8:-2]
-                
+            
             # value needs to be a string (or some other yaml-primitive)
             return representer.represent_scalar(
                 tag=cls.yaml_tag,
@@ -104,19 +113,17 @@ if True:
                 
             name = yaml_name or named_tuple_class.__name__
             if name in named_tuple_name_registry and named_tuple_class not in named_tuple_class_registry:
-                named_tuple_class_registry[the_class] = None
+                named_tuple_class_registry[named_tuple_class] = None
                 warn(f"(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}. Please rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple(SomeNamedTupleClass, 'SomeNamedTupleClass1234')")
             
             named_tuple_name_registry[name] = True
-            named_tuple_class_registry[the_class] = True
+            named_tuple_class_registry[named_tuple_class] = True
             named_tuple_class.yaml_tag = f"!python/named_tuple/{name}"
-            named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**json.loads(node.value))
-            named_tuple_class.to_yaml = lambda representer, object_of_this_class: representer.represent_scalar(
-                tag=named_tuple_class.yaml_tag,
-                value=json.dumps(object_of_this_class._asdict()),
-                style=None,
-                anchor=None
-            )
+            named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**{
+                key_node.value: value_node.value
+                    for key_node, value_node in node.value
+            })
+            named_tuple_class.to_yaml = lambda representer, object_of_this_class: representer.represent_mapping(tag=named_tuple_class.yaml_tag, mapping=object_of_this_class._asdict())
             
             yaml.register_class(named_tuple_class)
             return named_tuple_class
@@ -232,7 +239,7 @@ if True:
     # helper
     # 
     def to_yaml(obj):
-        if isinstance(obj, (tuple, list)):
+        if type(obj) == tuple or type(obj) == list:
             return tuple(to_yaml(each) for each in obj)
         elif isinstance(obj, dict):
             return { 
@@ -240,12 +247,17 @@ if True:
                     for each_key, each_value in obj.items()
             }
         else:
-            if is_probably_named_tuple(obj):
+            is_named_tuple = is_probably_named_tuple(obj)
+            if is_named_tuple:
                 register_named_tuple(obj.__class__)
+                # recursively register
+                tuple(to_yaml(each) for each in obj)
             try:
                 ez_yaml.to_string(obj)
                 return obj
             except Exception as error:
+                if is_named_tuple:
+                    raise error
                 return YamlPickled(obj)
 
 class GrugTest:
@@ -277,6 +289,7 @@ class GrugTest:
         record_io=True,
         verbose=False,
         max_io_per_func=None,
+        redo_inputs=False,
         overflow_strat="keep_old",
         project_folder="./", # FIXME: walk up until .git
         test_folder="./tests/grug_tests/", # FIXME: walk up until .git
@@ -289,6 +302,7 @@ class GrugTest:
         self.verbose         = verbose
         self.overflow_strat  = overflow_strat
         self.max_io_per_func = max_io_per_func if max_io_per_func != None else math.inf
+        self.redo_inputs     = redo_inputs
         self.project_folder  = project_folder
         self.test_folder     = test_folder
         
@@ -313,7 +327,7 @@ class GrugTest:
     # 
     # decorator
     # 
-    def __call__(self, *args, save_to=None, func_name=None, max_io=None, record_io=None, additional_io_per_run=None, **kwargs):
+    def __call__(self, *args, skip=False, save_to=None, func_name=None, max_io=None, record_io=None, additional_io_per_run=None, **kwargs):
         """
         Example:
             grug_test = GrugTest(
@@ -332,6 +346,10 @@ class GrugTest:
                 add_nums(a,b)
         
         """
+        if skip:
+            # e.g. returns a decorator that does nothing
+            return lambda func: func
+        
         if record_io == None:
             record_io = self.record_io
         if max_io == None:
@@ -355,13 +373,14 @@ class GrugTest:
                 # 
                 # setup name/folder
                 # 
-                if not save_to:
-                    relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=source))
-                    relative_path_to_test = self.test_folder+"/"+relative_path_to_function
-                    save_to = relative_path_to_test
+                relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=source))
                 function_name = func_name or getattr(function_being_wrapped, "__name__", "<unknown_func>")
+                if not save_to:
+                    relative_path_to_test = self.test_folder+"/"+relative_path_to_function
+                    save_to = relative_path_to_test+"/"+function_name
+                
                 function_id = f"{relative_path_to_function}:{function_name}"
-                grug_folder_for_this_func = save_to+"/"+function_name
+                grug_folder_for_this_func = save_to
                 if function_id not in self.grug_info["functions_with_tests"]:
                     self.grug_info["functions_with_tests"].append(function_id)
                 
@@ -432,6 +451,9 @@ class GrugTest:
                     # input limiter
                     # 
                     input_already_existed = FS.is_file(input_file_path)
+                    if input_already_existed and self.redo_inputs:
+                        FS.remove(input_file_path)
+                        input_already_existed = False
                     if is_overflowing and not input_already_existed and self.overflow_strat == 'delete_random':
                         input_to_delete  = randomly_pick_from(input_files)
                         output_to_delete = input_to_delete[0:-len(self.input_file_extension)]+self.output_file_extension
