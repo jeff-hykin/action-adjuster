@@ -84,7 +84,6 @@ if __name__ == '__main__':
                         twist=                                         getattr(env, "twist"                                         , None),
                         closest_index=                                 getattr(env, "closest_index"                                 , None),
                         prev_closest_index=                            getattr(env, "prev_closest_index"                            , None),
-                        closest_dist=                                  getattr(env, "closest_dist"                                  , None),
                         closest_distance=                              getattr(env, "closest_distance"                              , None),
                         number_of_waypoints=                           getattr(env, "number_of_waypoints"                           , None),
                         horizon=                                       getattr(env, "horizon"                                       , None),

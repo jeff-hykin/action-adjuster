@@ -109,8 +109,7 @@ normal_output:
   - 0
   closest_index: 0
   prev_closest_index: 0
-  closest_dist: .inf
-  closest_distance: null
+  closest_distance: .inf
   number_of_waypoints: 99
   horizon: 10
   dt: 0.06
@@ -570,8 +569,7 @@ normal_output:
   - !<python/numpy/float64> 1.25
   closest_index: 0
   prev_closest_index: 0
-  closest_dist: 22.645937592387142
-  closest_distance: null
+  closest_distance: 22.645937592387142
   number_of_waypoints: 99
   horizon: 10
   dt: 0.06
@@ -1037,8 +1035,7 @@ normal_output:
   - !<python/numpy/float64> 1.4000000000000001
   closest_index: 0
   prev_closest_index: 0
-  closest_dist: 22.535511549249115
-  closest_distance: null
+  closest_distance: 22.535511549249115
   number_of_waypoints: 99
   horizon: 10
   dt: 0.06
@@ -1512,8 +1509,7 @@ normal_output:
   - !<python/numpy/float64> 1.4175
   closest_index: 0
   prev_closest_index: 0
-  closest_dist: 22.408327261689106
-  closest_distance: null
+  closest_distance: 22.408327261689106
   number_of_waypoints: 99
   horizon: 10
   dt: 0.06
@@ -1995,8 +1991,7 @@ normal_output:
   - !<python/numpy/float64> 1.4195
   closest_index: 0
   prev_closest_index: 0
-  closest_dist: 22.27637322849239
-  closest_distance: null
+  closest_distance: 22.27637322849239
   number_of_waypoints: 99
   horizon: 10
   dt: 0.06

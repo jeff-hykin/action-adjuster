@@ -65,7 +65,7 @@ if True:
         'prev_angle',
         'pose',
         'ep_start',
-        'closest_dist',
+        'closest_distance',
         'closest_index',
         'ep_poses',
         'v_delay_data',
@@ -73,7 +73,7 @@ if True:
     ])
     GetObservationOutput = namedtuple('GetObservationOutput', [
         'obs',
-        'closest_dist',
+        'closest_distance',
         'closest_index'
     ])
     WarthogSimOutput = namedtuple('WarthogSimOutput', [
@@ -156,7 +156,7 @@ def pure_sim_warthog(
 
 @grug_test(max_io=30, skip=False)
 def pure_get_observation(
-    closest_dist,
+    closest_distance,
     closest_index,
     horizon,
     number_of_waypoints,
@@ -167,11 +167,11 @@ def pure_get_observation(
     obs   = [0] * (horizon * 4 + 2)
     index   = closest_index
     
-    closest_dist = math.inf
+    closest_distance = math.inf
     for i in range(closest_index, number_of_waypoints):
         dist = get_dist(waypoints_list[i], pose)
-        if dist <= closest_dist:
-            closest_dist = dist
+        if dist <= closest_distance:
+            closest_distance = dist
             index = i
         else:
             break
@@ -201,14 +201,14 @@ def pure_get_observation(
     obs[j] = twist[0]
     obs[j + 1] = twist[1]
     
-    return GetObservationOutput(obs, closest_dist, closest_index)
+    return GetObservationOutput(obs, closest_distance, closest_index)
 
 @grug_test(max_io=30, skip=False)
 def pure_reward(
     closest_waypoint,
     pose,
     twist,
-    closest_dist,
+    closest_distance,
     action,
     prev_action,
 ):
@@ -222,7 +222,7 @@ def pure_reward(
         waypoint_phi - pose_phi
     )
     vel_error = waypoint_velocity - twist[0]
-    crosstrack_error = closest_dist * math.sin(yaw_error)
+    crosstrack_error = closest_distance * math.sin(yaw_error)
     reward = (
         (2.0 - math.fabs(crosstrack_error))
         * (4.5 - math.fabs(vel_error))
@@ -244,7 +244,7 @@ def pure_reward_wrapper(
     waypoints_list,
     pose,
     twist,
-    closest_dist,
+    closest_distance,
     ep_steps,
     max_number_of_timesteps_per_episode,
     action,
@@ -261,7 +261,7 @@ def pure_reward_wrapper(
         closest_waypoint=waypoints_list[closest_index],
         pose=pose,
         twist=twist,
-        closest_dist=closest_dist,
+        closest_distance=closest_distance,
         action=action,
         prev_action=prev_action,
     )
@@ -282,7 +282,7 @@ def pure_reward_wrapper(
 @grug_test(max_io=60, skip=False)
 def pure_step(
     action,
-    closest_dist,
+    closest_distance,
     closest_index,
     crosstrack_error,
     dt,
@@ -329,8 +329,8 @@ def pure_step(
         ep_start=ep_start,
     )
     prev_closest_index = closest_index
-    obs, closest_dist, closest_index = pure_get_observation(
-        closest_dist=closest_dist,
+    obs, closest_distance, closest_index = pure_get_observation(
+        closest_distance=closest_distance,
         closest_index=closest_index,
         horizon=horizon,
         number_of_waypoints=number_of_waypoints,
@@ -348,7 +348,7 @@ def pure_step(
         waypoints_list=waypoints_list,
         pose=pose,
         twist=twist,
-        closest_dist=closest_dist,
+        closest_distance=closest_distance,
         ep_steps=ep_steps,
         max_number_of_timesteps_per_episode=max_number_of_timesteps_per_episode,
         action=action,
@@ -380,7 +380,7 @@ def pure_step(
             prev_angle,
             pose,
             ep_start,
-            closest_dist,
+            closest_distance,
             closest_index,
             ep_poses,
             v_delay_data,
@@ -415,7 +415,7 @@ class WarthogEnv(gym.Env):
         self.twist = [0, 0]
         self.closest_index = 0
         self.prev_closest_index = 0
-        self.closest_dist = math.inf
+        self.closest_distance = math.inf
         self.horizon = 10
         self.dt = 0.06
         self.num_steps = 0
@@ -488,9 +488,9 @@ class WarthogEnv(gym.Env):
     def step(self, action):
         self.global_timestep += 1
         self.original_relative_velocity, self.original_relative_spin = action
-        output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_dist, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
+        output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_distance, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
             action=Action(*action),
-            closest_dist=self.closest_dist,
+            closest_distance=self.closest_distance,
             closest_index=self.closest_index,
             crosstrack_error=self.crosstrack_error,
             dt=self.dt,
@@ -542,8 +542,8 @@ class WarthogEnv(gym.Env):
                 self.waypoints_list[i][3] = self.desired_velocities[i]
         # self.max_vel = 2
         self.max_vel = self.max_vel + 1
-        obs, self.closest_dist, self.closest_index = pure_get_observation(
-            closest_dist=self.closest_dist,
+        obs, self.closest_distance, self.closest_index = pure_get_observation(
+            closest_distance=self.closest_distance,
             closest_index=self.closest_index,
             horizon=self.horizon,
             number_of_waypoints=self.number_of_waypoints,
@@ -611,7 +611,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     twist=env.twist,
                     closest_index=env.closest_index,
                     prev_closest_index=env.prev_closest_index,
-                    closest_dist=env.closest_dist,
+                    closest_distance=env.closest_distance,
                     number_of_waypoints=env.number_of_waypoints,
                     horizon=env.horizon,
                     dt=env.dt,
@@ -667,14 +667,14 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
     # exit()
 
 
-def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
+def original_reward_function(*, spacial_info, closest_distanceance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
     x_diff     = closest_waypoint.x - spacial_info.x
     y_diff     = closest_waypoint.y - spacial_info.y
     angle_diff = get_theta(x_diff, y_diff)
     yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
 
     velocity_error   = closest_waypoint.velocity - spacial_info.velocity
-    crosstrack_error = closest_distance * math.sin(yaw_error)
+    crosstrack_error = closest_distanceance * math.sin(yaw_error)
     phi_error        = pi_to_pi(zero_to_2pi(closest_waypoint.angle) - spacial_info.angle)
     
     
