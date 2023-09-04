@@ -14,6 +14,7 @@ from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_s
 from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
+    # create a global list of registered named tuples to make sure all are loaded (and the same) before replaying inputs 
     # make API more local:
         # grug_test(record=True, test=True, max=10, path="override/path")
         # grug_test.force_disable_all = False
@@ -41,6 +42,7 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
 yaml.width = 999999999999999
+yaml.explicit_end = True
 
 # 
 # 
@@ -112,7 +114,7 @@ if True:
             # already registered
             if named_tuple_class_registry.get(named_tuple_class, None):
                 return named_tuple_class
-                
+            
             name = yaml_name or named_tuple_class.__name__
             if name in named_tuple_name_registry and named_tuple_class not in named_tuple_class_registry:
                 named_tuple_class_registry[named_tuple_class] = None
@@ -121,10 +123,7 @@ if True:
             named_tuple_name_registry[name] = True
             named_tuple_class_registry[named_tuple_class] = True
             named_tuple_class.yaml_tag = f"!python/named_tuple/{name}"
-            named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**{
-                key_node.value: value_node.value
-                    for key_node, value_node in node.value
-            })
+            named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**ez_yaml.ruamel.yaml.BaseConstructor.construct_mapping(constructor, node, deep=True))
             named_tuple_class.to_yaml = lambda representer, object_of_this_class: representer.represent_mapping(tag=named_tuple_class.yaml_tag, mapping=object_of_this_class._asdict())
             
             yaml.register_class(named_tuple_class)
@@ -153,6 +152,7 @@ if True:
                     numpy.ndarray,
                     lambda dumper, data: dumper.represent_sequence(tag='python/numpy/ndarray', sequence=data.tolist()), 
                 )
+                
                 ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
                     'python/numpy/ndarray',
                     lambda loader, node: numpy.array(loader.construct_sequence(node, deep=True)),
@@ -402,12 +402,11 @@ class GrugTest:
                     for progress, path in ProgressBar(input_files, disable_logging=not self.verbose):
                         progress.text = f" loading: {FS.basename(path)}"
                         try:
-                            # corrupted file
-                            if FS.read(path) == "":
-                                FS.remove(path)
-                                continue
+                            inputs = ez_yaml.to_object(file_path=path)
+                            args = inputs["args"]
+                            kwargs = inputs["kwargs"]
                             
-                            args, kwargs = ez_yaml.to_object(file_path=path)["pickled_args_and_kwargs"]
+                            # args, kwargs = ez_yaml.to_object(file_path=path)["pickled_args_and_kwargs"]
                             output, the_error = self.record_output(
                                 function_being_wrapped,
                                 args,
@@ -418,6 +417,11 @@ class GrugTest:
                                 verbose=True,
                             )
                         except Exception as error:
+                            # corrupted file
+                            if FS.read(path) == "":
+                                FS.remove(path)
+                                continue
+                            
                             if self.verbose:
                                 print(f"\n\ncorrupted_input: {path}\n    {error}")
                             else:
