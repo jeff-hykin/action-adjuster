@@ -5779,7 +5779,7 @@ kwargs:
    - !<python/numpy/float64> 2.0
    - !<python/numpy/float64> 1.25
    closest_distance: 108.44849000640369
-   ep_steps: 1
+   episode_steps: 1
    max_number_of_timesteps_per_episode: 700
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 2.0

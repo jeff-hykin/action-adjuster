@@ -111,7 +111,7 @@ kwargs:
    - !<python/numpy/float64> 0.19384393468499184
    - 0.0
    closest_distance: 0.22780111979038287
-   ep_steps: 3
+   episode_steps: 3
    max_number_of_timesteps_per_episode: 700
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 1.0175622701644897

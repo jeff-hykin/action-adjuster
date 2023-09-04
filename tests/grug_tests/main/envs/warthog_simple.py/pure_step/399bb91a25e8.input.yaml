@@ -9,7 +9,7 @@ kwargs:
    dt: 0.06
    ep_poses: []
    ep_start: 1
-   ep_steps: 0
+   episode_steps: 0
    horizon: 10
    is_delayed_dynamics: false
    max_number_of_timesteps_per_episode: 700

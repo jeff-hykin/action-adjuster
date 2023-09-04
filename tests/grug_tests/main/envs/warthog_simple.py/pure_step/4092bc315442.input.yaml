@@ -113,7 +113,7 @@ kwargs:
      - 0.9985926747322083
      - 0.18569042906165123
    ep_start: 0
-   ep_steps: 13
+   episode_steps: 13
    horizon: 10
    is_delayed_dynamics: false
    max_number_of_timesteps_per_episode: 700

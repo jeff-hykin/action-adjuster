@@ -51,7 +51,7 @@ if True:
     StepSideEffects = namedtuple('StepSideEffects', [
         'action',
         'crosstrack_error',
-        'ep_steps',
+        'episode_steps',
         'num_steps',
         'omega_reward',
         'phi_error',
@@ -245,7 +245,7 @@ def pure_reward_wrapper(
     pose,
     twist,
     closest_distance,
-    ep_steps,
+    episode_steps,
     max_number_of_timesteps_per_episode,
     action,
     prev_action,
@@ -269,14 +269,14 @@ def pure_reward_wrapper(
     if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
         done = True
     
-    if ep_steps >= max_number_of_timesteps_per_episode:
+    if episode_steps >= max_number_of_timesteps_per_episode:
         done = True
-        ep_steps = 0
+        episode_steps = 0
     
     total_ep_reward = total_ep_reward + reward
     prev_action = action
     
-    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward
+    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
 @grug_test(max_io=60, skip=False)
@@ -288,7 +288,7 @@ def pure_step(
     dt,
     ep_poses,
     ep_start,
-    ep_steps,
+    episode_steps,
     horizon,
     is_delayed_dynamics,
     max_number_of_timesteps_per_episode,
@@ -309,7 +309,7 @@ def pure_step(
     w_delay_data,
     waypoints_list,
 ):
-    ep_steps = ep_steps + 1
+    episode_steps = episode_steps + 1
     num_steps = num_steps + 1
     action = Action(
         np.clip(action[0], 0, 1) * 4.0,
@@ -342,14 +342,14 @@ def pure_step(
     if closest_index >= number_of_waypoints - 1:
         done = True
     
-    reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, ep_steps, omega_reward, vel_reward, prev_action, total_ep_reward = pure_reward_wrapper(
+    reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward = pure_reward_wrapper(
         total_ep_reward=total_ep_reward,
         closest_index=closest_index,
         waypoints_list=waypoints_list,
         pose=pose,
         twist=twist,
         closest_distance=closest_distance,
-        ep_steps=ep_steps,
+        episode_steps=episode_steps,
         max_number_of_timesteps_per_episode=max_number_of_timesteps_per_episode,
         action=action,
         prev_action=prev_action,
@@ -366,7 +366,7 @@ def pure_step(
         StepSideEffects(
             action,
             crosstrack_error,
-            ep_steps,
+            episode_steps,
             num_steps,
             omega_reward,
             phi_error,
@@ -437,7 +437,7 @@ class WarthogEnv(gym.Env):
         self.vel_error               = 0
         self.phi_error               = 0
         self.start_step_for_sup_data = 500000
-        self.ep_steps                = 0
+        self.episode_steps                = 0
         self.max_number_of_timesteps_per_episode            = 700
         self.tprev                   = time.time()
         self.total_ep_reward         = 0
@@ -488,7 +488,7 @@ class WarthogEnv(gym.Env):
     def step(self, action):
         self.global_timestep += 1
         self.original_relative_velocity, self.original_relative_spin = action
-        output, (self.action, self.crosstrack_error, self.ep_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_distance, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
+        output, (self.action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_distance, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
             action=Action(*action),
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
@@ -496,7 +496,7 @@ class WarthogEnv(gym.Env):
             dt=self.dt,
             ep_poses=self.ep_poses,
             ep_start=self.ep_start,
-            ep_steps=self.ep_steps,
+            episode_steps=self.episode_steps,
             horizon=self.horizon,
             is_delayed_dynamics=self.is_delayed_dynamics,
             max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
@@ -631,7 +631,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     vel_error=env.vel_error,
                     phi_error=env.phi_error,
                     start_step_for_sup_data=env.start_step_for_sup_data,
-                    ep_steps=env.ep_steps,
+                    episode_steps=env.episode_steps,
                     max_number_of_timesteps_per_episode=env.max_number_of_timesteps_per_episode,
                     total_ep_reward=env.total_ep_reward,
                     reward=env.reward,

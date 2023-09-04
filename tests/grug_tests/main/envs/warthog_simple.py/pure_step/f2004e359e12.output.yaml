@@ -52,7 +52,7 @@ normal_output:
      velocity: !<python/numpy/float64> 1.1041442155838013
      spin: !<python/numpy/float64> 0.353621169924736
   crosstrack_error: -0.12920545271880388
-  ep_steps: 5
+  episode_steps: 5
   num_steps: 5
   omega_reward: -0.707242339849472
   phi_error: !<python/numpy/float64> 0.005535012390359029

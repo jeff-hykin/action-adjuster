@@ -428,7 +428,7 @@ normal_output:
   vel_error: 0
   phi_error: 0
   start_step_for_sup_data: 500000
-  episode_steps: null
+  episode_steps: 0
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
@@ -888,7 +888,7 @@ normal_output:
   vel_error: !<python/numpy/float64> -2.020966741027661
   phi_error: !<python/numpy/float64> 0.7133302889220217
   start_step_for_sup_data: 500000
-  episode_steps: null
+  episode_steps: 1
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
@@ -1354,7 +1354,7 @@ normal_output:
   vel_error: !<python/numpy/float64> -2.2609667410276613
   phi_error: !<python/numpy/float64> 0.6383302889220217
   start_step_for_sup_data: 500000
-  episode_steps: null
+  episode_steps: 2
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
@@ -1828,7 +1828,7 @@ normal_output:
   vel_error: !<python/numpy/float64> -2.288966741027661
   phi_error: !<python/numpy/float64> 0.5543302889220216
   start_step_for_sup_data: 500000
-  episode_steps: null
+  episode_steps: 3
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
@@ -2310,7 +2310,7 @@ normal_output:
   vel_error: !<python/numpy/float64> -2.292166741027661
   phi_error: !<python/numpy/float64> 0.46928028892202167
   start_step_for_sup_data: 500000
-  episode_steps: null
+  episode_steps: 4
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
