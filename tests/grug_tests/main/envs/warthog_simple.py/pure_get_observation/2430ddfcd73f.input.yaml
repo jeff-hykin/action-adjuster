@@ -1,6 +1,6 @@
 args: []
 kwargs:
-   closest_dist: 108.32849000640368
+   closest_distance: 108.32849000640368
    closest_index: 11
    horizon: 10
    number_of_waypoints: 5768

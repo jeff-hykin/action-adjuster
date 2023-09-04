@@ -1,6 +1,6 @@
 args: []
 kwargs:
-   closest_dist: .inf
+   closest_distance: .inf
    closest_index: !<python/numpy/int64> 69
    horizon: 10
    number_of_waypoints: 99

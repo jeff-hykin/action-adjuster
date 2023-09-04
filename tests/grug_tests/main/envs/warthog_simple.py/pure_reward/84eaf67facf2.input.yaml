@@ -9,7 +9,7 @@ kwargs:
    - !<python/numpy/float64> 1.0203871726989746
    - !<python/numpy/float64> 0.2161656878888607
    - 0.0
-   closest_dist: 0.316417544126666
+   closest_distance: 0.316417544126666
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 1.0203871726989746
       spin: !<python/numpy/float64> 0.2161656878888607

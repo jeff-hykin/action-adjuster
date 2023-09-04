@@ -3,7 +3,7 @@ kwargs:
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float32> 0.25515830516815186
       spin: !<python/numpy/float32> 0.020034924149513245
-   closest_dist: 0.31320129493794
+   closest_distance: 0.31320129493794
    closest_index: 74
    crosstrack_error: -0.2657024771141497
    dt: 0.06

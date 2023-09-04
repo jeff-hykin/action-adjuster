@@ -72,7 +72,7 @@ normal_output:
   - !<python/numpy/float64> 0.19598531377507136
   - !<python/numpy/float64> 6.356444035331636
   ep_start: 0
-  closest_dist: 0.316417544126666
+  closest_distance: 0.316417544126666
   closest_index: 70
   ep_poses:
   - !<python/numpy/ndarray>

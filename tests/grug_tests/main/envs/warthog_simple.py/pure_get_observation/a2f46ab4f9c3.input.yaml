@@ -1,6 +1,6 @@
 args: []
 kwargs:
-   closest_dist: .inf
+   closest_distance: .inf
    closest_index: 0
    horizon: 10
    number_of_waypoints: 99

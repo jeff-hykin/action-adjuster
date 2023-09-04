@@ -5778,7 +5778,7 @@ kwargs:
    twist:
    - !<python/numpy/float64> 2.268
    - !<python/numpy/float64> 1.4175
-   closest_dist: 108.19446829792416
+   closest_distance: 108.19446829792416
    ep_steps: 3
    max_number_of_timesteps_per_episode: 700
    action: !python/named_tuple/Action
