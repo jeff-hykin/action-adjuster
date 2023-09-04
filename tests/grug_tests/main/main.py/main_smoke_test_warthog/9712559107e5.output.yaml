@@ -112,7 +112,7 @@ normal_output:
   closest_distance: .inf
   number_of_waypoints: 99
   horizon: 10
-  dt: 0.06
+  action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
   - -0.025749035460547555
@@ -432,6 +432,8 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
+  original_relative_velocity: null
+  original_relative_spin: 0
   action:
   - 0.0
   - 0.0
@@ -439,6 +441,7 @@ normal_output:
   prev_action:
   - 0.0
   - 0.0
+  action_buffer: null
   prev_reaction: null
   omega_reward: 0
   vel_reward: 0
@@ -457,7 +460,7 @@ normal_output:
   - 0.0
   - 0.0
   save_data: false
-  is_episode_start: null
+  is_episode_start: 1
   ep_dist: 0
   ep_poses: []
 - waypoints_list:
@@ -572,7 +575,7 @@ normal_output:
   closest_distance: 22.645937592387142
   number_of_waypoints: 99
   horizon: 10
-  dt: 0.06
+  action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
   - -0.025749035460547555
@@ -892,11 +895,14 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
+  original_relative_velocity: 0.5
+  original_relative_spin: 0.5
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.0
      spin: !<python/numpy/float64> 1.25
   reaction: null
   prev_action: *id001
+  action_buffer: null
   prev_reaction: null
   omega_reward: -2.5
   vel_reward: -2.0
@@ -915,7 +921,7 @@ normal_output:
   - 0.0
   - 0.0
   save_data: false
-  is_episode_start: null
+  is_episode_start: 0
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
@@ -1038,7 +1044,7 @@ normal_output:
   closest_distance: 22.535511549249115
   number_of_waypoints: 99
   horizon: 10
-  dt: 0.06
+  action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
   - -0.025749035460547555
@@ -1358,11 +1364,14 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
+  original_relative_velocity: 0.56
+  original_relative_spin: 0.56
   action: &id002 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.24
      spin: !<python/numpy/float64> 1.4000000000000001
   reaction: null
   prev_action: *id002
+  action_buffer: null
   prev_reaction: null
   omega_reward: -2.8000000000000003
   vel_reward: -0.2400000000000002
@@ -1381,7 +1390,7 @@ normal_output:
   - 0.0
   - 0.0
   save_data: false
-  is_episode_start: null
+  is_episode_start: 0
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
@@ -1512,7 +1521,7 @@ normal_output:
   closest_distance: 22.408327261689106
   number_of_waypoints: 99
   horizon: 10
-  dt: 0.06
+  action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
   - -0.025749035460547555
@@ -1832,11 +1841,14 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
+  original_relative_velocity: 0.567
+  original_relative_spin: 0.567
   action: &id003 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.268
      spin: !<python/numpy/float64> 1.4175
   reaction: null
   prev_action: *id003
+  action_buffer: null
   prev_reaction: null
   omega_reward: -2.835
   vel_reward: -0.02799999999999958
@@ -1855,7 +1867,7 @@ normal_output:
   - 0.0
   - 0.0
   save_data: false
-  is_episode_start: null
+  is_episode_start: 0
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
@@ -1994,7 +2006,7 @@ normal_output:
   closest_distance: 22.27637322849239
   number_of_waypoints: 99
   horizon: 10
-  dt: 0.06
+  action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
   - -0.025749035460547555
@@ -2314,11 +2326,14 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
+  original_relative_velocity: 0.5678
+  original_relative_spin: 0.5678
   action: &id004 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.2712
      spin: !<python/numpy/float64> 1.4195
   reaction: null
   prev_action: *id004
+  action_buffer: null
   prev_reaction: null
   omega_reward: -2.839
   vel_reward: -0.0032000000000000917
@@ -2337,7 +2352,7 @@ normal_output:
   - 0.0
   - 0.0
   save_data: false
-  is_episode_start: null
+  is_episode_start: 0
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
