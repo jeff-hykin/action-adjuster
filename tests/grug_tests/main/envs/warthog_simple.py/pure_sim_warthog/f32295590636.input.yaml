@@ -23,7 +23,7 @@ kwargs:
    - 0.0
    - 0.0
    - 0.0
-   dt: 0.06
+   action_duration: 0.06
    prev_angle: !<python/numpy/float64> 6.161213760311634
    ep_poses:
    - !<python/numpy/ndarray>
@@ -42,5 +42,5 @@ kwargs:
      - 0.17699703574180603
      - 0.9819915294647217
      - 0.1715957373380661
-   ep_start: 0
+   is_episode_start: 0
 pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x156\x02\0\0\r\0\0\0\0)}\x14@(\f\x01v\x14\f\x152numpy.c\0ore.mul\0tiarray\0\x14\f\x06scal\x03ar\x14\x13\x14\f\x05<numpy\x14\f`\x05dtype\x14@\x13\x14\f\x02f8\x14G\t\b\a\x14R\x14(/K\x03\f\x01<\x14N$NNJ\x7F\x7F\x7F\x7FxJ\x7F\x7F\x7F\x7FK\0\x1Et\x14bC\b\0\0\x02\0`oGp?\x14T\x06\x14R\x14\f\x01w\e\x14h\x04h\nC\b\x01\0\0\0H`OHx?\x14\x06\x14R\x14\fn\x04pose\x14] \x14(h\x04h\nC\x01\b5693Hk$ @\x14\x06\x14R\x14\\h\x04h\nC\b\x1E@<;\x7FvfK??\x14\x06\x14R\x14h\x04\x17h\nC\b=\x03\x04P$u/\x18@\x14\x06f\x14R\x14e\f\x05t\x15wist\x14]\x14P(h\x04h\nC\b\0\0\0\0\0yloH?\x14\x06\x14R\x14h.\x04h\nC\b\0\0\0\0`YvE?\x14\\\x06\x14R\x14G\0\0\v\0\0\0\0\0\0e\0\f\x13is_de\x01layed_d\0ynamics\0\x14\t\f\fv_d\aelay_da\0ta\x14]\x14(G\x14\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0e\f\fw_\bdelay_d\0ata\x14]\x14((G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0e\f\x02d\x10t\x14G?.8Q2k\x05\x1E8\f\np\erev_ang\0le\x14h\x04h\n\x04C\b\nPP8\x15\f%\x18@\x14\x06\x14R9\x14\f\bep_p\x03oses\x14]\x14P(h\x02\f\f_r\beconstr\0uct\x14\x13\x14h8\x05\f\andar\x02ray\x14\x13\x14K8\0\x05\x14C\x01b\x14F\a\x14R\x14(K\x01\vK\a\x05\x14h\n\tLC833\\[/ Q @MLLG8\e7L?\nPP78\x15%\x18@\0\0\x04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\eikh?\0\0\0@V'pF?\x14t\x14bh\x154h6K\0\x05\x14`h8\a\x14R\x14(,K\x01K\a\x05\x14h0\n\tC833\\\x02[/Q @MLaLG\e7L?\n]PP8\x15%\x18@\x11\0\0\0\0\eikh?\0\0\0@V'pF?\0\0\0\0y!lo?\0\0\0`\x02YvE?\x14t\x14Wbe\f\bep_\x04start\x14K \0u\x06\x14.\0\0\f\x02"

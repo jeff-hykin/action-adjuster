@@ -6,9 +6,9 @@ kwargs:
    closest_distance: .inf
    closest_index: 0
    crosstrack_error: 0
-   dt: 0.06
+   action_duration: 0.06
    ep_poses: []
-   ep_start: 1
+   is_episode_start: 1
    episode_steps: 0
    horizon: 10
    is_delayed_dynamics: false

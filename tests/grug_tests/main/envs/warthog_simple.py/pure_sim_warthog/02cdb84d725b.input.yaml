@@ -22,9 +22,9 @@ kwargs:
    - 0.0
    - 0.0
    - 0.0
-   dt: 0.06
+   action_duration: 0.06
    prev_angle: 0
    ep_poses: []
-   ep_start: 1
+   is_episode_start: 1
 pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15z\x01\0\0\x05\0\0\0\0)}\x14@(\f\x01v\x14\f\x152numpy.c\0ore.mul\0tiarray\0\x14\f\x06scal\x03ar\x14\x13\x14\f\x05<numpy\x14\f`\x05dtype\x14@\x13\x14\f\x02f8\x14G\t\b\a\x14R\x14(/K\x03\f\x01<\x14N$NNJ\x7F\x7F\x7F\x7FxJ\x7F\x7F\x7F\x7FK\0\x1Et\x14bC\b\0\0\x02\0\0\0\0\0@\x14@\x06\x14R\x14\f\x01w\e\x14h\x04h\nC\b\x01\0\0\0\0\0\0t@?\x14\x06\x14R\x14\fn\x04pose\x14] \x14(K\0K\0K\x01\0e\f\x05twi\x04st\x14]\x14(K\x14\0K\0e\f\x13i\x10s_delay\0ed_dyna\0mics\x14\t\fp\fv_dela\0y_data\x14@]\x14(G\0\0\0\x02\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0e\0\f\fw_del\x01ay_data\0\x14]\x14(G\0\0\x05\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0G\0\0\0\0\0\0\0\0\0\0e\f\x02dt\x14G\"?.8Qk\x05\x1E68\f\nprev\x03_angle\x14@K\0\f\bep_\x04poses\x14] \x14\f\bep_s\x03tart\x14K\x01\x10u\x06\x14.\0\0\0\x06\x03"
 ...

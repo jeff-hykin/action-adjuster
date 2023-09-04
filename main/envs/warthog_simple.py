@@ -64,7 +64,7 @@ if True:
         'twist',
         'prev_angle',
         'pose',
-        'ep_start',
+        'is_episode_start',
         'closest_distance',
         'closest_index',
         'ep_poses',
@@ -80,7 +80,7 @@ if True:
         'twist',
         'prev_angle',
         'pose',
-        'ep_start',
+        'is_episode_start',
     ])
     RewardOutput = namedtuple('RewardOutput', [
         "running_reward",
@@ -92,7 +92,7 @@ if True:
         "twist",
         "prev_angle",
         "pose",
-        "ep_start",
+        "is_episode_start",
         "ep_poses",
         "v_delay_data",
         "w_delay_data",
@@ -111,10 +111,10 @@ def pure_sim_warthog(
     is_delayed_dynamics,
     v_delay_data,
     w_delay_data,
-    dt,
+    action_duration,
     prev_angle,
     ep_poses,
-    ep_start,
+    is_episode_start,
 ):
     v                   = deepcopy(v)
     w                   = deepcopy(w)
@@ -123,10 +123,10 @@ def pure_sim_warthog(
     is_delayed_dynamics = deepcopy(is_delayed_dynamics)
     v_delay_data        = deepcopy(v_delay_data)
     w_delay_data        = deepcopy(w_delay_data)
-    dt                  = deepcopy(dt)
+    action_duration                  = deepcopy(action_duration)
     prev_angle          = deepcopy(prev_angle)
     ep_poses            = deepcopy(ep_poses)
-    ep_start            = deepcopy(ep_start)
+    is_episode_start            = deepcopy(is_episode_start)
     
     x = pose[0]
     y = pose[1]
@@ -144,15 +144,15 @@ def pure_sim_warthog(
         w_delay_data.append(w)
         twist[0] = v_delay_data[0]
         twist[1] = v_delay_data[1]
-    dt = dt
+    action_duration = action_duration
     prev_angle = pose[2]
-    pose[0] = x + v_ * math.cos(th) * dt
-    pose[1] = y + v_ * math.sin(th) * dt
-    pose[2] = th + w_ * dt
+    pose[0] = x + v_ * math.cos(th) * action_duration
+    pose[1] = y + v_ * math.sin(th) * action_duration
+    pose[2] = th + w_ * action_duration
     ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
-    ep_start = 0
+    is_episode_start = 0
     
-    return SimWarthogOutput(twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data)
+    return SimWarthogOutput(twist, prev_angle, pose, is_episode_start, ep_poses, v_delay_data, w_delay_data)
 
 @grug_test(max_io=30, skip=False)
 def pure_get_observation(
@@ -285,9 +285,9 @@ def pure_step(
     closest_distance,
     closest_index,
     crosstrack_error,
-    dt,
+    action_duration,
     ep_poses,
-    ep_start,
+    is_episode_start,
     episode_steps,
     horizon,
     is_delayed_dynamics,
@@ -315,7 +315,7 @@ def pure_step(
         np.clip(action[0], 0, 1) * 4.0,
         np.clip(action[1], -1, 1) * 2.5,
     )
-    twist, prev_angle, pose, ep_start, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
+    twist, prev_angle, pose, is_episode_start, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
         v=action[0],
         w=action[1],
         pose=pose,
@@ -323,10 +323,10 @@ def pure_step(
         is_delayed_dynamics=is_delayed_dynamics,
         v_delay_data=v_delay_data,
         w_delay_data=w_delay_data,
-        dt=dt,
+        action_duration=action_duration,
         prev_angle=prev_angle,
         ep_poses=ep_poses,
-        ep_start=ep_start,
+        is_episode_start=is_episode_start,
     )
     prev_closest_index = closest_index
     obs, closest_distance, closest_index = pure_get_observation(
@@ -379,7 +379,7 @@ def pure_step(
             twist,
             prev_angle,
             pose,
-            ep_start,
+            is_episode_start,
             closest_distance,
             closest_index,
             ep_poses,
@@ -417,7 +417,7 @@ class WarthogEnv(gym.Env):
         self.prev_closest_index = 0
         self.closest_distance = math.inf
         self.horizon = 10
-        self.dt = 0.06
+        self.action_duration = 0.06
         self.num_steps = 0
         self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file)
         self.number_of_waypoints = len(self.waypoints_list)
@@ -451,7 +451,7 @@ class WarthogEnv(gym.Env):
         self.v_delay_data            = [0.0] * self.delay_steps
         self.w_delay_data            = [0.0] * self.delay_steps
         self.save_data               = False
-        self.ep_start                = 1
+        self.is_episode_start                = 1
         self.ep_dist                 = 0
         self.ep_poses                = []
         
@@ -488,14 +488,14 @@ class WarthogEnv(gym.Env):
     def step(self, action):
         self.global_timestep += 1
         self.original_relative_velocity, self.original_relative_spin = action
-        output, (self.action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.ep_start, self.closest_distance, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
+        output, (self.action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, self.v_delay_data, self.w_delay_data), other = pure_step(
             action=Action(*action),
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
             crosstrack_error=self.crosstrack_error,
-            dt=self.dt,
+            action_duration=self.action_duration,
             ep_poses=self.ep_poses,
-            ep_start=self.ep_start,
+            is_episode_start=self.is_episode_start,
             episode_steps=self.episode_steps,
             horizon=self.horizon,
             is_delayed_dynamics=self.is_delayed_dynamics,
@@ -521,7 +521,7 @@ class WarthogEnv(gym.Env):
         return output
     
     def reset(self):
-        self.ep_start = 1
+        self.is_episode_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
         if self.max_vel >= 5:
@@ -614,7 +614,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     closest_distance=env.closest_distance,
                     number_of_waypoints=env.number_of_waypoints,
                     horizon=env.horizon,
-                    dt=env.dt,
+                    action_duration=env.action_duration,
                     desired_velocities=env.desired_velocities,
                     num_steps=env.num_steps,
                     max_vel=env.max_vel,
@@ -644,7 +644,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     v_delay_data=env.v_delay_data,
                     w_delay_data=env.w_delay_data,
                     save_data=env.save_data,
-                    ep_start=env.ep_start,
+                    is_episode_start=env.is_episode_start,
                     ep_dist=env.ep_dist,
                     ep_poses=env.ep_poses,
                 ))

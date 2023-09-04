@@ -6,7 +6,7 @@ kwargs:
    closest_distance: 0.17847669882164877
    closest_index: 69
    crosstrack_error: -0.10993710591896444
-   dt: 0.06
+   action_duration: 0.06
    ep_poses:
    - !<python/numpy/ndarray>
      - 8.158568243985064
@@ -24,7 +24,7 @@ kwargs:
      - 0.17699703574180603
      - 0.9819915294647217
      - 0.1715957373380661
-   ep_start: 0
+   is_episode_start: 0
    episode_steps: 2
    horizon: 10
    is_delayed_dynamics: false

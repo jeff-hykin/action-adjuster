@@ -71,7 +71,7 @@ normal_output:
   - !<python/numpy/float64> 11.126919137154045
   - !<python/numpy/float64> 0.766033231545959
   - !<python/numpy/float64> 6.610920100892809
-  ep_start: 0
+  is_episode_start: 0
   closest_distance: 0.2849776266441611
   closest_index: 74
   ep_poses:

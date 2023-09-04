@@ -70,7 +70,7 @@ normal_output:
   - 0.0
   - 0.0
   - 0.0
-  ep_start: 0
+  is_episode_start: 0
   closest_distance: 22.645937592387142
   closest_index: 0
   ep_poses:

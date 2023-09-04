@@ -9,7 +9,7 @@ normal_output: !python/named_tuple/SimWarthogOutput
    - !<python/numpy/float64> 8.391190735647971
    - !<python/numpy/float64> 0.19977560564247457
    - !<python/numpy/float64> 6.206597296754747
-   ep_start: 0
+   is_episode_start: 0
    ep_poses:
    - !<python/numpy/ndarray>
      - 8.158568243985064
