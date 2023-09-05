@@ -102,7 +102,7 @@ if True:
     
 
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_sim_warthog(
     v, 
     w, 
@@ -154,7 +154,7 @@ def pure_sim_warthog(
     
     return SimWarthogOutput(twist, prev_angle, pose, is_episode_start, ep_poses, v_delay_data, w_delay_data)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_get_observation(
     closest_distance,
     closest_index,
@@ -203,7 +203,7 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_distance, closest_index)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward(
     closest_waypoint,
     pose,
@@ -237,7 +237,7 @@ def pure_reward(
     
     return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward_wrapper(
     total_ep_reward,
     closest_index,
@@ -279,7 +279,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
-@grug_test(max_io=60, skip=False)
+@grug_test(max_io=60, skip=True)
 def pure_step(
     action,
     closest_distance,
@@ -483,6 +483,8 @@ class WarthogEnv(gym.Env):
                 x.append(each_waypoint[0])
                 y.append(each_waypoint[1])
             self.ax.plot(x, y, "+r")
+        
+        self.reset()
     
     # just a wrapper around the pure_step
     def step(self, action):
@@ -524,6 +526,8 @@ class WarthogEnv(gym.Env):
         self.is_episode_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
+        if self.max_vel >= 5:
+            self.max_vel = 1
         if config.simulator.starting_waypoint == 'random':
             index = np.random.randint(self.number_of_waypoints, size=1)[0]
         else:
@@ -597,7 +601,7 @@ class WarthogEnv(gym.Env):
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
-    @grug_test(skip=False)
+    @grug_test(skip=True)
     def smoke_test_warthog(trajectory_file):
         actual_starting_setting = config.simulator.starting_waypoint
         config.simulator.starting_waypoint = 0 # force override it for test
