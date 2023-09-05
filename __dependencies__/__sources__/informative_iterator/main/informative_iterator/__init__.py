@@ -43,8 +43,6 @@ except ImportError:
     ipython_exists = False
 except AttributeError:
     ipython_exists = False
-    
-class NotGiven: pass
 
 def subsequence_replace(a_list, sequence, replacement):
     que = []
@@ -105,7 +103,7 @@ class ProgressBar:
         for each_key, each_value in config.items():
             setattr(this_class, each_key, each_value)
     
-    def __init__(self, iterator, *, title=None, iterations=None, layout=None, disable_logging=NotGiven, minimal=NotGiven, inline=NotGiven, progress_bar_size=NotGiven, seconds_per_print=NotGiven, percent_per_print=NotGiven, lookback_size=NotGiven):
+    def __init__(self, iterator, *, title=None, iterations=None, layout=None, disable_logging=None, minimal=None, inline=None, progress_bar_size=None, seconds_per_print=None, percent_per_print=None, lookback_size=None, smoothing_buffer_size=10, smoothing_threshold_in_seconds=2):
         original_generator = range(int(iterator)) if isinstance(iterator, (int, float)) else iterator
         self.title = title or ""
         
@@ -113,7 +111,7 @@ class ProgressBar:
         for each_option in [ "disable_logging", "minimal", "inline", "progress_bar_size", "seconds_per_print", "percent_per_print", "lookback_size" ]:
             arg_value = eval(each_option, locals())
             # default to the class value if not given
-            if arg_value == NotGiven:
+            if arg_value == None:
                 actual_value = getattr(ProgressBar, each_option, None)
             # otherwise use the given value
             else:
@@ -121,11 +119,19 @@ class ProgressBar:
             # set the object's value
             setattr(self, each_option, actual_value)
         
+        # if only given seconds_per_print, then clear the default percent_per_print
+        if seconds_per_print != None and percent_per_print == None:
+            self.percent_per_print = 100
+        # if only given percent_per_print, then clear the default seconds_per_print
+        if percent_per_print != None and seconds_per_print == None:
+            self.seconds_per_print = math.inf
+        
         # initilize misc values
-        self.past_indicies     = []
-        self.start_time        = datetime.now()
-        self.next_percent_mark = self.percent_per_print
-        self.prev_time         = -math.inf
+        self.past_indicies            = []
+        self.start_time               = datetime.now()
+        self.percent_at_prev_print    = 0 
+        self.time_at_prev_print    = -math.inf
+        self.time_at_prev_update   = -math.inf
         self.times             = [time.time()]
         self.opacity = 0.7
         self.colors = LazyDict(
@@ -134,7 +140,7 @@ class ProgressBar:
         self.progress_data     = LazyDict(
             index=0,
             percent=0,
-            updated=True,
+            printed=True,
             time=self.times[0],
             total_iterations=(len(original_generator) if iterations is None else iterations),
             deviation=None,
@@ -282,6 +288,9 @@ class ProgressBar:
             self.layout = ProgressBar.layout
         else:
             self.layout = layout
+            
+        # setup time_estimator
+        time_estimator = create_time_estimator(smoothing_buffer_size=smoothing_buffer_size, smoothing_threshold_in_seconds=smoothing_threshold_in_seconds)
         
         def generator_func():
             self.parent_bars = list(nested_progress_bars)
@@ -289,89 +298,97 @@ class ProgressBar:
             self.nested_indent = bliss_print.indent.string * len(self.parent_bars)
             if len(self.parent_bars) > 0:
                 self.print()
-            for self.progress_data.index, each_original in enumerate(original_generator):
-                self.progress_data.previous_output = ""
-                # update
-                self.progress_data.time    = time.time()
-                self.progress_data.updated = (self.progress_data.time - self.prev_time) > self.seconds_per_print
-                self.progress_data.percent = (self.progress_data.index * 10000 // self.progress_data.total_iterations) / 100 # two decimals of accuracy
+            for iter_index, each_original in enumerate(original_generator):
+                # collect data
+                current_timestamp   = time.time()
+                progress_data       = self.progress_data
+                total_iterations    = self.progress_data.total_iterations
+                percentage_complete = (iter_index * 10000 // total_iterations) / 100 # two decimals of accuracy
+                self.total_eslaped_time = current_timestamp - self.start_time.timestamp()
+                self.times.append(current_timestamp)
+                self.past_indicies.append(iter_index)
                 
-                if self.progress_data.updated:
-                    self.prev_time = self.progress_data.time
-                    
-                # also printout at each percent marker
-                if self.progress_data.percent >= self.next_percent_mark:
-                    self.next_percent_mark += self.percent_per_print
-                    self.progress_data.updated = True
+                # update checkers
+                percent_since_prev_print   = percentage_complete - self.percent_at_prev_print
+                seconds_since_prev_print   = current_timestamp - self.time_at_prev_print
+                seconds_since_prev_update  = current_timestamp - self.time_at_prev_update
                 
-                self.times.append(self.progress_data.time)
-                self.past_indicies.append(self.progress_data.index)
+                # 
+                # check for changes
+                # 
+                print_duration_passed  = (seconds_since_prev_print  >= self.seconds_per_print )
+                print_percetage_passed = (percent_since_prev_print  >= self.percent_per_print )
+                should_print = print_duration_passed or print_percetage_passed
+                if print_duration_passed:
+                    self.time_at_prev_print = current_timestamp
+                if print_percetage_passed:
+                    self.percent_at_prev_print = percentage_complete
                 
-                if self.progress_data.updated:
-                    self.total_eslaped_time = 0
-                    self.secs_remaining     = math.inf
-                    # if more than 3, then stdev can be computed
-                    if len(self.times) > 3:
-                        self.total_eslaped_time = self.times[-1] - self.times[ 0]
-                        
-                        # 
-                        # compute ETA as a slight overestimate that is less-of-an-overesitmate over time
-                        # 
-                        lookback_size = self.lookback_size
-                        remaining_number_of_iterations = self.progress_data.total_iterations - self.progress_data.index
-                        recent_indicies                = self.past_indicies[-lookback_size:]
-                        recent_update_times            = self.times[-lookback_size:]
-                        number_of_indicies_processed   =     recent_indicies[-1] -     recent_indicies[0]
-                        time_span_of_recent_updates    = recent_update_times[-1] - recent_update_times[0]
-                        time_per_update                = time_span_of_recent_updates / (len(recent_update_times)-1)
-                        
-                        list_of_iterations_per_update = tuple(each-prev for prev, each in zip(recent_indicies[0:-1], recent_indicies[1:]))
-                        average_number_of_iterations_per_update = mean(list_of_iterations_per_update)
-                        stdev_of_iters_per_update               = stdev(list_of_iterations_per_update) # TODO: the proper way to do this would be with a one sided bell curve
-                        partial_deviation                       = (1 - (self.progress_data.percent/100)) * stdev_of_iters_per_update
-                        iterations_per_update_lowerbound        = max((average_number_of_iterations_per_update-partial_deviation, min(list_of_iterations_per_update)))
-                        soft_lowerbound                         = mean((iterations_per_update_lowerbound, average_number_of_iterations_per_update))
-                        expected_number_of_updates_needed       = remaining_number_of_iterations / soft_lowerbound
-                        
-                        self.secs_remaining = time_per_update * expected_number_of_updates_needed
+                updated = should_print or iter_index == 0 or iter_index == 1
+                if updated:
+                    self.time_at_prev_update = current_timestamp
+                
+                
+                # 
+                # export data
+                # 
+                progress_data.update(dict(
+                    previous_output="",
+                    index=iter_index,
+                    time=current_timestamp,
+                    percent=percentage_complete,
+                    printed=should_print,
+                    updated=updated,
+                ))
+                
+                if updated:
+                    self.secs_remaining, self.end_time = time_estimator(
+                        start_time=self.start_time,
+                        total_iterations=self.progress_data.total_iterations,
+                        index=iter_index,
+                        percent=percentage_complete,
+                        times=self.times,
+                        lookback_size=self.lookback_size,
+                        past_indicies=self.past_indicies,
+                        seconds_since_prev_update=seconds_since_prev_update,
+                    )
                     
-                    # otherwise, use super basic linear prediction
-                    elif len(self.times) > 2:
-                        # provide very rough estimate on first iteration ()
-                        self.total_eslaped_time = self.times[-1] - self.times[ 0]
-                        self.secs_remaining = self.total_eslaped_time * (self.progress_data.total_iterations - 1)
+                    # 
+                    # print / write everything 
+                    # 
+                    if True:
+                        indent = bliss_print.indent.string*bliss_print.indent.size + self.nested_indent
+                        if self.progress_data.pretext:
+                            self.print('', end='\r')
+                            self.print('                                                                                                                        ', end='\r')
+                            bliss_print(self.progress_data.pretext, end='\n')
                         
+                        if self.inline:
+                            self.print('', end='\r')
                         
-                    indent = bliss_print.indent.string*bliss_print.indent.size + self.nested_indent
-                    if self.progress_data.pretext:
-                        self.print('', end='\r')
-                        self.print('                                                                                                                        ', end='\r')
-                        bliss_print(self.progress_data.pretext, end='\n')
-                    
-                    if self.inline:
-                        self.print('', end='\r')
-                    
-                    self.print(indent, end="")
-                    
-                    # display each thing according to the layout
-                    for each in self.layout:
-                        getattr(self, f"show_{each}", lambda : None)()
-                    
-                    if not ipython_exists:
-                        if self.progress_data.text:
-                            line_1, *other_lines = self.progress_data.text.split('\n')
-                            self.print(line_1, end='')
-                            if other_lines:
-                                nextline_text = f"\n{indent}" + f"\n{indent}".join(other_lines)
-                                self.print(nextline_text, end='')
+                        self.print(indent, end="")
                         
-                    if not self.inline:
-                        self.print()
+                        # display each thing according to the layout
+                        for each in self.layout:
+                            getattr(self, f"show_{each}", lambda : None)()
+                        
+                        if not ipython_exists:
+                            if self.progress_data.text:
+                                line_1, *other_lines = self.progress_data.text.split('\n')
+                                self.print(line_1, end='')
+                                if other_lines:
+                                    nextline_text = f"\n{indent}" + f"\n{indent}".join(other_lines)
+                                    self.print(nextline_text, end='')
+                            
+                        if not self.inline:
+                            self.print()
+                        
+                        # convoluted so that it handles both GUI and CLI
+                        self.should_flush = True
+                        self.print(end="")
+                        sys.stdout.flush()
                     
-                    # convoluted so that it handles both GUI and CLI
-                    self.should_flush = True
-                    self.print(end="")
-                    sys.stdout.flush()
+                    pass
                     
                 yield self.progress_data, each_original
                 # manual stop if given an infinite generator and a "total_iterations" argument
@@ -421,13 +438,16 @@ class ProgressBar:
     def show_end_time(self):
         if self.progress_data.percent != 100:
             time_format = self.time_format
-            if self.secs_remaining > (86400/2): # more than half a day
-                time_format = self.long_time_format
-            try:
-                endtime = self.start_time + timedelta(seconds=self.total_eslaped_time + self.secs_remaining)
-                self.print(f'eta: {endtime.strftime(time_format)}',  end='')
-            except:
+            if self.secs_remaining == math.inf:
                 self.print(f'eta: {"_"*(len(time_format)-3)}',  end='')
+            else:
+                if self.secs_remaining > (86400/2): # more than half a day
+                    time_format = self.long_time_format
+                try:
+                    endtime = self.start_time + timedelta(seconds=self.total_eslaped_time + self.secs_remaining)
+                    self.print(f'eta: {endtime.strftime(time_format)}',  end='')
+                except:
+                    self.print(f'eta: {"_"*(len(time_format)-3)}',  end='')
     
     def show_done(self):
         if self.inline:
@@ -447,3 +467,64 @@ class ProgressBar:
     
     def __len__(self):
         return self.progress_data.total_iterations
+
+from statistics import mean as average
+def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_seconds=2):
+    list_of_end_times = []
+    
+    def time_estimator(start_time, total_iterations, index, percent, times, lookback_size, past_indicies, seconds_since_prev_update):
+        nonlocal list_of_end_times
+        total_eslaped_time = 0
+        secs_remaining     = math.inf
+        # if more than 3, then stdev can be computed
+        if len(times) > 3:
+            total_eslaped_time = times[-1] - times[ 0]
+            
+            # 
+            # compute ETA as a slight overestimate that is less-of-an-overesitmate over time
+            # 
+            remaining_number_of_iterations = total_iterations - index
+            recent_indicies                = past_indicies[-lookback_size:]
+            recent_update_times            = times[-lookback_size:]
+            number_of_indicies_processed   =     recent_indicies[-1] -     recent_indicies[0]
+            time_span_of_recent_updates    = recent_update_times[-1] - recent_update_times[0]
+            time_per_update                = time_span_of_recent_updates / (len(recent_update_times)-1)
+            
+            list_of_iterations_per_update = tuple(each-prev for prev, each in zip(recent_indicies[0:-1], recent_indicies[1:]))
+            average_number_of_iterations_per_update = mean(list_of_iterations_per_update)
+            stdev_of_iters_per_update               = stdev(list_of_iterations_per_update) # TODO: the proper way to do this would be with a one sided bell curve
+            partial_deviation                       = (1 - (percent/100)) * stdev_of_iters_per_update
+            iterations_per_update_lowerbound        = max((average_number_of_iterations_per_update-partial_deviation, min(list_of_iterations_per_update)))
+            soft_lowerbound                         = mean((iterations_per_update_lowerbound, average_number_of_iterations_per_update))
+            expected_number_of_updates_needed       = remaining_number_of_iterations / soft_lowerbound
+            
+            secs_remaining = time_per_update * expected_number_of_updates_needed
+        
+        # otherwise, use super basic linear prediction
+        elif len(times) > 2:
+            # provide very rough estimate on first iteration ()
+            total_eslaped_time = times[-1] - times[ 0]
+            secs_remaining = total_eslaped_time * (total_iterations - 1)
+        
+        end_time = None
+        if secs_remaining != math.inf:
+            end_time = (start_time + timedelta(seconds=total_eslaped_time + secs_remaining)).timestamp()
+            list_of_end_times.append(end_time)
+            half_way = int(total_iterations/2)
+            multiplier = 1
+            if index < half_way:
+                multiplier = math.log(index+2)
+            else
+                multiplier = math.log((total_iterations-index)+2)
+            
+            # buffer slowly gets bigger till the midpoint, then gets smaller towards the end
+            cutoff = int(multiplier * smoothing_buffer_size)
+            list_of_end_times = list_of_end_times[-cutoff:]
+        
+        if seconds_since_prev_update <= smoothing_threshold_in_seconds and len(list_of_end_times) > 0:
+            end_time = average(list_of_end_times)
+            secs_remaining = end_time - time.time()
+        
+        return secs_remaining, end_time
+        
+    return time_estimator
