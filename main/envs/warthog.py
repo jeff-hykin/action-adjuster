@@ -106,7 +106,6 @@ class WarthogEnv(gym.Env):
         if self.waypoint_file_path is not None:
             self.desired_velocities, self.waypoints_list = read_waypoint_file(self.waypoint_file_path)
         
-        self.prev_angle = 0
         self.x_pose = [0.0] * self.number_of_trajectories
         self.y_pose = [0.0] * self.number_of_trajectories
         self.crosstrack_error = 0

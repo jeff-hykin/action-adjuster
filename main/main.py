@@ -10,8 +10,8 @@ from __dependencies__.rigorous_recorder import RecordKeeper
 from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 
 from specific_tools.train_ppo import * # required because of pickle lookup
-# from envs.warthog import WarthogEnv
-from envs.warthog_simple import WarthogEnv
+from envs.warthog import WarthogEnv
+# from envs.warthog_simple import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, NormalAgent
 from config import config, path_to, selected_profiles, grug_test
 from generic_tools.functions import cache_outputs
@@ -80,6 +80,7 @@ if __name__ == '__main__':
                 def env_snapshot(env):
                     return deepcopy(dict(
                         waypoints_list=                                getattr(env, "waypoints_list"                                , None),
+                        spacial_info=                                  getattr(env, "spacial_info"                                  , None),
                         pose=                                          getattr(env, "pose"                                          , None),
                         twist=                                         getattr(env, "twist"                                         , None),
                         closest_index=                                 getattr(env, "closest_index"                                 , None),
@@ -87,7 +88,7 @@ if __name__ == '__main__':
                         closest_distance=                              getattr(env, "closest_distance"                              , None),
                         number_of_waypoints=                           getattr(env, "number_of_waypoints"                           , None),
                         horizon=                                       getattr(env, "horizon"                                       , None),
-                        action_duration=                                            getattr(env, "action_duration"                                            , None),
+                        action_duration=                               getattr(env, "action_duration"                               , None),
                         desired_velocities=                            getattr(env, "desired_velocities"                            , None),
                         num_steps=                                     getattr(env, "num_steps"                                     , None),
                         max_vel=                                       getattr(env, "max_vel"                                       , None),
