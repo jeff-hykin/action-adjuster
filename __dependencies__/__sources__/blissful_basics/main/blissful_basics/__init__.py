@@ -264,7 +264,8 @@ if True:
             import sys
             def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
                 log = file if hasattr(file,'write') else sys.stderr
-                traceback.print_stack(file=log)
+                import inspect
+                traceback.print_stack(f=inspect.stack()[2].frame,file=log)
                 log.write(warnings.formatwarning(message, category, filename, lineno, line))
             warnings.showwarning = warn_with_traceback
             warnings.simplefilter("always")
