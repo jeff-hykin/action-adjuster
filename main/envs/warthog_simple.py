@@ -524,9 +524,10 @@ class WarthogEnv(gym.Env):
         self.is_episode_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
-        if self.max_vel >= 5:
-            self.max_vel = 1
-        index = np.random.randint(self.number_of_waypoints, size=1)[0]
+        if config.simulator.starting_waypoint == 'random':
+            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+        else:
+            index = config.simulator.starting_waypoint
         self.closest_index = index
         self.prev_closest_index = index
         self.pose[0] = self.waypoints_list[index][0] + 0.1
