@@ -41,9 +41,6 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
-yaml.width = 999999999999999
-yaml.explicit_end = True
-
 # 
 # 
 # extend yaml support
@@ -487,6 +484,10 @@ class GrugTest:
                                 kwargs=to_yaml(kwargs),
                                 pickled_args_and_kwargs=YamlPickled(arg),
                             ),
+                            settings=dict(
+                                width=999999999999999,
+                                explicit_end=True,
+                            ),
                         )
                         input_files.append(input_file_path)
                 except Exception as error:
@@ -546,6 +547,10 @@ class GrugTest:
                     "error_output": repr(the_error),
                     "normal_output": to_yaml(output),
                 },
+                settings=dict(
+                    width=999999999999999,
+                    explicit_end=True,
+                ),
             )
         except Exception as error:
             message = f"\n\n\nFor a grug test on this function: {repr(function_name)}\n"+ indent(f"I tried to seralize the output but I wasn't able to.\nHere is the output type:\n    output: {type(output)}\nAnd here's the error: {indent(error)}\n")
