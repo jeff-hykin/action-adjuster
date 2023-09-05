@@ -514,7 +514,7 @@ def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_second
             multiplier = 1
             if index < half_way:
                 multiplier = math.log(index+2)
-            else
+            else:
                 multiplier = math.log((total_iterations-index)+2)
             
             # buffer slowly gets bigger till the midpoint, then gets smaller towards the end
