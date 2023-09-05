@@ -100,20 +100,19 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: !python/named_tuple/SpacialInformation
-     x: !<python/numpy/float64> 20.948369383136743
-     y: !<python/numpy/float64> 8.942170746065676
-     angle: !<python/numpy/float64> 0.8133302889220216
-     velocity: 0
-     spin: 0
-     timestep: 0
-  pose: null
-  twist: null
-  closest_index: null
+  spacial_info: null
+  pose:
+  - 0
+  - 0
+  - 0
+  twist:
+  - 0
+  - 0
+  closest_index: 0
   prev_closest_index: 0
-  closest_distance: 0.14142135623731025
+  closest_distance: .inf
   number_of_waypoints: 99
-  horizon: null
+  horizon: 10
   action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
@@ -215,242 +214,256 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: null
-  max_vel: null
-  waypoints_dist: null
-  warthog_length: null
-  warthog_width: null
+  num_steps: 0
+  max_vel: 1
+  waypoints_dist: 0.5
+  warthog_length: 0.25
+  warthog_width: 0.5
   warthog_diag: 0.5590169943749475
-  diag_angle: null
-  prev_angle: null
-  n_traj: null
+  diag_angle: 0.4636476090008061
+  prev_angle: 0
+  n_traj: 100
   x_pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
   y_pose:
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
   crosstrack_error: 0
-  vel_error: null
+  vel_error: 0
   phi_error: 0
-  start_step_for_sup_data: null
+  start_step_for_sup_data: 500000
   episode_steps: 0
-  max_number_of_timesteps_per_episode: 1200
-  total_ep_reward: null
+  max_number_of_timesteps_per_episode: 700
+  total_ep_reward: 0
   reward: 0
-  original_relative_velocity: 0
+  original_relative_velocity: null
   original_relative_spin: 0
-  action: null
+  action:
+  - 0.0
+  - 0.0
   reaction: null
-  prev_action: null
-  action_buffer: []
+  prev_action:
+  - 0.0
+  - 0.0
+  action_buffer: null
   prev_reaction: null
-  omega_reward: null
-  vel_reward: null
-  is_delayed_dynamics: null
-  delay_steps: null
-  v_delay_data: null
-  w_delay_data: null
-  save_data: true
+  omega_reward: 0
+  vel_reward: 0
+  is_delayed_dynamics: false
+  delay_steps: 5
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  save_data: false
   is_episode_start: 1
-  ep_dist: null
-  ep_poses: null
+  ep_dist: 0
+  ep_poses: []
 - waypoints_list:
   - !python/warthog/Waypoint '{"x": 20.848369383136742, "y": 8.842170746065676, "angle": 0.7133302889220217, "velocity": -0.020966741027661155}'
   - !python/warthog/Waypoint '{"x": 21.227814671001397, "y": 9.170518406666815, "angle": 2.6946149206120853, "velocity": -0.025749035460547555}'
@@ -551,20 +564,19 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: !python/named_tuple/SpacialInformation
-     x: !<python/numpy/float64> 21.00896280885883
-     y: !<python/numpy/float64> 9.008702982527483
-     angle: !<python/numpy/float64> 0.8695802889220218
-     velocity: 2.0
-     spin: 1.25
-     timestep: 1
-  pose: null
-  twist: null
-  closest_index: null
+  spacial_info: null
+  pose:
+  - 0.0
+  - 0.0
+  - 0.0
+  twist:
+  - !<python/numpy/float64> 2.0
+  - !<python/numpy/float64> 1.25
+  closest_index: 0
   prev_closest_index: 0
-  closest_distance: 0.2721770913443333
+  closest_distance: 22.645937592387142
   number_of_waypoints: 99
-  horizon: null
+  horizon: 10
   action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
@@ -666,242 +678,262 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: null
-  max_vel: null
-  waypoints_dist: null
-  warthog_length: null
-  warthog_width: null
+  num_steps: 1
+  max_vel: 1
+  waypoints_dist: 0.5
+  warthog_length: 0.25
+  warthog_width: 0.5
   warthog_diag: 0.5590169943749475
-  diag_angle: null
-  prev_angle: null
-  n_traj: null
+  diag_angle: 0.4636476090008061
+  prev_angle: 0
+  n_traj: 100
   x_pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
   y_pose:
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  crosstrack_error: -0.06282078417214852
-  vel_error: null
-  phi_error: !<python/numpy/float64> 1.8250346316900634
-  start_step_for_sup_data: null
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  crosstrack_error: 8.842170746065676
+  vel_error: !<python/numpy/float64> -2.020966741027661
+  phi_error: !<python/numpy/float64> 0.7133302889220217
+  start_step_for_sup_data: 500000
   episode_steps: 1
-  max_number_of_timesteps_per_episode: 1200
-  total_ep_reward: null
-  reward: 95.02082745932357
+  max_number_of_timesteps_per_episode: 700
+  total_ep_reward: 0
+  reward: 0
   original_relative_velocity: 0.5
   original_relative_spin: 0.5
-  action: null
+  action: &id001 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.0
+     spin: !<python/numpy/float64> 1.25
   reaction: null
-  prev_action: null
-  action_buffer: []
+  prev_action: *id001
+  action_buffer: null
   prev_reaction: null
-  omega_reward: null
-  vel_reward: null
-  is_delayed_dynamics: null
-  delay_steps: null
-  v_delay_data: null
-  w_delay_data: null
-  save_data: true
+  omega_reward: -2.5
+  vel_reward: -2.0
+  is_delayed_dynamics: false
+  delay_steps: 5
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  save_data: false
   is_episode_start: 0
-  ep_dist: null
-  ep_poses: null
+  ep_dist: 0
+  ep_poses:
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
 - waypoints_list:
   - !python/warthog/Waypoint '{"x": 20.848369383136742, "y": 8.842170746065676, "angle": 0.7133302889220217, "velocity": -0.020966741027661155}'
   - !python/warthog/Waypoint '{"x": 21.227814671001397, "y": 9.170518406666815, "angle": 2.6946149206120853, "velocity": -0.025749035460547555}'
@@ -1002,20 +1034,19 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: !python/named_tuple/SpacialInformation
-     x: !<python/numpy/float64> 21.09022698035673
-     y: !<python/numpy/float64> 9.11115356442417
-     angle: !<python/numpy/float64> 0.9513302889220219
-     velocity: 2.24
-     spin: 1.4000000000000001
-     timestep: 2
-  pose: null
-  twist: null
-  closest_index: null
+  spacial_info: null
+  pose:
+  - !<python/numpy/float64> 0.12
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.075
+  twist:
+  - !<python/numpy/float64> 2.24
+  - !<python/numpy/float64> 1.4000000000000001
+  closest_index: 0
   prev_closest_index: 0
-  closest_distance: 0.48643487074192465
+  closest_distance: 22.535511549249115
   number_of_waypoints: 99
-  horizon: null
+  horizon: 10
   action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
@@ -1117,242 +1148,270 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: null
-  max_vel: null
-  waypoints_dist: null
-  warthog_length: null
-  warthog_width: null
+  num_steps: 2
+  max_vel: 1
+  waypoints_dist: 0.5
+  warthog_length: 0.25
+  warthog_width: 0.5
   warthog_diag: 0.5590169943749475
-  diag_angle: null
-  prev_angle: null
-  n_traj: null
+  diag_angle: 0.4636476090008061
+  prev_angle: 0.0
+  n_traj: 100
   x_pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.12
   y_pose:
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  crosstrack_error: 0.4855013231844949
-  vel_error: null
-  phi_error: !<python/numpy/float64> 2.057809698522629
-  start_step_for_sup_data: null
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.0
+  crosstrack_error: 7.264143145695855
+  vel_error: !<python/numpy/float64> -2.2609667410276613
+  phi_error: !<python/numpy/float64> 0.6383302889220217
+  start_step_for_sup_data: 500000
   episode_steps: 2
-  max_number_of_timesteps_per_episode: 1200
-  total_ep_reward: null
-  reward: 100
+  max_number_of_timesteps_per_episode: 700
+  total_ep_reward: 0
+  reward: 0
   original_relative_velocity: 0.56
   original_relative_spin: 0.56
-  action: null
+  action: &id002 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.24
+     spin: !<python/numpy/float64> 1.4000000000000001
   reaction: null
-  prev_action: null
-  action_buffer: []
+  prev_action: *id002
+  action_buffer: null
   prev_reaction: null
-  omega_reward: null
-  vel_reward: null
-  is_delayed_dynamics: null
-  delay_steps: null
-  v_delay_data: null
-  w_delay_data: null
-  save_data: true
+  omega_reward: -2.8000000000000003
+  vel_reward: -0.2400000000000002
+  is_delayed_dynamics: false
+  delay_steps: 5
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  save_data: false
   is_episode_start: 0
-  ep_dist: null
-  ep_poses: null
+  ep_dist: 0
+  ep_poses:
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+    - 2.24
+    - 1.4000000000000001
 - waypoints_list:
   - !python/warthog/Waypoint '{"x": 20.848369383136742, "y": 8.842170746065676, "angle": 0.7133302889220217, "velocity": -0.020966741027661155}'
   - !python/warthog/Waypoint '{"x": 21.227814671001397, "y": 9.170518406666815, "angle": 2.6946149206120853, "velocity": -0.025749035460547555}'
@@ -1453,20 +1512,19 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: !python/named_tuple/SpacialInformation
-     x: !<python/numpy/float64> 21.165419137030675
-     y: !<python/numpy/float64> 9.224022866938709
-     angle: !<python/numpy/float64> 1.0361177889220219
-     velocity: 2.268
-     spin: 1.4175
-     timestep: 3
-  pose: null
-  twist: null
-  closest_index: null
+  spacial_info: null
+  pose:
+  - !<python/numpy/float64> 0.25402217715428066
+  - !<python/numpy/float64> 0.010070552657456572
+  - !<python/numpy/float64> 0.159
+  twist:
+  - !<python/numpy/float64> 2.268
+  - !<python/numpy/float64> 1.4175
+  closest_index: 0
   prev_closest_index: 0
-  closest_distance: 1.1292496215186731
+  closest_distance: 22.408327261689106
   number_of_waypoints: 99
-  horizon: null
+  horizon: 10
   action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
@@ -1568,242 +1626,278 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: null
-  max_vel: null
-  waypoints_dist: null
-  warthog_length: null
-  warthog_width: null
+  num_steps: 3
+  max_vel: 1
+  waypoints_dist: 0.5
+  warthog_length: 0.25
+  warthog_width: 0.5
   warthog_diag: 0.5590169943749475
-  diag_angle: null
-  prev_angle: null
-  n_traj: null
+  diag_angle: 0.4636476090008061
+  prev_angle: !<python/numpy/float64> 0.075
+  n_traj: 100
   x_pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.12
+  - !<python/numpy/float64> 0.25402217715428066
   y_pose:
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  crosstrack_error: 1.0836816629120436
-  vel_error: null
-  phi_error: !<python/numpy/float64> 1.9799005017528866
-  start_step_for_sup_data: null
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.010070552657456572
+  crosstrack_error: 5.459971510259269
+  vel_error: !<python/numpy/float64> -2.288966741027661
+  phi_error: !<python/numpy/float64> 0.5543302889220216
+  start_step_for_sup_data: 500000
   episode_steps: 3
-  max_number_of_timesteps_per_episode: 1200
-  total_ep_reward: null
-  reward: 100
+  max_number_of_timesteps_per_episode: 700
+  total_ep_reward: 0
+  reward: 0
   original_relative_velocity: 0.567
   original_relative_spin: 0.567
-  action: null
+  action: &id003 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.268
+     spin: !<python/numpy/float64> 1.4175
   reaction: null
-  prev_action: null
-  action_buffer: []
+  prev_action: *id003
+  action_buffer: null
   prev_reaction: null
-  omega_reward: null
-  vel_reward: null
-  is_delayed_dynamics: null
-  delay_steps: null
-  v_delay_data: null
-  w_delay_data: null
-  save_data: true
+  omega_reward: -2.835
+  vel_reward: -0.02799999999999958
+  is_delayed_dynamics: false
+  delay_steps: 5
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  save_data: false
   is_episode_start: 0
-  ep_dist: null
-  ep_poses: null
+  ep_dist: 0
+  ep_poses:
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+    - 2.24
+    - 1.4000000000000001
+  - !<python/numpy/ndarray>
+    - 0.12
+    - 0.0
+    - 0.075
+    - 2.24
+    - 1.4000000000000001
+    - 2.268
+    - 1.4175
 - waypoints_list:
   - !python/warthog/Waypoint '{"x": 20.848369383136742, "y": 8.842170746065676, "angle": 0.7133302889220217, "velocity": -0.020966741027661155}'
   - !python/warthog/Waypoint '{"x": 21.227814671001397, "y": 9.170518406666815, "angle": 2.6946149206120853, "velocity": -0.025749035460547555}'
@@ -1904,20 +1998,19 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: !python/named_tuple/SpacialInformation
-     x: !<python/numpy/float64> 21.23103845857721
-     y: !<python/numpy/float64> 9.343356770244394
-     angle: !<python/numpy/float64> 1.1212577889220217
-     velocity: 2.2712
-     spin: 1.4195
-     timestep: 4
-  pose: null
-  twist: null
-  closest_index: null
+  spacial_info: null
+  pose:
+  - !<python/numpy/float64> 0.3883856787230399
+  - !<python/numpy/float64> 0.031616221507181845
+  - !<python/numpy/float64> 0.24405
+  twist:
+  - !<python/numpy/float64> 2.2712
+  - !<python/numpy/float64> 1.4195
+  closest_index: 0
   prev_closest_index: 0
-  closest_distance: 1.8235641576747244
+  closest_distance: 22.27637322849239
   number_of_waypoints: 99
-  horizon: null
+  horizon: 10
   action_duration: 0.06
   desired_velocities:
   - -0.020966741027661155
@@ -2019,240 +2112,284 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: null
-  max_vel: null
-  waypoints_dist: null
-  warthog_length: null
-  warthog_width: null
+  num_steps: 4
+  max_vel: 1
+  waypoints_dist: 0.5
+  warthog_length: 0.25
+  warthog_width: 0.5
   warthog_diag: 0.5590169943749475
-  diag_angle: null
-  prev_angle: null
-  n_traj: null
+  diag_angle: 0.4636476090008061
+  prev_angle: !<python/numpy/float64> 0.159
+  n_traj: 100
   x_pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.12
+  - !<python/numpy/float64> 0.25402217715428066
+  - !<python/numpy/float64> 0.3883856787230399
   y_pose:
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  crosstrack_error: 1.7328346687661031
-  vel_error: null
-  phi_error: !<python/numpy/float64> 1.7890581936607168
-  start_step_for_sup_data: null
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - !<python/numpy/float64> 0.0
+  - !<python/numpy/float64> 0.010070552657456572
+  - !<python/numpy/float64> 0.031616221507181845
+  crosstrack_error: 3.6056344717499
+  vel_error: !<python/numpy/float64> -2.292166741027661
+  phi_error: !<python/numpy/float64> 0.46928028892202167
+  start_step_for_sup_data: 500000
   episode_steps: 4
-  max_number_of_timesteps_per_episode: 1200
-  total_ep_reward: null
-  reward: 98.620549219856
+  max_number_of_timesteps_per_episode: 700
+  total_ep_reward: 0
+  reward: 0
   original_relative_velocity: 0.5678
   original_relative_spin: 0.5678
-  action: null
+  action: &id004 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.2712
+     spin: !<python/numpy/float64> 1.4195
   reaction: null
-  prev_action: null
-  action_buffer: []
+  prev_action: *id004
+  action_buffer: null
   prev_reaction: null
-  omega_reward: null
-  vel_reward: null
-  is_delayed_dynamics: null
-  delay_steps: null
-  v_delay_data: null
-  w_delay_data: null
-  save_data: true
+  omega_reward: -2.839
+  vel_reward: -0.0032000000000000917
+  is_delayed_dynamics: false
+  delay_steps: 5
+  v_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  w_delay_data:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  save_data: false
   is_episode_start: 0
-  ep_dist: null
-  ep_poses: null
+  ep_dist: 0
+  ep_poses:
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+  - !<python/numpy/ndarray>
+    - 0.0
+    - 0.0
+    - 0.0
+    - 2.0
+    - 1.25
+    - 2.24
+    - 1.4000000000000001
+  - !<python/numpy/ndarray>
+    - 0.12
+    - 0.0
+    - 0.075
+    - 2.24
+    - 1.4000000000000001
+    - 2.268
+    - 1.4175
+  - !<python/numpy/ndarray>
+    - 0.25402217715428066
+    - 0.010070552657456572
+    - 0.159
+    - 2.268
+    - 1.4175
+    - 2.2712
+    - 1.4195
 ...
