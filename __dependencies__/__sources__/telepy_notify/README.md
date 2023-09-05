@@ -68,7 +68,9 @@ with notify.when_done:
 #    - can limit notify-rate (by time passed or percent-progress)
 #        e.g. percent_per_notify=50 => message me after 50% progress
 #        e.g. minutes_per_notify=30 => message once every 30min
-for progress, epoch in notify.progress(range(100), percent_per_notify=50, minutes_per_notify=30):
+#    - notify_iter_delay is used to wait a few iterations before sending an ETA
+#      (makes the ETA of the first notification more accurate)
+for progress, epoch in notify.progress(range(100), percent_per_notify=50, minutes_per_notify=30, notify_iter_delay=1):
     index = progress.index
     
     # do stuff
