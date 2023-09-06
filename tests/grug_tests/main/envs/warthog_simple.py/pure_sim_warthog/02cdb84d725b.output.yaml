@@ -3,18 +3,18 @@ normal_output: !python/named_tuple/SimWarthogOutput
    twist:
    - !<python/numpy/float64> 2.0
    - !<python/numpy/float64> 1.25
-   prev_angle: !<python/numpy/float64> 0.15
-   pose:
-   - !<python/numpy/float64> 0.35831518752578995
-   - !<python/numpy/float64> 0.026924140769560987
-   - !<python/numpy/float64> 0.22499999999999998
+   prev_angle: 0.15
+   pose: !python/named_tuple/PoseEntry
+      x: 0.35831518752578995
+      y: 0.026924140769560987
+      angle: 0.22499999999999998
    ep_poses:
-   - !<python/numpy/ndarray>
-     - 0.23966265817346488
-     - 0.00899156487272908
-     - 0.15
-     - 2.0
-     - 1.25
-     - 2.0
-     - 1.25
+   - !python/named_tuple/SpacialHistory
+     x: 0.23966265817346488
+     y: 0.00899156487272908
+     angle: 0.15
+     velocity: 2.0
+     spin: 1.25
+     new_velocity: 2.0
+     new_spin: 1.25
 ...

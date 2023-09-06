@@ -3,43 +3,43 @@ normal_output:
 - !python/named_tuple/StepOutput
   observation:
   - 0.3965032590283798
-  - !<python/numpy/float64> -2.466540691522396
+  - -2.466540691522396
   - !<python/numpy/float64> -0.06886809340608732
   - !<python/numpy/float64> 0.07841670513153076
   - 0.5281973482600426
-  - !<python/numpy/float64> -0.6021225389934468
+  - -0.6021225389934468
   - !<python/numpy/float64> 0.11567810095072839
   - !<python/numpy/float64> 0.07841670513153076
   - 0.9949164100469605
-  - !<python/numpy/float64> -0.24102433399940537
+  - -0.24102433399940537
   - !<python/numpy/float64> 0.15924584022217514
   - !<python/numpy/float64> 0.07841670513153076
   - 1.7109512738154409
-  - !<python/numpy/float64> -0.06933043751475829
+  - -0.06933043751475829
   - !<python/numpy/float64> 0.0358484838755162
   - !<python/numpy/float64> 0.07841670513153076
   - 2.229453298179504
-  - !<python/numpy/float64> -0.04480774677814023
+  - -0.04480774677814023
   - !<python/numpy/float64> 0.14095353000349192
   - !<python/numpy/float64> 0.07841670513153076
   - 2.9645131169258656
-  - !<python/numpy/float64> 0.0016038261126461173
+  - 0.0016038261126461173
   - !<python/numpy/float64> 0.14930036953924303
   - !<python/numpy/float64> 0.07841670513153076
   - 3.4741613668536053
-  - !<python/numpy/float64> 0.023395765133493812
+  - 0.023395765133493812
   - !<python/numpy/float64> 0.1646591287042179
   - !<python/numpy/float64> 0.07841670513153076
   - 4.2068726720940415
-  - !<python/numpy/float64> 0.04812363494784383
+  - 0.04812363494784383
   - !<python/numpy/float64> 0.25494742476560667
   - !<python/numpy/float64> 0.07841670513153076
   - 4.798568306315643
-  - !<python/numpy/float64> 0.07392936531345212
+  - 0.07392936531345212
   - !<python/numpy/float64> 0.20423187363321976
   - !<python/numpy/float64> 0.07841670513153076
   - 5.421431864695866
-  - !<python/numpy/float64> 0.08897075503043811
+  - 0.08897075503043811
   - !<python/numpy/float64> 0.13638048133340958
   - !<python/numpy/float64> 0.07841670513153076
   - !<python/numpy/float64> 0.9215832948684692
@@ -66,11 +66,11 @@ normal_output:
   - !<python/numpy/float64> 0.9215832948684692
   - !<python/numpy/float64> 0.07617568597197533
   - 0.0
-  prev_angle: !<python/numpy/float64> 6.488479580591351
-  pose:
-  - !<python/numpy/float64> 9.61453737489148
-  - !<python/numpy/float64> 0.3068389160465488
-  - !<python/numpy/float64> 6.493050121749669
+  prev_angle: 6.488479580591351
+  pose: !python/named_tuple/PoseEntry
+     x: 9.61453737489148
+     y: 0.3068389160465488
+     angle: 6.493050121749669
   is_episode_start: 0
   closest_distance: 0.3965032590283798
   closest_index: 71
@@ -243,15 +243,15 @@ normal_output:
     - 0.1697765663266182
     - 0.9586734175682068
     - 0.1141880452632904
-  - !<python/numpy/ndarray>
-    - 9.560403514769854
-    - 0.2955667397658776
-    - 6.488479580591351
-    - 0.9215832948684692
-    - 0.07617568597197533
-    - 0.9215832948684692
-    - 0.07617568597197533
-- - !<python/numpy/float64> -2.466540691522396
+  - !python/named_tuple/SpacialHistory
+    x: 9.560403514769854
+    y: 0.2955667397658776
+    angle: 6.488479580591351
+    velocity: 0.9215832948684692
+    spin: 0.07617568597197533
+    new_velocity: 0.9215832948684692
+    new_spin: 0.07617568597197533
+- - -2.466540691522396
   - !<python/numpy/float64> -0.3068389160465488
   - !<python/numpy/float64> -0.25112688828459895
 ...

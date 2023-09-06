@@ -86,7 +86,21 @@ if True:
         "pose",
         "ep_poses",
     ])
-    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput]:
+    PoseEntry = namedtuple('PoseEntry', [
+        "x",
+        "y",
+        "angle",
+    ])
+    SpacialHistory = namedtuple('SpacialHistory', [
+        "x",
+        "y",
+        "angle",
+        "velocity",
+        "spin",
+        "new_velocity",
+        "new_spin",
+    ])
+    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, SpacialHistory, PoseEntry]:
         register_named_tuple(each)
     
 
@@ -108,12 +122,23 @@ def pure_sim_warthog(
         old_v, old_w, *_ = twist
         twist[0] = v
         twist[1] = w
-        pose[0] = old_x + old_v * math.cos(prev_angle) * action_duration
-        pose[1] = old_y + old_v * math.sin(prev_angle) * action_duration
-        pose[2] = prev_angle + old_w * action_duration
+        pose = PoseEntry(
+            x=float(old_x + old_v * math.cos(prev_angle) * action_duration),
+            y=float(old_y + old_v * math.sin(prev_angle) * action_duration),
+            angle=float(prev_angle + old_w * action_duration),
+        )
     
-    ep_poses.append(np.array([old_x, old_y, prev_angle, old_v, old_w, v, w]))
-    
+    ep_poses.append(
+        SpacialHistory(
+            x=float(old_x),
+            y=float(old_y),
+            angle=float(prev_angle),
+            velocity=float(old_v),
+            spin=float(old_w),
+            new_velocity=float(v),
+            new_spin=float(w),
+        )
+    )
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses)
 
 @grug_test(max_io=30, skip=False)
@@ -369,7 +394,11 @@ class WarthogEnv(gym.Env):
     def __init__(self, waypoint_file, *args, **kwargs):
         super(WarthogEnv, self).__init__()
         self.waypoints_list = []
-        self.pose = [0, 0, 0]
+        self.pose = PoseEntry(
+            x=0,
+            y=0,
+            angle=0,
+        )
         self.twist = [0, 0]
         self.closest_index = 0
         self.prev_closest_index = 0
@@ -460,7 +489,11 @@ class WarthogEnv(gym.Env):
             number_of_waypoints=self.number_of_waypoints,
             omega_reward=self.omega_reward,
             phi_error=self.phi_error,
-            pose=self.pose,
+            pose=PoseEntry(
+                x=float(self.pose[0]),
+                y=float(self.pose[1]),
+                angle=float(self.pose[2]),
+            ),
             prev_action=self.prev_action,
             prev_angle=self.prev_angle,
             prev_closest_index=self.prev_closest_index,
@@ -486,9 +519,11 @@ class WarthogEnv(gym.Env):
             index = config.simulator.starting_waypoint
         self.closest_index = index
         self.prev_closest_index = index
-        self.pose[0] = self.waypoints_list[index][0] + 0.1
-        self.pose[1] = self.waypoints_list[index][1] + 0.1
-        self.pose[2] = self.waypoints_list[index][2] + 0.01
+        self.pose = PoseEntry(
+            x=float(self.waypoints_list[index][0] + 0.1),
+            y=float(self.waypoints_list[index][1] + 0.1),
+            angle=float(self.waypoints_list[index][2] + 0.01),
+        )
         self.x_pose = [self.pose[0]] * self.n_traj
         self.y_pose = [self.pose[1]] * self.n_traj
         self.twist = [0.0, 0.0, 0.0]

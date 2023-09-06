@@ -4,11 +4,11 @@ normal_output: !python/named_tuple/SimWarthogOutput
    - !<python/numpy/float64> 1.0175622701644897
    - !<python/numpy/float64> 0.19384393468499184
    - 0.0
-   prev_angle: !<python/numpy/float64> 6.205390598858624
-   pose:
-   - !<python/numpy/float64> 8.451487482687394
-   - !<python/numpy/float64> 0.1950820553895231
-   - !<python/numpy/float64> 6.217021234939724
+   prev_angle: 6.205390598858624
+   pose: !python/named_tuple/PoseEntry
+      x: 8.451487482687394
+      y: 0.1950820553895231
+      angle: 6.217021234939724
    ep_poses:
    - !<python/numpy/ndarray>
      - 8.158568243985064
@@ -26,12 +26,12 @@ normal_output: !python/named_tuple/SimWarthogOutput
      - 0.17699703574180603
      - 0.9819915294647217
      - 0.1715957373380661
-   - !<python/numpy/ndarray>
-     - 8.390618402434749
-     - 0.19982692360490237
-     - 6.205390598858624
-     - 1.0175622701644897
-     - 0.19384393468499184
-     - 1.0175622701644897
-     - 0.19384393468499184
+   - !python/named_tuple/SpacialHistory
+     x: 8.390618402434749
+     y: 0.19982692360490237
+     angle: 6.205390598858624
+     velocity: 1.0175622701644897
+     spin: 0.19384393468499184
+     new_velocity: 1.0175622701644897
+     new_spin: 0.19384393468499184
 ...
