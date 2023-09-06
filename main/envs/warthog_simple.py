@@ -76,12 +76,6 @@ if True:
         'closest_distance',
         'closest_index'
     ])
-    WarthogSimOutput = namedtuple('WarthogSimOutput', [
-        'twist',
-        'prev_angle',
-        'pose',
-        'is_episode_start',
-    ])
     RewardOutput = namedtuple('RewardOutput', [
         "running_reward",
         "velocity_error",
@@ -92,12 +86,11 @@ if True:
         "twist",
         "prev_angle",
         "pose",
-        "is_episode_start",
         "ep_poses",
         "v_delay_data",
         "w_delay_data",
     ])
-    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, WarthogSimOutput, RewardOutput, SimWarthogOutput]:
+    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput]:
         register_named_tuple(each)
     
 
@@ -113,23 +106,17 @@ def pure_sim_warthog(
     action_duration,
     prev_angle,
     ep_poses,
-    is_episode_start,
 ):
-    x = pose[0]
-    y = pose[1]
-    th = pose[2]
-    v_ = twist[0]
-    w_ = twist[1]
+    old_x, old_y, prev_angle = pose
+    old_v, old_w, *_ = twist
     twist[0] = v
     twist[1] = w
-    prev_angle = pose[2]
-    pose[0] = x + v_ * math.cos(th) * action_duration
-    pose[1] = y + v_ * math.sin(th) * action_duration
-    pose[2] = th + w_ * action_duration
-    ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
-    is_episode_start = 0
+    pose[0] = old_x + old_v * math.cos(prev_angle) * action_duration
+    pose[1] = old_y + old_v * math.sin(prev_angle) * action_duration
+    pose[2] = prev_angle + old_w * action_duration
+    ep_poses.append(np.array([old_x, old_y, prev_angle, old_v, old_w, v, w]))
     
-    return SimWarthogOutput(twist, prev_angle, pose, is_episode_start, ep_poses, v_delay_data, w_delay_data)
+    return SimWarthogOutput(twist, prev_angle, pose, ep_poses, v_delay_data, w_delay_data)
 
 @grug_test(max_io=30, skip=True)
 def pure_get_observation(
@@ -291,7 +278,7 @@ def pure_step(
         np.clip(action[0], 0, 1) * 4.0,
         np.clip(action[1], -1, 1) * 2.5,
     )
-    twist, prev_angle, pose, is_episode_start, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
+    twist, prev_angle, pose, ep_poses, v_delay_data, w_delay_data = pure_sim_warthog(
         v=action[0],
         w=action[1],
         pose=pose,
@@ -301,8 +288,8 @@ def pure_step(
         action_duration=action_duration,
         prev_angle=prev_angle,
         ep_poses=ep_poses,
-        is_episode_start=is_episode_start,
     )
+    is_episode_start = 0
     prev_closest_index = closest_index
     obs, closest_distance, closest_index = pure_get_observation(
         closest_distance=closest_distance,
