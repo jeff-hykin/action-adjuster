@@ -4,9 +4,9 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/jeff-hykin/json_fix.git
+	remote = git@github.com:jeff-hykin/json_fix.git
 	branch = master
-	commit = 9930e75788d07939174956f8deb9e62990cb42b5
-	parent = cf7f852872f7d90de5987885d47793156806f954
+	commit = 4a3f954720b1df3ac6563baa03ea1b1440fe23fa
+	parent = 33821a790f32d7078597474f5d851e994df9b4aa
 	method = merge
 	cmdver = 0.4.1

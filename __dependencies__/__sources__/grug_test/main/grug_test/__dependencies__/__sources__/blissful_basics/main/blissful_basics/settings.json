@@ -1,15 +1,19 @@
 {
     "pure_python_packages": {
         "file_system_py": {
+            "git_url": "git@github.com:jeff-hykin/file_system_py.git",
             "path": "__sources__/file_system_py/main/file_system_py/"
         },
         "super_hash": {
+            "git_url": "git@github.com:jeff-hykin/super_hash.git",
             "path": "__sources__/super_hash/main/super_hash/"
         },
         "super_map": {
+            "git_url": "git@github.com:jeff-hykin/super_map.git",
             "path": "__sources__/super_map/main/super_map/"
         },
         "json_fix": {
+            "git_url": "git@github.com:jeff-hykin/json_fix.git",
             "path": "__sources__/json_fix/main/json_fix/"
         }
     }

@@ -522,8 +522,12 @@ def create_time_estimator(smoothing_buffer_size=5, smoothing_threshold_in_second
             list_of_end_times = list_of_end_times[-cutoff:]
         
         if seconds_since_prev_update <= smoothing_threshold_in_seconds and len(list_of_end_times) > 0:
-            end_time = average(list_of_end_times)
-            secs_remaining = end_time - time.time()
+            now = time.time()
+            list_of_end_times = [ each for each in list_of_end_times if each > now ]
+            # len can be 0 at the end of progress because of slightly under-shooting estimates
+            if len(list_of_end_times) != 0:
+                end_time = average(list_of_end_times)
+                secs_remaining = end_time - now
         
         return secs_remaining, end_time
         

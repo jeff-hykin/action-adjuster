@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blissful_basics"
-version = "0.2.34"
+version = "0.2.35"
 description = "Tools I need in every python project"
 authors=[]
 

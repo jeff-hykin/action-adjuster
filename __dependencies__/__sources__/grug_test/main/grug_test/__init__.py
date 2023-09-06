@@ -10,7 +10,7 @@ import json
 
 from .__dependencies__.ez_yaml import yaml
 from .__dependencies__ import ez_yaml
-from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent, super_hash, print, randomly_pick_from, stringify, to_pure
+from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_string_to_bytes, indent, super_hash, print, randomly_pick_from, stringify, to_pure, traceback_to_string
 from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
@@ -41,6 +41,21 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add `additional_inputs` in the decorator
     # add file path args to the decorator that create file copies, then inject/replace the path arguments
 
+
+class ErrorCatcher:
+    def __init__(self, *args, **kwargs):
+        self.error = None
+        self.traceback = None
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, _, error, traceback):
+        # normal cleanup HERE
+        should_suppress_error = True
+        self.traceback = traceback
+        self.error = error
+        return should_suppress_error
 # 
 # 
 # extend yaml support
@@ -531,10 +546,10 @@ class GrugTest:
     def record_output(func, args, kwargs, path, function_name, source, verbose):
         the_error = None
         output = None
-        try:
+        with ErrorCatcher() as error_catcher:
             output = func(*args, **kwargs)
-        except Exception as error:
-            the_error = error
+            
+        the_error = error_catcher.error
         
         # clear the way (generates parent folders if needed)
         FS.ensure_is_folder(FS.parent_path(path))
@@ -545,6 +560,7 @@ class GrugTest:
                 file_path=path,
                 obj={
                     "error_output": repr(the_error),
+                    "traceback": traceback_to_string(error_catcher.traceback),
                     "normal_output": to_yaml(output),
                 },
                 settings=dict(

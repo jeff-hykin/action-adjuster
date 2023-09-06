@@ -307,7 +307,7 @@ if True:
         import traceback as traceback_module
         from io import StringIO
         string_stream = StringIO()
-        traceback_module.print_tb(the_traceback, limit=None, file=string_stream)
+        traceback_module.print_tb(traceback, limit=None, file=string_stream)
         return string_stream.getvalue()
         
     class CatchAll:

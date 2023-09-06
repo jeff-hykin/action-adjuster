@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "informative_iterator"
-version = "2.2.1"
+version = "2.2.2"
 description = "A replacement for tqdm"
 authors=[]
 
