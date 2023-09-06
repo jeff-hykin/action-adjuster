@@ -449,18 +449,8 @@ normal_output:
   vel_reward: 0
   is_delayed_dynamics: null
   delay_steps: 5
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+  v_delay_data: null
+  w_delay_data: null
   save_data: false
   is_episode_start: 1
   ep_dist: 0
@@ -912,18 +902,8 @@ normal_output:
   vel_reward: -2.0
   is_delayed_dynamics: null
   delay_steps: 5
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+  v_delay_data: null
+  w_delay_data: null
   save_data: false
   is_episode_start: 0
   ep_dist: 0
@@ -1383,18 +1363,8 @@ normal_output:
   vel_reward: -0.2400000000000002
   is_delayed_dynamics: null
   delay_steps: 5
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+  v_delay_data: null
+  w_delay_data: null
   save_data: false
   is_episode_start: 0
   ep_dist: 0
@@ -1862,18 +1832,8 @@ normal_output:
   vel_reward: -0.02799999999999958
   is_delayed_dynamics: null
   delay_steps: 5
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+  v_delay_data: null
+  w_delay_data: null
   save_data: false
   is_episode_start: 0
   ep_dist: 0
@@ -2349,18 +2309,8 @@ normal_output:
   vel_reward: -0.0032000000000000917
   is_delayed_dynamics: null
   delay_steps: 5
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
+  v_delay_data: null
+  w_delay_data: null
   save_data: false
   is_episode_start: 0
   ep_dist: 0
