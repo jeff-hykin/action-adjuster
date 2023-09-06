@@ -4,12 +4,11 @@ normal_output: !python/named_tuple/SimWarthogOutput
    - !<python/numpy/float64> 0.9986732602119446
    - !<python/numpy/float64> 0.1697765663266182
    - 0.0
-   prev_angle: !<python/numpy/float64> 6.448467577855021
+   prev_angle: !<python/numpy/float64> 6.482673809538514
    pose:
-   - !<python/numpy/float64> 9.336529441559206
-   - !<python/numpy/float64> 0.2522660612278289
-   - !<python/numpy/float64> 6.4623006215793195
-   is_episode_start: 0
+   - !<python/numpy/float64> 9.513073238575492
+   - !<python/numpy/float64> 0.2860911505747599
+   - !<python/numpy/float64> 6.492860403518111
    ep_poses:
    - !<python/numpy/ndarray>
      - 8.158568243985064
@@ -164,23 +163,11 @@ normal_output: !python/named_tuple/SimWarthogOutput
      - 1.0334489345550537
      - 0.23055072873830795
    - !<python/numpy/ndarray>
-     - 9.275367538960177
-     - 0.24206401282244994
-     - 6.448467577855021
-     - 1.0334489345550537
-     - 0.23055072873830795
+     - 9.45434118014261
+     - 0.2742168454321038
+     - 6.482673809538514
      - 0.9986732602119446
      - 0.1697765663266182
-   v_delay_data:
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   w_delay_data:
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
+     - 0.9986732602119446
+     - 0.1697765663266182
 ...

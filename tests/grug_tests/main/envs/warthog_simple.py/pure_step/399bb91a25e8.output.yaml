@@ -2,60 +2,60 @@ error_output: None
 normal_output:
 - !python/named_tuple/StepOutput
   observation:
-  - 108.44849000640369
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.09017817213987
+  - !<python/numpy/float64> -0.22524908961668189
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.804080754518509
-  - 108.45828596867776
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.09997413411007
+  - !<python/numpy/float64> -0.22524906704431302
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.5102021098136902
-  - 108.48277586318707
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.12446402785994
+  - !<python/numpy/float64> -0.22524901063131164
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.3761523365974426
-  - 108.51396824635721
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.15565641006329
+  - !<python/numpy/float64> -0.22524893881597396
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.2214792370796204
-  - 108.55289428450322
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.19458244700361
+  - !<python/numpy/float64> -0.22524884925324784
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.138986885547638
-  - 108.59594494022585
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.2376331013938
+  - !<python/numpy/float64> -0.22524875027544233
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.0925849676132202
-  - 108.64131569184518
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.28300385161002
+  - !<python/numpy/float64> -0.2252486460486809
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -1.0461830496788025
-  - 108.68900653936124
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.33069469765249
+  - !<python/numpy/float64> -0.2252485365862542
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -0.8915101289749146
-  - 108.7444310329125
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.38611918949283
+  - !<python/numpy/float64> -0.22524840949420266
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -0.7007466554641724
-  - 108.80939370013928
-  - 0.0
-  - !<python/numpy/float64> 0.0
+  - 108.45108185471646
+  - !<python/numpy/float64> -0.22524826069584236
+  - !<python/numpy/float64> -0.22499999999999998
   - !<python/numpy/float64> -0.5460737943649292
   - !<python/numpy/float64> 2.0
   - !<python/numpy/float64> 1.25
   reward: 0
-  done: false
+  done: true
   debug: {}
 - !python/named_tuple/StepSideEffects
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.0
      spin: !<python/numpy/float64> 1.25
-  crosstrack_error: 0.0
+  crosstrack_error: -24.141851179784304
   episode_steps: 1
   num_steps: 1
   omega_reward: -2.5
-  phi_error: !<python/numpy/float64> 0.0
+  phi_error: !<python/numpy/float64> -0.22499999999999998
   prev_action: *id001
   prev_closest_index: 0
   reward: 0
@@ -65,36 +65,24 @@ normal_output:
   twist:
   - !<python/numpy/float64> 2.0
   - !<python/numpy/float64> 1.25
-  prev_angle: 0
+  prev_angle: !<python/numpy/float64> 0.15
   pose:
-  - 0.0
-  - 0.0
-  - 0.0
+  - !<python/numpy/float64> 0.35831518752578995
+  - !<python/numpy/float64> 0.026924140769560987
+  - !<python/numpy/float64> 0.22499999999999998
   is_episode_start: 0
-  closest_distance: 108.44849000640369
+  closest_distance: 108.09017817213987
   closest_index: 11
   ep_poses:
   - !<python/numpy/ndarray>
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
-    - 0.0
+    - 0.23966265817346488
+    - 0.00899156487272908
+    - 0.15
     - 2.0
     - 1.25
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-- - 0.0
-  - !<python/numpy/float64> 0.0
-  - !<python/numpy/float64> 108.44849000640369
+    - 2.0
+    - 1.25
+- - !<python/numpy/float64> -0.22524908961668189
+  - !<python/numpy/float64> -0.026924140769560987
+  - !<python/numpy/float64> 108.0901748188779
 ...

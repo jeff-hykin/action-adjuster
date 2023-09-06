@@ -3,31 +3,18 @@ normal_output: !python/named_tuple/SimWarthogOutput
    twist:
    - !<python/numpy/float64> 2.0
    - !<python/numpy/float64> 1.25
-   prev_angle: 0
+   prev_angle: !<python/numpy/float64> 0.15
    pose:
-   - 0.0
-   - 0.0
-   - 0.0
-   is_episode_start: 0
+   - !<python/numpy/float64> 0.35831518752578995
+   - !<python/numpy/float64> 0.026924140769560987
+   - !<python/numpy/float64> 0.22499999999999998
    ep_poses:
    - !<python/numpy/ndarray>
-     - 0.0
-     - 0.0
-     - 0.0
-     - 0.0
-     - 0.0
+     - 0.23966265817346488
+     - 0.00899156487272908
+     - 0.15
      - 2.0
      - 1.25
-   v_delay_data:
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   w_delay_data:
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
-   - 0.0
+     - 2.0
+     - 1.25
 ...

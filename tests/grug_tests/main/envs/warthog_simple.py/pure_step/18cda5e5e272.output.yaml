@@ -2,77 +2,77 @@ error_output: None
 normal_output:
 - !python/named_tuple/StepOutput
   observation:
-  - 0.3066169709641372
-  - !<python/numpy/float64> -1.3893850973090656
-  - !<python/numpy/float64> 0.050979728386339906
+  - 0.3381105282988062
+  - !<python/numpy/float64> -2.050474374489026
+  - !<python/numpy/float64> 0.0316833434110263
   - !<python/numpy/float64> -0.14191889762878418
-  - 0.846528165160476
-  - !<python/numpy/float64> -0.3163543722106764
-  - !<python/numpy/float64> -0.07241762796031903
+  - 0.6548547005035977
+  - !<python/numpy/float64> -0.4353804251433999
+  - !<python/numpy/float64> -0.09171401293563264
   - !<python/numpy/float64> -0.14191889762878418
-  - 1.3576591575003123
-  - !<python/numpy/float64> -0.2235883082675204
-  - !<python/numpy/float64> 0.03268741816765669
+  - 1.1584784758376971
+  - !<python/numpy/float64> -0.28334808280865664
+  - !<python/numpy/float64> 0.013391033192343083
   - !<python/numpy/float64> -0.14191889762878418
-  - 2.086573174955176
-  - !<python/numpy/float64> -0.13299985913984488
-  - !<python/numpy/float64> 0.041034257703407795
+  - 1.8832420494260438
+  - !<python/numpy/float64> -0.16746558068679648
+  - !<python/numpy/float64> 0.021737872728094187
   - !<python/numpy/float64> -0.14191889762878418
-  - 2.594755884791239
-  - !<python/numpy/float64> -0.0986638373707718
-  - !<python/numpy/float64> 0.05639301686838266
+  - 2.390444645899804
+  - !<python/numpy/float64> -0.12698040327824353
+  - !<python/numpy/float64> 0.037096631893069054
   - !<python/numpy/float64> -0.14191889762878418
-  - 3.326633950817604
-  - !<python/numpy/float64> -0.06435965110294828
-  - !<python/numpy/float64> 0.14668131292977143
+  - 3.1216400604353245
+  - !<python/numpy/float64> -0.08831340398489224
+  - !<python/numpy/float64> 0.12738492795445783
   - !<python/numpy/float64> -0.14191889762878418
-  - 3.918240735941369
-  - !<python/numpy/float64> -0.03211912626288016
-  - !<python/numpy/float64> 0.09596576179738453
+  - 3.7128593400480785
+  - !<python/numpy/float64> -0.053549167944132225
+  - !<python/numpy/float64> 0.07666937682207092
   - !<python/numpy/float64> -0.14191889762878418
-  - 4.541377880764595
-  - !<python/numpy/float64> -0.0144665886460143
-  - !<python/numpy/float64> 0.028114369497574343
+  - 4.335882325700615
+  - !<python/numpy/float64> -0.034753605661670406
+  - !<python/numpy/float64> 0.008817984522260736
   - !<python/numpy/float64> -0.14191889762878418
-  - 5.050679753846274
-  - !<python/numpy/float64> -0.010170580940355611
-  - !<python/numpy/float64> 0.13231473334708027
+  - 4.845166716802793
+  - !<python/numpy/float64> -0.03017125684841504
+  - !<python/numpy/float64> 0.11301834837176666
   - !<python/numpy/float64> -0.14191889762878418
-  - 5.565139363345282
-  - !<python/numpy/float64> 0.003078889745321889
-  - !<python/numpy/float64> 0.11270093391384428
+  - 5.3595979962868014
+  - !<python/numpy/float64> -0.016346092930049627
+  - !<python/numpy/float64> 0.09340454893853067
   - !<python/numpy/float64> -0.14191889762878418
   - !<python/numpy/float64> 1.1419188976287842
   - !<python/numpy/float64> 0.10720213875174522
-  reward: 7.121543697927305
+  reward: 7.271598643429272
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 1.1419188976287842
      spin: !<python/numpy/float64> 0.10720213875174522
-  crosstrack_error: -0.30158540528560157
+  crosstrack_error: -0.29995257358198657
   episode_steps: 40
   num_steps: 40
   omega_reward: -0.21440427750349045
-  phi_error: !<python/numpy/float64> 0.05097972838633957
+  phi_error: !<python/numpy/float64> 0.031683343411025966
   prev_action: *id001
   prev_closest_index: 73
-  reward: 7.121543697927305
-  total_ep_reward: 292.87627800808156
+  reward: 7.271598643429272
+  total_ep_reward: 293.02633295358356
   vel_error: !<python/numpy/float64> -0.14191889762878418
   vel_reward: -0.03788554668426514
   twist:
   - !<python/numpy/float64> 1.1419188976287842
   - !<python/numpy/float64> 0.10720213875174522
   - 0.0
-  prev_angle: !<python/numpy/float64> 6.594714366133241
+  prev_angle: !<python/numpy/float64> 6.6141804902357135
   pose:
-  - !<python/numpy/float64> 10.462094040486036
-  - !<python/numpy/float64> 0.5449917969515968
-  - !<python/numpy/float64> 6.6013162335855045
+  - !<python/numpy/float64> 10.65690526217027
+  - !<python/numpy/float64> 0.6105382288664019
+  - !<python/numpy/float64> 6.620612618560818
   is_episode_start: 0
-  closest_distance: 0.3066169709641372
+  closest_distance: 0.3381105282988062
   closest_index: 73
   ep_poses:
   - !<python/numpy/ndarray>
@@ -388,26 +388,14 @@ normal_output:
     - 1.104033350944519
     - 0.1100311242043972
   - !<python/numpy/ndarray>
-    - 10.399040531633974
-    - 0.5246876662035228
-    - 6.594714366133241
-    - 1.104033350944519
-    - 0.1100311242043972
+    - 10.592109171368724
+    - 0.5882718824130644
+    - 6.6141804902357135
     - 1.1419188976287842
     - 0.10720213875174522
-  v_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  w_delay_data:
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-  - 0.0
-- - !<python/numpy/float64> -1.3893850973090656
-  - !<python/numpy/float64> -0.2691489817796696
-  - !<python/numpy/float64> 0.14687679357267314
+    - 1.1419188976287842
+    - 0.10720213875174522
+- - !<python/numpy/float64> -2.050474374489026
+  - !<python/numpy/float64> -0.33469541369447464
+  - !<python/numpy/float64> -0.04793442811156012
 ...

@@ -100,14 +100,18 @@ def pure_sim_warthog(
     action_duration,
     prev_angle,
     ep_poses,
+    **kwargs,
 ):
-    old_x, old_y, prev_angle = pose
-    old_v, old_w, *_ = twist
-    twist[0] = v
-    twist[1] = w
-    pose[0] = old_x + old_v * math.cos(prev_angle) * action_duration
-    pose[1] = old_y + old_v * math.sin(prev_angle) * action_duration
-    pose[2] = prev_angle + old_w * action_duration
+    effective_action_duration = action_duration/config.simulator.granularity_of_calculations
+    for each in range(config.simulator.granularity_of_calculations):
+        old_x, old_y, prev_angle = pose
+        old_v, old_w, *_ = twist
+        twist[0] = v
+        twist[1] = w
+        pose[0] = old_x + old_v * math.cos(prev_angle) * action_duration
+        pose[1] = old_y + old_v * math.sin(prev_angle) * action_duration
+        pose[2] = prev_angle + old_w * action_duration
+    
     ep_poses.append(np.array([old_x, old_y, prev_angle, old_v, old_w, v, w]))
     
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses)
@@ -121,6 +125,7 @@ def pure_get_observation(
     pose,
     twist,
     waypoints_list,
+    **kwargs,
 ):
     obs   = [0] * (horizon * 4 + 2)
     index   = closest_index
@@ -169,6 +174,7 @@ def pure_reward(
     closest_distance,
     action,
     prev_action,
+    **kwargs,
 ):
     waypoint_x, waypoint_y, waypoint_phi, waypoint_velocity, *_ = closest_waypoint
     pose_x, pose_y, pose_phi, *_ = pose
@@ -208,6 +214,7 @@ def pure_reward_wrapper(
     action,
     prev_action,
     done,
+    **kwargs,
 ):
     xdiff         = waypoints_list[closest_index][0] - pose[0]
     ydiff         = waypoints_list[closest_index][1] - pose[1]
@@ -263,6 +270,7 @@ def pure_step(
     vel_error,
     vel_reward,
     waypoints_list,
+    **kwargs,
 ):
     episode_steps = episode_steps + 1
     num_steps = num_steps + 1

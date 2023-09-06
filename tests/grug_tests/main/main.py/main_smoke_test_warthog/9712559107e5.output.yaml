@@ -557,16 +557,16 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: null
   pose:
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 0.7233302889220217
+  - !<python/numpy/float64> 21.19914378444955
+  - !<python/numpy/float64> 9.199516588491827
+  - !<python/numpy/float64> 0.9483302889220215
   twist:
   - !<python/numpy/float64> 2.0
   - !<python/numpy/float64> 1.25
   - 0.0
-  closest_index: 0
+  closest_index: 1
   prev_closest_index: 0
-  closest_distance: 0.14142135623731025
+  closest_distance: 0.04077884604577861
   number_of_waypoints: 99
   horizon: 10
   action_duration: 0.06
@@ -677,7 +677,7 @@ normal_output:
   warthog_width: 0.5
   warthog_diag: 0.5590169943749475
   diag_angle: 0.4636476090008061
-  prev_angle: !<python/numpy/float64> 0.7233302889220217
+  prev_angle: !<python/numpy/float64> 0.8733302889220216
   n_traj: 100
   x_pose:
   - !<python/numpy/float64> 20.948369383136743
@@ -779,7 +779,7 @@ normal_output:
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
+  - !<python/numpy/float64> 21.19914378444955
   y_pose:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
@@ -880,10 +880,10 @@ normal_output:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  crosstrack_error: -0.0087720881584543
-  vel_error: !<python/numpy/float64> -2.020966741027661
-  phi_error: !<python/numpy/float64> -0.010000000000000009
+  - !<python/numpy/float64> 9.199516588491827
+  crosstrack_error: -0.04020057766138824
+  vel_error: !<python/numpy/float64> -2.0257490354605476
+  phi_error: !<python/numpy/float64> 1.7462846316900638
   start_step_for_sup_data: 500000
   episode_steps: 1
   max_number_of_timesteps_per_episode: 700
@@ -909,11 +909,11 @@ normal_output:
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 0.0
-    - 0.0
+    - 21.12207047965822
+    - 9.107539930102087
+    - 0.8733302889220216
+    - 2.0
+    - 1.25
     - 2.0
     - 1.25
 - waypoints_list:
@@ -1018,16 +1018,16 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: null
   pose:
-  - !<python/numpy/float64> 21.038322057856284
-  - !<python/numpy/float64> 9.021596914995069
-  - !<python/numpy/float64> 0.7983302889220216
+  - !<python/numpy/float64> 21.448935975040907
+  - !<python/numpy/float64> 9.656827754438055
+  - !<python/numpy/float64> 1.2753302889220217
   twist:
   - !<python/numpy/float64> 2.24
   - !<python/numpy/float64> 1.4000000000000001
   - 0.0
   closest_index: 1
-  prev_closest_index: 0
-  closest_distance: 0.24100842540936504
+  prev_closest_index: 1
+  closest_distance: 0.5342203785235284
   number_of_waypoints: 99
   horizon: 10
   action_duration: 0.06
@@ -1138,7 +1138,7 @@ normal_output:
   warthog_width: 0.5
   warthog_diag: 0.5590169943749475
   diag_angle: 0.4636476090008061
-  prev_angle: !<python/numpy/float64> 0.7233302889220217
+  prev_angle: !<python/numpy/float64> 1.1913302889220216
   n_traj: 100
   x_pose:
   - !<python/numpy/float64> 20.948369383136743
@@ -1239,8 +1239,8 @@ normal_output:
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 21.038322057856284
+  - !<python/numpy/float64> 21.19914378444955
+  - !<python/numpy/float64> 21.448935975040907
   y_pose:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
@@ -1340,11 +1340,11 @@ normal_output:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 9.021596914995069
-  crosstrack_error: -0.03178022178583268
+  - !<python/numpy/float64> 9.199516588491827
+  - !<python/numpy/float64> 9.656827754438055
+  crosstrack_error: 0.06993301364380691
   vel_error: !<python/numpy/float64> -2.265749035460548
-  phi_error: !<python/numpy/float64> 1.8962846316900637
+  phi_error: !<python/numpy/float64> 1.4192846316900636
   start_step_for_sup_data: 500000
   episode_steps: 2
   max_number_of_timesteps_per_episode: 700
@@ -1370,19 +1370,19 @@ normal_output:
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 0.0
-    - 0.0
+    - 21.12207047965822
+    - 9.107539930102087
+    - 0.8733302889220216
+    - 2.0
+    - 1.25
     - 2.0
     - 1.25
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 2.0
-    - 1.25
+    - 21.399150916217806
+    - 9.53198862628514
+    - 1.1913302889220216
+    - 2.24
+    - 1.4000000000000001
     - 2.24
     - 1.4000000000000001
 - waypoints_list:
@@ -1487,16 +1487,16 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: null
   pose:
-  - !<python/numpy/float64> 21.13212029027445
-  - !<python/numpy/float64> 9.11785309191493
-  - !<python/numpy/float64> 0.8823302889220216
+  - !<python/numpy/float64> 21.539418041491036
+  - !<python/numpy/float64> 10.189410143300089
+  - !<python/numpy/float64> 1.614480288922022
   twist:
   - !<python/numpy/float64> 2.268
   - !<python/numpy/float64> 1.4175
   - 0.0
   closest_index: 1
   prev_closest_index: 1
-  closest_distance: 0.10922934532729323
+  closest_distance: 1.0654750262113473
   number_of_waypoints: 99
   horizon: 10
   action_duration: 0.06
@@ -1607,7 +1607,7 @@ normal_output:
   warthog_width: 0.5
   warthog_diag: 0.5590169943749475
   diag_angle: 0.4636476090008061
-  prev_angle: !<python/numpy/float64> 0.7983302889220216
+  prev_angle: !<python/numpy/float64> 1.529430288922022
   n_traj: 100
   x_pose:
   - !<python/numpy/float64> 20.948369383136743
@@ -1707,9 +1707,9 @@ normal_output:
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 21.038322057856284
-  - !<python/numpy/float64> 21.13212029027445
+  - !<python/numpy/float64> 21.19914378444955
+  - !<python/numpy/float64> 21.448935975040907
+  - !<python/numpy/float64> 21.539418041491036
   y_pose:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
@@ -1808,12 +1808,12 @@ normal_output:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 9.021596914995069
-  - !<python/numpy/float64> 9.11785309191493
-  crosstrack_error: -0.0404361759136919
+  - !<python/numpy/float64> 9.199516588491827
+  - !<python/numpy/float64> 9.656827754438055
+  - !<python/numpy/float64> 10.189410143300089
+  crosstrack_error: 0.35580117650556664
   vel_error: !<python/numpy/float64> -2.2937490354605474
-  phi_error: !<python/numpy/float64> 1.8122846316900638
+  phi_error: !<python/numpy/float64> 1.0801346316900633
   start_step_for_sup_data: 500000
   episode_steps: 3
   max_number_of_timesteps_per_episode: 700
@@ -1839,27 +1839,27 @@ normal_output:
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 0.0
-    - 0.0
+    - 21.12207047965822
+    - 9.107539930102087
+    - 0.8733302889220216
+    - 2.0
+    - 1.25
     - 2.0
     - 1.25
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 2.0
-    - 1.25
+    - 21.399150916217806
+    - 9.53198862628514
+    - 1.1913302889220216
+    - 2.24
+    - 1.4000000000000001
     - 2.24
     - 1.4000000000000001
   - !<python/numpy/ndarray>
-    - 21.038322057856284
-    - 9.021596914995069
-    - 0.7983302889220216
-    - 2.24
-    - 1.4000000000000001
+    - 21.53379055628878
+    - 10.053446553283134
+    - 1.529430288922022
+    - 2.268
+    - 1.4175
     - 2.268
     - 1.4175
 - waypoints_list:
@@ -1964,16 +1964,16 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: null
   pose:
-  - !<python/numpy/float64> 21.2185791770831
-  - !<python/numpy/float64> 9.222936997874925
-  - !<python/numpy/float64> 0.9673802889220215
+  - !<python/numpy/float64> 21.446903099963915
+  - !<python/numpy/float64> 10.723893866721124
+  - !<python/numpy/float64> 1.955040288922022
   twist:
   - !<python/numpy/float64> 2.2712
   - !<python/numpy/float64> 1.4195
   - 0.0
-  closest_index: 1
+  closest_index: 2
   prev_closest_index: 1
-  closest_distance: 0.053225962200394134
+  closest_distance: 1.4986532509146635
   number_of_waypoints: 99
   horizon: 10
   action_duration: 0.06
@@ -2084,7 +2084,7 @@ normal_output:
   warthog_width: 0.5
   warthog_diag: 0.5590169943749475
   diag_angle: 0.4636476090008061
-  prev_angle: !<python/numpy/float64> 0.8823302889220216
+  prev_angle: !<python/numpy/float64> 1.869870288922022
   n_traj: 100
   x_pose:
   - !<python/numpy/float64> 20.948369383136743
@@ -2183,10 +2183,10 @@ normal_output:
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
   - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 20.948369383136743
-  - !<python/numpy/float64> 21.038322057856284
-  - !<python/numpy/float64> 21.13212029027445
-  - !<python/numpy/float64> 21.2185791770831
+  - !<python/numpy/float64> 21.19914378444955
+  - !<python/numpy/float64> 21.448935975040907
+  - !<python/numpy/float64> 21.539418041491036
+  - !<python/numpy/float64> 21.446903099963915
   y_pose:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
@@ -2284,13 +2284,13 @@ normal_output:
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
   - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 8.942170746065676
-  - !<python/numpy/float64> 9.021596914995069
-  - !<python/numpy/float64> 9.11785309191493
-  - !<python/numpy/float64> 9.222936997874925
-  crosstrack_error: -0.03734990164162489
-  vel_error: !<python/numpy/float64> -2.2969490354605475
-  phi_error: !<python/numpy/float64> 1.7272346316900637
+  - !<python/numpy/float64> 9.199516588491827
+  - !<python/numpy/float64> 9.656827754438055
+  - !<python/numpy/float64> 10.189410143300089
+  - !<python/numpy/float64> 10.723893866721124
+  crosstrack_error: 1.1706100210298223
+  vel_error: !<python/numpy/float64> -1.3874077582062596
+  phi_error: !<python/numpy/float64> 1.0540996985226287
   start_step_for_sup_data: 500000
   episode_steps: 4
   max_number_of_timesteps_per_episode: 700
@@ -2316,35 +2316,35 @@ normal_output:
   ep_dist: 0
   ep_poses:
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 0.0
-    - 0.0
+    - 21.12207047965822
+    - 9.107539930102087
+    - 0.8733302889220216
+    - 2.0
+    - 1.25
     - 2.0
     - 1.25
   - !<python/numpy/ndarray>
-    - 20.948369383136743
-    - 8.942170746065676
-    - 0.7233302889220217
-    - 2.0
-    - 1.25
+    - 21.399150916217806
+    - 9.53198862628514
+    - 1.1913302889220216
+    - 2.24
+    - 1.4000000000000001
     - 2.24
     - 1.4000000000000001
   - !<python/numpy/ndarray>
-    - 21.038322057856284
-    - 9.021596914995069
-    - 0.7983302889220216
-    - 2.24
-    - 1.4000000000000001
+    - 21.53379055628878
+    - 10.053446553283134
+    - 1.529430288922022
+    - 2.268
+    - 1.4175
     - 2.268
     - 1.4175
   - !<python/numpy/ndarray>
-    - 21.13212029027445
-    - 9.11785309191493
-    - 0.8823302889220216
-    - 2.268
-    - 1.4175
+    - 21.487053655507015
+    - 10.593671015909216
+    - 1.869870288922022
+    - 2.2712
+    - 1.4195
     - 2.2712
     - 1.4195
 ...
