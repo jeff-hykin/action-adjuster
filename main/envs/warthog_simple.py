@@ -526,8 +526,8 @@ class WarthogEnv(gym.Env):
         self.is_episode_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
-        if self.max_vel >= 5:
-            self.max_vel = 1
+        # if self.max_vel >= 5:
+            # self.max_vel = 1
         if config.simulator.starting_waypoint == 'random':
             index = np.random.randint(self.number_of_waypoints, size=1)[0]
         else:
@@ -540,13 +540,13 @@ class WarthogEnv(gym.Env):
         self.x_pose = [self.pose[0]] * self.n_traj
         self.y_pose = [self.pose[1]] * self.n_traj
         self.twist = [0.0, 0.0, 0.0]
-        for i in range(0, self.number_of_waypoints):
-            if self.desired_velocities[i] > self.max_vel:
-                self.waypoints_list[i][3] = self.max_vel
-            else:
-                self.waypoints_list[i][3] = self.desired_velocities[i]
+        # for i in range(0, self.number_of_waypoints):
+        #     if self.desired_velocities[i] > self.max_vel:
+        #         self.waypoints_list[i][3] = self.max_vel
+        #     else:
+        #         self.waypoints_list[i][3] = self.desired_velocities[i]
         # self.max_vel = 2
-        self.max_vel = self.max_vel + 1
+        # self.max_vel = self.max_vel + 1
         obs, self.closest_distance, self.closest_index = pure_get_observation(
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
