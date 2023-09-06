@@ -1,4 +1,5 @@
 error_output: None
+traceback: ''
 normal_output: !<python/numpy/ndarray>
 - 0.4031309187412262
 - -0.7112417817115784

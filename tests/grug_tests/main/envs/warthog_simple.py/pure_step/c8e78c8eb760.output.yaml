@@ -1,4 +1,5 @@
 error_output: None
+traceback: ''
 normal_output:
 - !python/named_tuple/StepOutput
   observation:
@@ -42,8 +43,8 @@ normal_output:
   - 0.007146755702756302
   - !<python/numpy/float64> 0.06782011179870484
   - !<python/numpy/float64> -0.016833066940307617
-  - !<python/numpy/float64> 1.0168330669403076
-  - !<python/numpy/float64> 0.09275207296013832
+  - 1.0168330669403076
+  - 0.09275207296013832
   reward: 7.299371500101573
   done: false
   debug: {}
@@ -62,10 +63,10 @@ normal_output:
   total_ep_reward: 351.9595945332243
   vel_error: !<python/numpy/float64> -0.016833066940307617
   vel_reward: -0.040635764598846436
-  twist:
-  - !<python/numpy/float64> 1.0168330669403076
-  - !<python/numpy/float64> 0.09275207296013832
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 1.0168330669403076
+     spin: 0.09275207296013832
+     unknown: 0.0
   prev_angle: 6.602501686151054
   pose: !python/named_tuple/PoseEntry
      x: 11.12355126791032

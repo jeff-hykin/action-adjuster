@@ -1,9 +1,10 @@
 error_output: None
+traceback: ''
 normal_output: !python/named_tuple/SimWarthogOutput
-   twist:
-   - !<python/numpy/float64> 1.0969858169555664
-   - !<python/numpy/float64> 0.3491060808300972
-   - 0.0
+   twist: !python/named_tuple/TwistEntry
+      velocity: 1.0969858169555664
+      spin: 0.3491060808300972
+      unknown: 0.0
    prev_angle: 6.344153465191751
    pose: !python/named_tuple/PoseEntry
       x: 8.858893306626587

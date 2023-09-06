@@ -91,6 +91,11 @@ if True:
         "y",
         "angle",
     ])
+    TwistEntry = namedtuple('TwistEntry', [
+        "velocity",
+        "spin",
+        "unknown",
+    ])
     SpacialHistory = namedtuple('SpacialHistory', [
         "x",
         "y",
@@ -119,9 +124,12 @@ def pure_sim_warthog(
     effective_action_duration = action_duration/config.simulator.granularity_of_calculations
     for each in range(config.simulator.granularity_of_calculations):
         old_x, old_y, prev_angle = pose
-        old_v, old_w, *_ = twist
-        twist[0] = v
-        twist[1] = w
+        old_v, old_w, *unknown = twist
+        twist = TwistEntry(
+            velocity=float(v),
+            spin=float(w),
+            unknown=(None if len(unknown) == 0 else unknown[0]),
+        )
         pose = PoseEntry(
             x=float(old_x + old_v * math.cos(prev_angle) * action_duration),
             y=float(old_y + old_v * math.sin(prev_angle) * action_duration),
@@ -399,7 +407,11 @@ class WarthogEnv(gym.Env):
             y=0,
             angle=0,
         )
-        self.twist = [0, 0]
+        self.twist = TwistEntry(
+            velocity=0,
+            spin=0,
+            unknown=0,
+        )
         self.closest_index = 0
         self.prev_closest_index = 0
         self.closest_distance = math.inf
@@ -526,7 +538,11 @@ class WarthogEnv(gym.Env):
         )
         self.x_pose = [self.pose[0]] * self.n_traj
         self.y_pose = [self.pose[1]] * self.n_traj
-        self.twist = [0.0, 0.0, 0.0]
+        self.twist = TwistEntry(
+            velocity=0,
+            spin=0,
+            unknown=0,
+        )
         # for i in range(0, self.number_of_waypoints):
         #     if self.desired_velocities[i] > self.max_vel:
         #         self.waypoints_list[i][3] = self.max_vel

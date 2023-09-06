@@ -1,4 +1,5 @@
 error_output: None
+traceback: ''
 normal_output:
 - waypoints_list:
   - !python/warthog/Waypoint '{"x": 20.848369383136742, "y": 8.842170746065676, "angle": 0.7133302889220217, "velocity": -0.020966741027661155}'
@@ -105,10 +106,10 @@ normal_output:
      x: 20.948369383136743
      y: 8.942170746065676
      angle: 0.7233302889220217
-  twist:
-  - 0.0
-  - 0.0
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 0
+     spin: 0
+     unknown: 0
   closest_index: 0
   prev_closest_index: 0
   closest_distance: 0.14142135623731025
@@ -560,10 +561,10 @@ normal_output:
      x: 21.19914378444955
      y: 9.199516588491827
      angle: 0.9483302889220215
-  twist:
-  - !<python/numpy/float64> 2.0
-  - !<python/numpy/float64> 1.25
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 2.0
+     spin: 1.25
+     unknown: 0
   closest_index: 1
   prev_closest_index: 0
   closest_distance: 0.04077884604577861
@@ -1021,10 +1022,10 @@ normal_output:
      x: 21.448935975040907
      y: 9.656827754438055
      angle: 1.2753302889220217
-  twist:
-  - !<python/numpy/float64> 2.24
-  - !<python/numpy/float64> 1.4000000000000001
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 2.24
+     spin: 1.4000000000000001
+     unknown: 0
   closest_index: 1
   prev_closest_index: 1
   closest_distance: 0.5342203785235284
@@ -1490,10 +1491,10 @@ normal_output:
      x: 21.539418041491036
      y: 10.189410143300089
      angle: 1.614480288922022
-  twist:
-  - !<python/numpy/float64> 2.268
-  - !<python/numpy/float64> 1.4175
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 2.268
+     spin: 1.4175
+     unknown: 0
   closest_index: 1
   prev_closest_index: 1
   closest_distance: 1.0654750262113473
@@ -1967,10 +1968,10 @@ normal_output:
      x: 21.446903099963915
      y: 10.723893866721124
      angle: 1.955040288922022
-  twist:
-  - !<python/numpy/float64> 2.2712
-  - !<python/numpy/float64> 1.4195
-  - 0.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 2.2712
+     spin: 1.4195
+     unknown: 0
   closest_index: 2
   prev_closest_index: 1
   closest_distance: 1.4986532509146635

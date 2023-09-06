@@ -1,4 +1,5 @@
 error_output: None
+traceback: ''
 normal_output: !python/named_tuple/RewardOutput
    running_reward: 7.518926935194001
    velocity_error: !<python/numpy/float64> -0.05434572696685791
