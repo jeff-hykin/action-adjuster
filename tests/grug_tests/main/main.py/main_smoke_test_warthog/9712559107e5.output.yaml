@@ -447,7 +447,7 @@ normal_output:
   prev_reaction: null
   omega_reward: 0
   vel_reward: 0
-  is_delayed_dynamics: false
+  is_delayed_dynamics: null
   delay_steps: 5
   v_delay_data:
   - 0.0
@@ -910,7 +910,7 @@ normal_output:
   prev_reaction: null
   omega_reward: -2.5
   vel_reward: -2.0
-  is_delayed_dynamics: false
+  is_delayed_dynamics: null
   delay_steps: 5
   v_delay_data:
   - 0.0
@@ -1381,7 +1381,7 @@ normal_output:
   prev_reaction: null
   omega_reward: -2.8000000000000003
   vel_reward: -0.2400000000000002
-  is_delayed_dynamics: false
+  is_delayed_dynamics: null
   delay_steps: 5
   v_delay_data:
   - 0.0
@@ -1860,7 +1860,7 @@ normal_output:
   prev_reaction: null
   omega_reward: -2.835
   vel_reward: -0.02799999999999958
-  is_delayed_dynamics: false
+  is_delayed_dynamics: null
   delay_steps: 5
   v_delay_data:
   - 0.0
@@ -2347,7 +2347,7 @@ normal_output:
   prev_reaction: null
   omega_reward: -2.839
   vel_reward: -0.0032000000000000917
-  is_delayed_dynamics: false
+  is_delayed_dynamics: null
   delay_steps: 5
   v_delay_data:
   - 0.0

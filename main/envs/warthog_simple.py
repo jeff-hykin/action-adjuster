@@ -108,7 +108,6 @@ def pure_sim_warthog(
     w, 
     pose,
     twist,
-    is_delayed_dynamics,
     v_delay_data,
     w_delay_data,
     action_duration,
@@ -116,18 +115,6 @@ def pure_sim_warthog(
     ep_poses,
     is_episode_start,
 ):
-    v                   = deepcopy(v)
-    w                   = deepcopy(w)
-    pose                = deepcopy(pose)
-    twist               = deepcopy(twist)
-    is_delayed_dynamics = deepcopy(is_delayed_dynamics)
-    v_delay_data        = deepcopy(v_delay_data)
-    w_delay_data        = deepcopy(w_delay_data)
-    action_duration                  = deepcopy(action_duration)
-    prev_angle          = deepcopy(prev_angle)
-    ep_poses            = deepcopy(ep_poses)
-    is_episode_start            = deepcopy(is_episode_start)
-    
     x = pose[0]
     y = pose[1]
     th = pose[2]
@@ -135,16 +122,6 @@ def pure_sim_warthog(
     w_ = twist[1]
     twist[0] = v
     twist[1] = w
-    if is_delayed_dynamics:
-        v_ = v_delay_data[0]
-        w_ = w_delay_data[0]
-        del v_delay_data[0]
-        del w_delay_data[0]
-        v_delay_data.append(v)
-        w_delay_data.append(w)
-        twist[0] = v_delay_data[0]
-        twist[1] = v_delay_data[1]
-    action_duration = action_duration
     prev_angle = pose[2]
     pose[0] = x + v_ * math.cos(th) * action_duration
     pose[1] = y + v_ * math.sin(th) * action_duration
@@ -290,7 +267,6 @@ def pure_step(
     is_episode_start,
     episode_steps,
     horizon,
-    is_delayed_dynamics,
     max_number_of_timesteps_per_episode,
     num_steps,
     number_of_waypoints,
@@ -320,7 +296,6 @@ def pure_step(
         w=action[1],
         pose=pose,
         twist=twist,
-        is_delayed_dynamics=is_delayed_dynamics,
         v_delay_data=v_delay_data,
         w_delay_data=w_delay_data,
         action_duration=action_duration,
@@ -446,7 +421,6 @@ class WarthogEnv(gym.Env):
         self.prev_action             = [0.0, 0.0]
         self.omega_reward            = 0
         self.vel_reward              = 0
-        self.is_delayed_dynamics     = False
         self.delay_steps             = 5
         self.v_delay_data            = [0.0] * self.delay_steps
         self.w_delay_data            = [0.0] * self.delay_steps
@@ -500,7 +474,6 @@ class WarthogEnv(gym.Env):
             is_episode_start=self.is_episode_start,
             episode_steps=self.episode_steps,
             horizon=self.horizon,
-            is_delayed_dynamics=self.is_delayed_dynamics,
             max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
             num_steps=self.num_steps,
             number_of_waypoints=self.number_of_waypoints,
@@ -644,7 +617,6 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     prev_action=env.prev_action,
                     omega_reward=env.omega_reward,
                     vel_reward=env.vel_reward,
-                    is_delayed_dynamics=env.is_delayed_dynamics,
                     delay_steps=env.delay_steps,
                     v_delay_data=env.v_delay_data,
                     w_delay_data=env.w_delay_data,
