@@ -1,5 +1,8 @@
 # NOTE: names in parentheses are special, all other names are not!
 (project):
+    next_time:
+        - compare the diff and try to make it the same
+        - check with akhil if the traj of warthog_simple makes sense
     
     # a central place for filepaths
     (path_to):
