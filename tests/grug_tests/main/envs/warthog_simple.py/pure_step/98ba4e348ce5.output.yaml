@@ -3,63 +3,63 @@ traceback: ''
 normal_output:
 - !python/named_tuple/StepOutput
   observation:
-  - 0.2644976512350948
-  - -2.666966678479456
+  - 0.26449765123509483
+  - -2.6669666784794552
   - !<python/numpy/float64> -0.13754139700915058
   - !<python/numpy/float64> -0.1256617307662964
   - 0.5986497406175266
   - -0.3942420734397656
-  - !<python/numpy/float64> 0.07450832218932493
+  - !<python/numpy/float64> 0.0745083221893253
   - !<python/numpy/float64> -0.1256617307662964
   - 1.3089366957114108
   - -0.1336112821281148
-  - !<python/numpy/float64> 0.25905451654614065
+  - !<python/numpy/float64> 0.259054516546141
   - !<python/numpy/float64> -0.1256617307662964
   - 1.8142480909632088
-  - -0.020653243003893373
-  - !<python/numpy/float64> 0.3026222558175874
+  - -0.020653243003893026
+  - !<python/numpy/float64> 0.3026222558175877
   - !<python/numpy/float64> -0.1256617307662964
   - 2.536782960033038
-  - 0.07342781021988021
-  - !<python/numpy/float64> 0.17922489947092846
+  - 0.07342781021988057
+  - !<python/numpy/float64> 0.17922489947092882
   - !<python/numpy/float64> -0.1256617307662964
   - 3.0550756516199846
-  - 0.09142729246690207
-  - !<python/numpy/float64> 0.2843299455989042
+  - 0.09142729246690243
+  - !<python/numpy/float64> 0.28432994559890457
   - !<python/numpy/float64> -0.1256617307662964
   - 3.788633030050575
-  - 0.12911770007947368
-  - !<python/numpy/float64> 0.2926767851346553
+  - 0.12911770007947404
+  - !<python/numpy/float64> 0.29267678513465567
   - !<python/numpy/float64> -0.1256617307662964
   - 4.297008100569928
-  - 0.14861251924861854
-  - !<python/numpy/float64> 0.30803554429963015
+  - 0.1486125192486189
+  - !<python/numpy/float64> 0.30803554429963054
   - !<python/numpy/float64> -0.1256617307662964
   - 5.027791955674728
-  - 0.1719411675901669
-  - !<python/numpy/float64> 0.3983238403610189
+  - 0.17194116759016725
+  - !<python/numpy/float64> 0.3983238403610193
   - !<python/numpy/float64> -0.1256617307662964
   - 5.616986064641548
-  - 0.19603721317158374
-  - !<python/numpy/float64> 0.347608289228632
+  - 0.1960372131715841
+  - !<python/numpy/float64> 0.3476082892286324
   - !<python/numpy/float64> -0.1256617307662964
   - 1.1256617307662964
   - 0.39510808885097504
-  reward: 6.6693869064195175
+  reward: 6.669386906419516
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 1.1256617307662964
      spin: !<python/numpy/float64> 0.39510808885097504
-  crosstrack_error: -0.12087696006206272
+  crosstrack_error: -0.12087696006206294
   episode_steps: 8
   num_steps: 8
   omega_reward: -0.7902161777019501
   phi_error: !<python/numpy/float64> -0.13754139700915058
   prev_action: *id001
   prev_closest_index: 70
-  reward: 6.6693869064195175
+  reward: 6.669386906419516
   total_ep_reward: 61.26969383452277
   vel_error: !<python/numpy/float64> -0.1256617307662964
   vel_reward: -0.017697572708129883
@@ -67,13 +67,13 @@ normal_output:
      velocity: 1.1256617307662964
      spin: 0.39510808885097504
      unknown: 0.0
-  prev_angle: 6.325967220823198
+  prev_angle: 0.04278191364361188
   pose: !python/named_tuple/PoseEntry
      x: 8.796628151480812
-     y: 0.19271558455525148
-     angle: 6.349673706154257
+     y: 0.1927155845552515
+     angle: 0.06648839897467038
   is_episode_start: 0
-  closest_distance: 0.2644976512350948
+  closest_distance: 0.26449765123509483
   closest_index: 70
   ep_poses:
   - !<python/numpy/ndarray>
@@ -134,13 +134,13 @@ normal_output:
     - 0.42610637843608856
   - !python/named_tuple/SpacialHistory
     x: 8.729150246902455
-    y: 0.1898269881285458
-    angle: 6.325967220823198
+    y: 0.18982698812854581
+    angle: 0.04278191364361188
     velocity: 1.1256617307662964
     spin: 0.39510808885097504
     new_velocity: 1.1256617307662964
     new_spin: 0.39510808885097504
-- - -2.666966678479456
-  - !<python/numpy/float64> -0.1362404867760669
+- - -2.6669666784794552
+  - !<python/numpy/float64> -0.13624048677606693
   - !<python/numpy/float64> -0.22671024959604757
 ...

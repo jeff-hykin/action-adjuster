@@ -71,7 +71,7 @@ normal_output:
   pose: !python/named_tuple/PoseEntry
      x: 8.66222787376898
      y: 0.1885148773967709
-     angle: 6.303334468464286
+     angle: 0.020149161284699346
   is_episode_start: 0
   closest_distance: 0.16110752406615125
   closest_index: 70

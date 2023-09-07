@@ -1,4 +1,5 @@
 error_output: None
+traceback: ''
 normal_output:
 - - 0
   - 0.0
@@ -11536,3 +11537,4 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 20.58417014388931, "y": 122.05970159422894, "angle": 0.0, "velocity": 0.0}'
   - !python/warthog/Waypoint '{"x": 20.58417014388931, "y": 122.05970159422894, "angle": 0.0, "velocity": 0.0}'
   - !python/warthog/Waypoint '{"x": 20.58417014388931, "y": 122.05970159422894, "angle": 0.0, "velocity": 0.0}'
+...

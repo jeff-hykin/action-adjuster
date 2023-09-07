@@ -4,62 +4,62 @@ normal_output:
 - !python/named_tuple/StepOutput
   observation:
   - 0.39044242100457827
-  - -0.7393614358472664
-  - !<python/numpy/float64> -0.062198779299730944
+  - -0.7393614358472655
+  - !<python/numpy/float64> -0.062198779299729945
   - !<python/numpy/float64> -0.027822494506835938
   - 0.8605111830712114
-  - -0.35047711400108117
-  - !<python/numpy/float64> 0.04290626682824478
+  - -0.3504771140010803
+  - !<python/numpy/float64> 0.042906266828245776
   - !<python/numpy/float64> -0.027822494506835938
   - 1.5744024757591406
-  - -0.1681638138548475
-  - !<python/numpy/float64> 0.05125310636399588
+  - -0.1681638138548465
+  - !<python/numpy/float64> 0.05125310636399688
   - !<python/numpy/float64> -0.027822494506835938
   - 2.0795096382146614
-  - -0.11429341947143692
-  - !<python/numpy/float64> 0.06661186552897075
+  - -0.11429341947143593
+  - !<python/numpy/float64> 0.06661186552897175
   - !<python/numpy/float64> -0.027822494506835938
   - 2.8093841383583023
-  - -0.0669621106022672
-  - !<python/numpy/float64> 0.15690016159035952
+  - -0.0669621106022662
+  - !<python/numpy/float64> 0.15690016159036052
   - !<python/numpy/float64> -0.027822494506835938
   - 3.3999227590197623
-  - -0.02758258865372787
-  - !<python/numpy/float64> 0.10618461045797262
+  - -0.02758258865372687
+  - !<python/numpy/float64> 0.10618461045797362
   - !<python/numpy/float64> -0.027822494506835938
   - 4.0227576066730775
-  - -0.006774910458982097
-  - !<python/numpy/float64> 0.03833321815816243
+  - -0.006774910458981098
+  - !<python/numpy/float64> 0.03833321815816343
   - !<python/numpy/float64> -0.027822494506835938
   - 4.532014697838587
-  - -0.001703281904978704
-  - !<python/numpy/float64> 0.14253358200766836
+  - -0.0017032819049777048
+  - !<python/numpy/float64> 0.14253358200766936
   - !<python/numpy/float64> -0.027822494506835938
   - 5.046407821426015
-  - 0.013086614100204286
-  - !<python/numpy/float64> 0.12291978257443237
+  - 0.013086614100205285
+  - !<python/numpy/float64> 0.12291978257443337
   - !<python/numpy/float64> -0.027822494506835938
   - 5.574585480207488
-  - 0.02352925004486517
-  - !<python/numpy/float64> 0.08478953740245132
+  - 0.023529250044866168
+  - !<python/numpy/float64> 0.08478953740245232
   - !<python/numpy/float64> -0.027822494506835938
   - 1.027822494506836
   - -0.08885594084858894
-  reward: 7.441995732227815
+  reward: 7.441995732227824
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 1.027822494506836
      spin: !<python/numpy/float64> -0.08885594084858894
-  crosstrack_error: -0.2630864341544033
+  crosstrack_error: -0.2630864341544031
   episode_steps: 45
   num_steps: 45
   omega_reward: -0.1777118816971779
-  phi_error: !<python/numpy/float64> -0.062198779299730944
+  phi_error: !<python/numpy/float64> -0.062198779299729945
   prev_action: *id001
   prev_closest_index: 73
-  reward: 7.441995732227815
+  reward: 7.441995732227824
   total_ep_reward: 329.887882133194
   vel_error: !<python/numpy/float64> -0.027822494506835938
   vel_reward: -0.03155183792114258
@@ -67,11 +67,11 @@ normal_output:
      velocity: 1.027822494506836
      spin: -0.08885594084858894
      unknown: 0.0
-  prev_angle: 6.596428741375831
+  prev_angle: 0.31324343419624445
   pose: !python/named_tuple/PoseEntry
      x: 10.953958357913095
      y: 0.7097739489696262
-     angle: 6.591097384924916
+     angle: 0.30791207774532914
   is_episode_start: 0
   closest_distance: 0.39044242100457827
   closest_index: 74
@@ -431,12 +431,12 @@ normal_output:
   - !python/named_tuple/SpacialHistory
     x: 10.895289892770593
     y: 0.6907707943211384
-    angle: 6.596428741375831
+    angle: 0.31324343419624445
     velocity: 1.027822494506836
     spin: -0.08885594084858894
     new_velocity: 1.027822494506836
     new_spin: -0.08885594084858894
-- - -0.7393614358472664
+- - -0.7393614358472655
   - !<python/numpy/float64> -0.16327824964591242
   - !<python/numpy/float64> 0.35466251185103204
 ...

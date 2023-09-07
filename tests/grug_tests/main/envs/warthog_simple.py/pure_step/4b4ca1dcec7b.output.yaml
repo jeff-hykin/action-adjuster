@@ -4,62 +4,62 @@ normal_output:
 - !python/named_tuple/StepOutput
   observation:
   - 0.37453975014537255
-  - -2.2148798120752966
-  - !<python/numpy/float64> 0.03163121803158331
+  - -2.2148798120752975
+  - !<python/numpy/float64> 0.03163121803158281
   - !<python/numpy/float64> -0.14377140998840332
   - 0.5929369969361447
-  - -0.48374923189383345
-  - !<python/numpy/float64> -0.09176613831507563
+  - -0.48374923189383434
+  - !<python/numpy/float64> -0.09176613831507613
   - !<python/numpy/float64> -0.14377140998840332
   - 1.0924161100228136
-  - -0.30063369623018577
-  - !<python/numpy/float64> 0.013338907812900092
+  - -0.30063369623018626
+  - !<python/numpy/float64> 0.013338907812899592
   - !<python/numpy/float64> -0.14377140998840332
   - 1.8153185758750738
-  - -0.17360033662649565
-  - !<python/numpy/float64> 0.021685747348651196
+  - -0.17360033662649615
+  - !<python/numpy/float64> 0.021685747348650697
   - !<python/numpy/float64> -0.14377140998840332
   - 2.3221111368027927
-  - -0.13059924509348073
-  - !<python/numpy/float64> 0.03704450651362606
+  - -0.13059924509348123
+  - !<python/numpy/float64> 0.037044506513625564
   - !<python/numpy/float64> -0.14377140998840332
   - 3.0530278963306814
-  - -0.09021089161394402
-  - !<python/numpy/float64> 0.12733280257501484
+  - -0.09021089161394452
+  - !<python/numpy/float64> 0.12733280257501434
   - !<python/numpy/float64> -0.14377140998840332
   - 3.6440890624518647
-  - -0.054491937257883316
-  - !<python/numpy/float64> 0.07661725144262793
+  - -0.054491937257883816
+  - !<python/numpy/float64> 0.07661725144262743
   - !<python/numpy/float64> -0.14377140998840332
   - 4.267062197708101
-  - -0.03526330231615327
-  - !<python/numpy/float64> 0.008765859142817745
+  - -0.035263302316153766
+  - !<python/numpy/float64> 0.008765859142817245
   - !<python/numpy/float64> -0.14377140998840332
   - 4.776338198278564
-  - -0.030566135548977913
-  - !<python/numpy/float64> 0.11296622299232367
+  - -0.030566135548978413
+  - !<python/numpy/float64> 0.11296622299232317
   - !<python/numpy/float64> -0.14377140998840332
   - 5.290753186760428
-  - -0.01652776700648989
-  - !<python/numpy/float64> 0.09335242355908768
+  - -0.01652776700649039
+  - !<python/numpy/float64> 0.09335242355908718
   - !<python/numpy/float64> -0.14377140998840332
   - 1.1437714099884033
   - 0.07175767794251442
-  reward: 7.377706740884322
+  reward: 7.377706740884323
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 1.1437714099884033
      spin: !<python/numpy/float64> 0.07175767794251442
-  crosstrack_error: -0.29950087542539633
+  crosstrack_error: -0.29950087542539616
   episode_steps: 41
   num_steps: 41
   omega_reward: -0.14351535588502884
-  phi_error: !<python/numpy/float64> 0.031631218031582975
+  phi_error: !<python/numpy/float64> 0.03163121803158281
   prev_action: *id001
   prev_closest_index: 73
-  reward: 7.377706740884322
+  reward: 7.377706740884323
   total_ep_reward: 300.2539847489659
   vel_error: !<python/numpy/float64> -0.14377140998840332
   vel_reward: -0.0018525123596191406
@@ -67,11 +67,11 @@ normal_output:
      velocity: 1.1437714099884033
      spin: 0.07175767794251442
      unknown: 0.0
-  prev_angle: 6.61635928326371
+  prev_angle: 0.33317397608412447
   pose: !python/named_tuple/PoseEntry
      x: 10.72201547204006
      y: 0.6329155448260183
-     angle: 6.620664743940261
+     angle: 0.3374794367606753
   is_episode_start: 0
   closest_distance: 0.37453975014537255
   closest_index: 73
@@ -399,12 +399,12 @@ normal_output:
   - !python/named_tuple/SpacialHistory
     x: 10.657163010299005
     y: 0.6104717228691888
-    angle: 6.61635928326371
+    angle: 0.33317397608412447
     velocity: 1.1437714099884033
     spin: 0.07175767794251442
     new_velocity: 1.1437714099884033
     new_spin: 0.07175767794251442
-- - -2.2148798120752966
+- - -2.2148798120752975
   - !<python/numpy/float64> -0.3570727296540911
   - !<python/numpy/float64> -0.1130446379813499
 ...

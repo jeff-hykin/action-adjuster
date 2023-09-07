@@ -15,22 +15,9 @@ from envs.warthog import read_waypoint_file
 
 
 from generic_tools.plotting import create_slider_from_traces
+from generic_tools.geometry import zero_to_2pi, pi_to_pi
 from __dependencies__.blissful_basics import FS
 from __dependencies__.grug_test import register_named_tuple
-
-def zero_to_2pi(theta):
-    if theta < 0:
-        theta = 2 * math.pi + theta
-    elif theta > 2 * math.pi:
-        theta = theta - 2 * math.pi
-    return theta
-
-def pi_to_pi(theta):
-    if theta < -math.pi:
-        theta = theta + 2 * math.pi
-    elif theta > math.pi:
-        theta = theta - 2 * math.pi
-    return theta
 
 def get_dist(waypoint, pose):
     xdiff = pose[0] - waypoint[0]
@@ -133,7 +120,7 @@ def pure_sim_warthog(
         pose = PoseEntry(
             x=float(old_x + old_v * math.cos(prev_angle) * action_duration),
             y=float(old_y + old_v * math.sin(prev_angle) * action_duration),
-            angle=float(prev_angle + old_w * action_duration),
+            angle=float(zero_to_2pi(prev_angle + old_w * action_duration)),
         )
     
     ep_poses.append(
@@ -462,6 +449,7 @@ class WarthogEnv(gym.Env):
             self.prev_timestamp = time.time()
             
             self.render_path = f"{config.output_folder}/render/"
+            print(f'''rendering to: {self.render_path}''')
             FS.remove(self.render_path)
             FS.ensure_is_folder(self.render_path)
             plt.ion

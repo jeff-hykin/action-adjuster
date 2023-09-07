@@ -119,6 +119,7 @@ class WarthogEnv(gym.Env):
             self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
             
             self.render_path = f"{config.output_folder}/render/"
+            print(f'''rendering to: {self.render_path}''')
             FS.remove(self.render_path)
             FS.ensure_is_folder(self.render_path)
             plt.ion

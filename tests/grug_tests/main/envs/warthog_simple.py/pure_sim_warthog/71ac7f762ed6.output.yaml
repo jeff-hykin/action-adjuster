@@ -9,7 +9,7 @@ normal_output: !python/named_tuple/SimWarthogOutput
    pose: !python/named_tuple/PoseEntry
       x: 8.66222787376898
       y: 0.1885148773967709
-      angle: 6.303334468464286
+      angle: 0.020149161284699346
    ep_poses:
    - !<python/numpy/ndarray>
      - 8.158568243985064

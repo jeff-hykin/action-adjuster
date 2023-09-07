@@ -45,7 +45,7 @@ normal_output:
   - !<python/numpy/float64> 0.05215054750442505
   - 0.947849452495575
   - 0.14262031763792038
-  reward: 7.773002294919534
+  reward: 7.773002294919532
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
@@ -56,10 +56,10 @@ normal_output:
   episode_steps: 15
   num_steps: 15
   omega_reward: -0.28524063527584076
-  phi_error: !<python/numpy/float64> 0.008262941772812837
+  phi_error: !<python/numpy/float64> 0.008262941772812976
   prev_action: *id001
   prev_closest_index: 70
-  reward: 7.773002294919534
+  reward: 7.773002294919532
   total_ep_reward: 112.42445713437229
   vel_error: !<python/numpy/float64> 0.05215054750442505
   vel_reward: -0.027271151542663574
@@ -67,11 +67,11 @@ normal_output:
      velocity: 0.947849452495575
      spin: 0.14262031763792038
      unknown: 0.0
-  prev_angle: 6.407361867512494
+  prev_angle: 0.12417656033290747
   pose: !python/named_tuple/PoseEntry
      x: 9.20237133828814
      y: 0.2309960864601542
-     angle: 6.415919086570769
+     angle: 0.1327337793911827
   is_episode_start: 0
   closest_distance: 0.2815897712118331
   closest_index: 71
@@ -191,7 +191,7 @@ normal_output:
   - !python/named_tuple/SpacialHistory
     x: 9.145938277985975
     y: 0.22395218062046762
-    angle: 6.407361867512494
+    angle: 0.12417656033290747
     velocity: 0.947849452495575
     spin: 0.14262031763792038
     new_velocity: 0.947849452495575

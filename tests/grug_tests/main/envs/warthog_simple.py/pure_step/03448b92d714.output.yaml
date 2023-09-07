@@ -3,12 +3,12 @@ traceback: ''
 normal_output:
 - !python/named_tuple/StepOutput
   observation:
-  - 0.2583372301883282
+  - 0.25833723018832827
   - -1.3680947959677683
   - !<python/numpy/float64> -0.020875386734729634
   - !<python/numpy/float64> -0.01911187171936035
   - 0.8424387789284009
-  - -0.324542545099904
+  - -0.3245425450999049
   - !<python/numpy/float64> 0.16367080762208608
   - !<python/numpy/float64> -0.01911187171936035
   - 1.3381151670049263
@@ -16,7 +16,7 @@ normal_output:
   - !<python/numpy/float64> 0.20723854689353283
   - !<python/numpy/float64> -0.01911187171936035
   - 2.0600448589888054
-  - -0.013203301181197724
+  - -0.013203301181197752
   - !<python/numpy/float64> 0.08384119054687389
   - !<python/numpy/float64> -0.01911187171936035
   - 2.5787976939041513
@@ -52,11 +52,11 @@ normal_output:
   action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 1.0191118717193604
      spin: !<python/numpy/float64> 0.25695981457829475
-  crosstrack_error: -0.2530481088567636
+  crosstrack_error: -0.25304810885676365
   episode_steps: 16
   num_steps: 16
   omega_reward: -0.5139196291565895
-  phi_error: !<python/numpy/float64> -0.020875386734729773
+  phi_error: !<python/numpy/float64> -0.020875386734729634
   prev_action: *id001
   prev_closest_index: 71
   reward: 7.448761106952075
@@ -67,13 +67,13 @@ normal_output:
      velocity: 1.0191118717193604
      spin: 0.25695981457829475
      unknown: 0.0
-  prev_angle: 6.429639826203614
+  prev_angle: 0.14645451902402762
   pose: !python/named_tuple/PoseEntry
      x: 9.271300091985282
-     y: 0.24135823935393325
-     angle: 6.4450574150783115
+     y: 0.24135823935393327
+     angle: 0.1618721078987253
   is_episode_start: 0
-  closest_distance: 0.2583372301883282
+  closest_distance: 0.25833723018832827
   closest_index: 71
   ep_poses:
   - !<python/numpy/ndarray>
@@ -198,13 +198,13 @@ normal_output:
     - 0.14262031763792038
   - !python/named_tuple/SpacialHistory
     x: 9.21080797405542
-    y: 0.23243500598002198
-    angle: 6.429639826203614
+    y: 0.232435005980022
+    angle: 0.14645451902402762
     velocity: 1.0191118717193604
     spin: 0.25695981457829475
     new_velocity: 1.0191118717193604
     new_spin: 0.25695981457829475
 - - -1.3680947959677683
-  - !<python/numpy/float64> -0.24135823935393325
+  - !<python/numpy/float64> -0.24135823935393327
   - !<python/numpy/float64> 0.09211039462159931
 ...
