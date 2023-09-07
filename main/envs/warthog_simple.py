@@ -475,10 +475,10 @@ class WarthogEnv(gym.Env):
             self.text = self.ax.text(1, 2, f"vel_error={self.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
             x = []
             y = []
-            for each_waypoint in self.waypoints_list:
-                x.append(each_waypoint[0])
-                y.append(each_waypoint[1])
-            self.ax.plot(x, y, "+r")
+            for each_x, each_y, *_ in self.waypoints_list:
+                x.append(each_x)
+                y.append(each_y)
+            self.ax.plot(x, y, "+b")
         
         self.reset()
     
@@ -526,7 +526,8 @@ class WarthogEnv(gym.Env):
         # if self.max_vel >= 5:
             # self.max_vel = 1
         if config.simulator.starting_waypoint == 'random':
-            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            assert self.number_of_waypoints > 21
+            index = np.random.randint(self.number_of_waypoints-20, size=1)[0]
         else:
             index = config.simulator.starting_waypoint
         self.closest_index = index
@@ -564,6 +565,22 @@ class WarthogEnv(gym.Env):
     def render(self, mode="human"):
         from matplotlib.patches import Rectangle
         
+        # plot all the points in blue
+        x = []
+        y = []
+        for each_x, each_y, *_ in self.waypoints_list:
+            x.append(each_x)
+            y.append(each_y)
+        self.ax.plot(x, y, "+b")
+        
+        # plot remaining points in red
+        x = []
+        y = []
+        for each_x, each_y, *_ in self.waypoints_list[self.closest_index:]:
+            x.append(each_x)
+            y.append(each_y)
+        self.ax.plot(x, y, "+r")
+            
         spacial_info_x = self.pose[0]
         spacial_info_y = self.pose[1]
         spacial_info_angle = self.pose[2]
@@ -586,7 +603,7 @@ class WarthogEnv(gym.Env):
         self.text = self.ax.text(
             spacial_info_x + 1,
             spacial_info_y + 2,
-            f"vel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
+            f"remaining_waypoints={len(self.waypoints_list[self.closest_index:])},\nvel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,

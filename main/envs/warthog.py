@@ -591,7 +591,8 @@ class WarthogEnv(gym.Env):
         
         index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
-            index = np.random.randint(self.number_of_waypoints, size=1)[0]
+            assert self.number_of_waypoints > 21
+            index = np.random.randint(self.number_of_waypoints-20, size=1)[0]
             
         # if position is overriden by (most likely) the real world position
         if type(override_next_spacial_info) != type(None):
@@ -638,6 +639,23 @@ class WarthogEnv(gym.Env):
         return self.prev_observation
 
     def render(self, mode="human"):
+            
+        # plot all the points in blue
+        x = []
+        y = []
+        for each_x, each_y, *_ in self.waypoints_list:
+            x.append(each_x)
+            y.append(each_y)
+        self.ax.plot(x, y, "+b")
+        
+        # plot remaining points in red
+        x = []
+        y = []
+        for each_x, each_y, *_ in self.waypoints_list[self.prev_closest_index:]:
+            x.append(each_x)
+            y.append(each_y)
+        self.ax.plot(x, y, "+r")
+        
         self.ax.set_xlim([self.spacial_info.x - self.render_axis_size / 2.0, self.spacial_info.x + self.render_axis_size / 2.0])
         self.ax.set_ylim([self.spacial_info.y - self.render_axis_size / 2.0, self.spacial_info.y + self.render_axis_size / 2.0])
         total_diag_ang = self.diagonal_angle + self.spacial_info.angle
