@@ -7,6 +7,7 @@ import math
 import random
 import functools
 import json
+import atexit
 
 from .__dependencies__.ez_yaml import yaml
 from .__dependencies__ import ez_yaml
@@ -274,6 +275,7 @@ if True:
                     raise error
                 return YamlPickled(obj)
 
+replay_inputs_at_end = []
 class GrugTest:
     """
         Example:
@@ -408,38 +410,37 @@ class GrugTest:
                 # replay inputs
                 # 
                 if self.replay_inputs and not self.has_been_tested.get(function_id, False):
-                    if self.verbose: print(f"replaying inputs for: {function_name}")
-                    decorator.replaying_inputs = True
-                    original_record_io_value = decorator.record_io
-                    for progress, path in ProgressBar(input_files, disable_logging=not self.verbose):
-                        progress.text = f" loading: {FS.basename(path)}"
-                        try:
-                            inputs = ez_yaml.to_object(file_path=path)
-                            args = inputs["args"]
-                            kwargs = inputs["kwargs"]
+                    def replay_inputs():
+                        if self.verbose: print(f"replaying inputs for: {function_name}")
+                        decorator.replaying_inputs = True
+                        for progress, path in ProgressBar(input_files, disable_logging=not self.verbose):
+                            progress.text = f" loading: {FS.basename(path)}"
+                            with ErrorCatcher() as error_catcher:
+                                inputs = ez_yaml.to_object(file_path=path)
+                                args = inputs["args"]
+                                kwargs = inputs["kwargs"]
+                                
+                                # args, kwargs = ez_yaml.to_object(file_path=path)["pickled_args_and_kwargs"]
+                                output, the_error = self.record_output(
+                                    function_being_wrapped,
+                                    args,
+                                    kwargs,
+                                    path=path[0:-len(self.input_file_extension)] + self.output_file_extension,
+                                    function_name=function_name,
+                                    source=source,
+                                    verbose=True,
+                                )
                             
-                            # args, kwargs = ez_yaml.to_object(file_path=path)["pickled_args_and_kwargs"]
-                            output, the_error = self.record_output(
-                                function_being_wrapped,
-                                args,
-                                kwargs,
-                                path=path[0:-len(self.input_file_extension)] + self.output_file_extension,
-                                function_name=function_name,
-                                source=source,
-                                verbose=True,
-                            )
-                        except Exception as error:
-                            # corrupted file
-                            if FS.read(path) == "":
-                                FS.remove(path)
-                                continue
-                            
-                            if self.verbose:
-                                print(f"\n\ncorrupted_input: {path}\n    {error}")
-                            else:
-                                warn(f"\n\ncorrupted_input: {path}\n    {error}")
-                    decorator.replaying_inputs = False
-                    self.has_been_tested[function_id] = True
+                            if error_catcher.error:
+                                # corrupted file
+                                if FS.read(path) == "":
+                                    FS.remove(path)
+                                    continue
+                                
+                                print(f"\n    corrupted_input: {path}\n{indent(indent(traceback_to_string(error_catcher.traceback)))}")
+                        decorator.replaying_inputs = False
+                        self.has_been_tested[function_id] = True
+                    replay_inputs_at_end.append(replay_inputs)
             
             @functools.wraps(function_being_wrapped) # fixes the stack-trace to make the decorator invisible
             def wrapper(*args, **kwargs):
@@ -556,11 +557,12 @@ class GrugTest:
         # encase its a folder for some reason
         FS.remove(path)
         try:
+            traceback_string = traceback_to_string(error_catcher.traceback).strip()
             ez_yaml.to_file(
                 file_path=path,
                 obj={
                     "error_output": repr(the_error),
-                    "traceback": traceback_to_string(error_catcher.traceback),
+                    "traceback": "" if len(traceback_string) == 0 else ez_yaml.ruamel.yaml.scalarstring.LiteralScalarString(traceback_string),
                     "normal_output": to_yaml(output),
                 },
                 settings=dict(
@@ -595,3 +597,10 @@ def _get_path_of_caller(*paths):
     else:
         # See note at the top
         return FS.join(intial_cwd, directory, *paths)
+
+
+
+@atexit.register
+def eventually():
+    for each in replay_inputs_at_end:
+        each()
