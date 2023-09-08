@@ -1,4 +1,6 @@
 error_output: None
+traceback: ''
 normal_output:
-- 0
-- 0.1414213562373065
+- 1
+- 0.06588365684039832
+...

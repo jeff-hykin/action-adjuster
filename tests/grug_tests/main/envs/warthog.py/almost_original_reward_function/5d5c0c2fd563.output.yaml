@@ -1,6 +1,8 @@
 error_output: None
+traceback: ''
 normal_output:
 - 100
-- !<python/numpy/int64> -0.5892587900161743
+- !<python/numpy/float64> -0.5892587900161743
 - -1.2032473720340424
-- !<python/numpy/int64> 0.0387792381644223
+- !<python/numpy/float64> 0.0387792381644223
+...

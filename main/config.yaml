@@ -174,7 +174,7 @@
                 # random start
                 # 
                 random_start_position_offset: 0.1 # TODO: units?
-                random_start_angle_offset: 0.10 # TODO: units?
+                random_start_angle_offset: 0.01 # TODO: units?
                 
                 # 
                 # action adversity

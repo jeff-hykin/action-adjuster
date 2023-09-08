@@ -1,9 +1,10 @@
 error_output: None
-normal_output: !python/pickled "envs.warthog.SpacialInformation:\0\x04\x15b\0\0\0\r\
-   \0\0\0\0\f\fe\x10nvs.war\0thog\x14\f\x120Spacial\0Informa\0tion\x14\x13\x14p(\f\
-   \x15nump\x02y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\x05nump\x03\
-   y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\x01\"<\x14\
-   NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\bT>yy\x01,Da?\x14\x06\x14\
-   R\x14]h\x05h\vC\b0@P!BcpI?2\x14\x06\x14R\x14h\x05\x17h\vC\b7\x1E\x05P\e\x1CdT?\x14\
-   \x06j\x14R\x14h\x05h\v\x05C\b\0\0\0 \r`R\x04@\x14\x06\x14R8\x14h\x05h\vC\b\x01\x01\
-   \0\0\0\x1F\vC`?\x14\x06\x14R\x14K.\x05t\x14\x01\x14.\0\x1C\x01"
+traceback: ''
+normal_output: !python/named_tuple/SpacialInformation
+   x: !<python/numpy/float64> 0.44352449700915053
+   y: !<python/numpy/float64> 0.16733443731776057
+   angle: !<python/numpy/float64> 0.31176999330520627
+   velocity: !<python/numpy/int64> 0
+   spin: !<python/numpy/float64> 0.0
+   timestep: 5
+...
