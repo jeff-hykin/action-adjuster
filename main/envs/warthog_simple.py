@@ -11,7 +11,7 @@ import gym
 import matplotlib as mpl
 import numpy as np
 from config import grug_test, path_to, config
-from envs.warthog import read_waypoint_file
+from envs.warthog import read_waypoint_file, SpacialInformation
 
 
 from generic_tools.plotting import create_slider_from_traces
@@ -98,23 +98,31 @@ if True:
 
 
 @grug_test(max_io=30, skip=False)
-def pure_sim_warthog(
-    v, 
-    w, 
-    pose,
-    twist,
+def generate_next_spacial_info(
+    old_spacial_info,
+    relative_velocity,
+    relative_spin,
     action_duration,
-    prev_angle,
     ep_poses,
     **kwargs,
 ):
+    pose = PoseEntry(
+        x=old_spacial_info.x,
+        y=old_spacial_info.y,
+        angle=old_spacial_info.angle,
+    )
+    twist = TwistEntry(
+        velocity=old_spacial_info.velocity,
+        spin=old_spacial_info.spin,
+        unknown=None,
+    )
     effective_action_duration = action_duration/config.simulator.granularity_of_calculations
     for each in range(config.simulator.granularity_of_calculations):
         old_x, old_y, prev_angle = pose
         old_v, old_w, *unknown = twist
         twist = TwistEntry(
-            velocity=float(v),
-            spin=float(w),
+            velocity=float(relative_velocity),
+            spin=float(relative_spin),
             unknown=(None if len(unknown) == 0 else unknown[0]),
         )
         pose = PoseEntry(
@@ -130,8 +138,8 @@ def pure_sim_warthog(
             angle=float(prev_angle),
             velocity=float(old_v),
             spin=float(old_w),
-            new_velocity=float(v),
-            new_spin=float(w),
+            new_velocity=float(relative_velocity),
+            new_spin=float(relative_spin),
         )
     )
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses)
@@ -298,13 +306,18 @@ def pure_step(
         np.clip(action[0], 0, 1) * 4.0,
         np.clip(action[1], -1, 1) * 2.5,
     )
-    twist, prev_angle, pose, ep_poses = pure_sim_warthog(
-        v=action[0],
-        w=action[1],
-        pose=pose,
-        twist=twist,
+    twist, prev_angle, pose, ep_poses = generate_next_spacial_info(
+        old_spacial_info=SpacialInformation(
+            x=pose.x,
+            y=pose.y,
+            angle=pose.angle,
+            velocity=twist.velocity,
+            spin=twist.spin,
+            timestep=episode_steps,
+        ),
+        relative_velocity=action.velocity,
+        relative_spin=action.spin,
         action_duration=action_duration,
-        prev_angle=prev_angle,
         ep_poses=ep_poses,
     )
     is_episode_start = 0

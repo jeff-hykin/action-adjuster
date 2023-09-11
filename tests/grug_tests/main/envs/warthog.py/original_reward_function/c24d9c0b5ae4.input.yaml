@@ -1,0 +1,18 @@
+args: []
+kwargs:
+   spacial_info: !python/named_tuple/SpacialInformation
+      x: !<python/numpy/float64> 21.26595243917135
+      y: !<python/numpy/float64> 9.316327176888954
+      angle: !<python/numpy/float64> 1.0312577889220218
+      velocity: 2.2712
+      spin: 1.4195
+      timestep: 4
+   closest_distance: 1.8618809769818614
+   relative_velocity: 0.5678
+   prev_relative_velocity: 0.567
+   relative_spin: 0.5678
+   prev_relative_spin: 0.567
+   closest_waypoint: !python/warthog/Waypoint '{"x": 19.42352278274484, "y": 9.584755442105234, "angle": 2.9103159825827385, "velocity": 1.85917827057943}'
+   closest_relative_index: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15\x02\x02\0\0\x05\0\0\0\0)}\x14@(\f\fspac\x02ial_inf\0o\x14\f\fenv\x06s.warth\0og\x14\f\x12Sp\facialIn\0formati\0on\x14\x13\x14(\f\\\x15numpy.\0core.mu\0ltiarra\0y\x14\f\x06sca\x06lar\x14\x13\x14\fx\x05numpy\x14@\f\x05dtype\x01\x14\x13\x14\f\x02f8\x0F\x14\t\b\a\x14R\x14_(K\x03\f\x01<\x14HNNNJ\x7F\x7F\x7Fp\x7FJ\x7F\x7F\x7F\x7FK=\0t\x14bC\bJ\x04\b\x04u\x15D5@\x03\x14\x06\x14R\x14h\a\x17h\rC\bl%?P\"u!\"@\x14\x06g\x14R\x14h\ah\r\x05C\bK%R*\b\x18\0p?\x14\x06\x14R;\x14G@\x02+jgAUfOG?v6eE!J@\x03K\x04\x1Et\x14\x01\x14\f\x10c\x1Elosest_\0distanc\0e\x14G?}JC25\x12gn\f\x11r\x1Delative\0_veloci\0ty\x14G?b+$jgUfO\f\x166prev_re\0lative_\0velocit\0y\x14G?b$]R/\x1A\x1F>\f\rr\x1Celative\0_spin\x14G ?b+jgUf2O\f\x12prev\x03_relati\0ve_spin\0\x14G?b$]/)\x1A\x1F>\f\x10cl\x0Eosest_w\0aypoint\0\x14h\x05\f\f_r\teconstr\0uct\x14\x13\x14h8\x02\f\bWayp\x02oint\x14\x13\x14pK\0\x05\x14C\x01b\f\x14\a\x14R\x14(K\x17\x01K\x04\x05\x14h\r\x18\tC \0\05}Akl3@\0\08@\x10e+#@r@@q>SH\a@lC(Y61?}?6\x14t\x14b\f\x16c\x15losest_\0relativ\0e_index\0\x14K\x01u\x06\x14.1\0"
+...

@@ -1,0 +1,15 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: 108.54849000640368
+      y: 0.1
+      angle: 0.01
+      velocity: 0
+      spin: 0
+      timestep: 1
+   relative_velocity: !<python/numpy/float64> 2.0
+   relative_spin: !<python/numpy/float64> 1.25
+   action_duration: 0.06
+   ep_poses: []
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15i\x04\0\0\x05\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\fenvs.w\0arthog\x14@\f\x12Spaci\x01alInfor\0mation\x14@\x13\x14(\f\\__\vdepende\0ncies__\0.grug_t\0est.__d\0ependen\0cies__.\0ez_yaml\0.__depe\0ndencie\0s__.rua\0mel.yam\0l.scala\0rfloat\x14@\f\vScala\x01rFloat\x14@\x13\x14G@[#\x1A\x03uSkr\x05\x14\x01~\x14}\x14(\f\x06_\x15width\x14K \x12\f\x05_pre\x02c\x14K\x03\f\a_\x12m_sign\x14@\t\f\b_m_l\x03ead0\x14K\0\x10\f\x04_exp\x14AN\f\b_e_w\x02idth\x14N\fP\a_e_sig\0n\x14N\f\v_u\nndersco\0re\x14N\f\f_\x14yaml_an\0chor\x14\fW0__depen\0dencies\0__.grug\0_test._\0_depend\0encies_\0_.ez_ya\0ml.__de\0pendenc\0ies__.r\0uamel.y\0aml.anc\0hor\x14\f\x06A\x18nchor\x14\x13`\x14)\x01\x14N}\x14M(\f\x05valu\x02e\x14N\f\val\nways_du\0mp\x14\tu\x06\x14lbubh\aG?\09\x19\x19\x19\x19\x19\x1A\x7F\x05\x14\x01\x14}\x14(/h\vK\x03h\fK\0\x01h\r\th\x0EK\b\x01h\x0FNh\x10N\0h\x11Nh\x12Nh\0\x13h\x16)\x01\x14N0}\x14(h\x19Nh\x02\x1A\tu\x06\x14bu\x1Abh\aG?\x04z aG.\x14{\x05\x14e\x01\x14}\x14(h\v\vK\x04h\fK\x01h\0\r\th\x0EK\x02h\x02\x0FNh\x10Nh\x11\0Nh\x12Nh\x13h\0\x16)\x01\x14N}\x14L(h\x19Nh\x1A\t@u\x06\x14bubK\x06\0K\0K\x01t\x14@\x01\x14\f\x11rel\aative_v\0elocity\0\x14\f\x15nump\x03y.core.\0multiar\0ray\x14\f\x06s\x18calar\x14\x13`\x14\f\x05nump\x03y\x14\f\x05dty\x06pe\x14\x13\x14\f\x02<f8\x14\t\b\a\x14|R\x14(K\x03\f\x01\"<\x14NNNJ\x7FB\x7F\x7F\x7FJ\x7F\x7F\x7Fw\x7FK\0t\x14bC\x11\b\0\0\0\0\0\0\0\0@\x14\x06\x14R\x14\\\f\rrelat\x01ive_spi\0n\x14h-h3C\x02\b\0\0\0\0\0\0\0t?\x14\x06\x14R\x14]\f\x0Factio\x01n_durat\0ion\x14h\aG\b?.8Qk\x05\x1E68\x05\x14\x01\x14}\x14_(h\vK\x04h\f\0K\x01h\r\th\x0E\x10K\x02h\x0FNh\x10\0Nh\x11Nh\x12N\0h\x13h\x16)\x01\x14`N}\x14(h\x19N\x04h\x1A\tu\x06\x14b4ub\f\bep_\x04poses\x14\f`Y__depe\0ndencie\0s__.gru\0g_test.\0__depen\0dencies\0__.ez_y\0aml.__d\0ependen\0cies__.\0ruamel.\0yaml.co\0mments\x14@\f\fComme\x01ntedSeq\0\x14\x13\x14)\x01\x14}7\x14(\f\x0E_ya\x05ml_line\0_col\x14hE\x10\f\aLineC\x01ol\x14\x13\x14)\x01\\\x14}\x14(\f\x04l\x15ine\x14K\t\fH\x03col\x14K\r\x10\f\x04data\x14ANubh\x13h\x16\0)\x01\x14N}\x14(&h\x19Nh\x1A\tu \x06\x14b\f\t_y\vaml_tag\0\x14hE\f\x03Ta\tg\x14\x13\x14)\x01\x14nN}\x14h\x19Ns\x04\x06\x14b\f\f_y\vaml_for\0mat\x14hE\fH\x06Format\0\x14\x13\x14)\x01\x14N7}\x14\f\v_fl\x06ow_styl\0e\x14Ns\x06\x14b2ubu\x06\x14.\0\x18\x01"
+...
