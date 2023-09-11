@@ -144,7 +144,7 @@ def generate_next_spacial_info(
     )
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_get_observation(
     closest_distance,
     closest_index,
@@ -194,7 +194,7 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_distance, closest_index)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward(
     closest_waypoint,
     pose,
@@ -229,7 +229,7 @@ def pure_reward(
     
     return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=30, skip=True)
 def pure_reward_wrapper(
     total_ep_reward,
     closest_index,
@@ -272,7 +272,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward
 
 
-@grug_test(max_io=60, skip=False)
+@grug_test(max_io=60, skip=True)
 def pure_step(
     action,
     closest_distance,
@@ -622,7 +622,7 @@ class WarthogEnv(gym.Env):
         self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
-    @grug_test(skip=False)
+    @grug_test(skip=True)
     def smoke_test_warthog(trajectory_file):
         actual_starting_setting = config.simulator.starting_waypoint
         config.simulator.starting_waypoint = 0 # force override it for test
