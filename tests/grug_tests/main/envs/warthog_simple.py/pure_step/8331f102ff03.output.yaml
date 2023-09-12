@@ -49,17 +49,15 @@ normal_output:
   done: false
   debug: {}
 - !python/named_tuple/StepSideEffects
-  action: !python/named_tuple/Action
-     velocity: 0.5678
-     spin: 0.5678
+  action: &id001 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.2712
+     spin: !<python/numpy/float64> 1.4195
   crosstrack_error: -0.34623224024908394
   episode_steps: 4
   num_steps: 4
   omega_reward: -2.839
   phi_error: !<python/numpy/float64> -1.2381009611105922
-  prev_action: !python/named_tuple/Action
-     velocity: !<python/numpy/float64> 2.2712
-     spin: !<python/numpy/float64> 1.4195
+  prev_action: *id001
   prev_closest_index: 31
   reward: -4.1741567290737756
   total_ep_reward: -3.876576009661078

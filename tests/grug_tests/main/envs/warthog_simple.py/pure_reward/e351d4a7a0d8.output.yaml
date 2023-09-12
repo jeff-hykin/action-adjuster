@@ -1,8 +1,0 @@
-error_output: None
-traceback: ''
-normal_output: !python/named_tuple/RewardOutput
-   running_reward: 7.5158285765392865
-   velocity_error: !<python/numpy/float64> 0.04132658243179321
-   crosstrack_error: -0.25220746040828096
-   phi_error: !<python/numpy/float64> -0.04830518721533483
-...

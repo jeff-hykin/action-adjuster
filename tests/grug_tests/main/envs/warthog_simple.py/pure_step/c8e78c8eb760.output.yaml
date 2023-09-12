@@ -1,8 +1,0 @@
-error_output: AttributeError("'CommentedSeq' object has no attribute 'x'")
-traceback: |-
-   File "/Users/jeffhykin/repos/action-adjuster/__dependencies__/grug_test/__init__.py", line 551, in record_output
-       with ErrorCatcher() as error_catcher:
-     File "/Users/jeffhykin/repos/action-adjuster/main/envs/warthog_simple.py", line 316, in pure_step
-       x=pose.x,
-normal_output: null
-...
