@@ -1,0 +1,23 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: 21.19914378444955
+      y: 9.199516588491827
+      angle: 0.9483302889220215
+      velocity: 2.0
+      spin: 1.25
+      timestep: 2
+   relative_velocity: 0.56
+   relative_spin: 0.56
+   action_duration: 0.06
+   ep_poses:
+   - !python/named_tuple/SpacialHistory
+     x: 21.12207047965822
+     y: 9.107539930102087
+     angle: 0.8733302889220216
+     velocity: 2.0
+     spin: 1.25
+     new_velocity: 2.0
+     new_spin: 1.25
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15A\x01\0\0\x05\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\fenvs.w\0arthog\x14@\f\x12Spaci\x01alInfor\0mation\x14@\x13\x14(G@52\x03{\x16Ii\x19G@\x11\"f'\tM)mPG?nX8C\x174=vG@\0\0\0\x02\0\0\0\0G?t@\0\0\0\0\0\0K\0\x02t\x14\x01\x14\f\x11<relativ\0e_veloc\0ity\x14G?aHk\x05\x1E8Ql\fk\rrelati\0ve_spin\0\x14G?ak\x05\x1E98Ql\f\x0Fac\rtion_du\0ration\x14@G?.8Qk\x05l\x1E8\f\bep_\x06poses\x14] \x14\f\x13envs\x03.wartho\0g_simpl\0e\x14\f\x0ESpa\x06cialHis\0tory\x14\x13\x14p(G@5\x1F@\x02\0MphG@\"7\x03\x0FyE\x1AmG?\x18krR\\0W\x10sG@\0\0\0\0\0\0\0\0G?t\0\0\x10\0\0\0\0G@\0\0\0\0\0\0\0\0G\0?t\0\0\0\0\0\x02\0t\x14\x01\x14au\x1C\x06\x14.\0\0\0\0\x03\x04"
+...

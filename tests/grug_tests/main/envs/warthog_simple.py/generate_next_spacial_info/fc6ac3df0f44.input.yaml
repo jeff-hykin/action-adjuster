@@ -1,0 +1,39 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: 109.81157147575064
+      y: 0.6563900002231512
+      angle: 0.9011499999999999
+      velocity: 2.268
+      spin: 1.4175
+      timestep: 4
+   relative_velocity: 0.5678
+   relative_spin: 0.5678
+   action_duration: 0.06
+   ep_poses:
+   - !python/named_tuple/SpacialHistory
+     x: 108.78805076739395
+     y: 0.11138770193638992
+     angle: 0.15999999999999998
+     velocity: 2.0
+     spin: 1.25
+     new_velocity: 2.0
+     new_spin: 1.25
+   - !python/named_tuple/SpacialHistory
+     x: 109.27531578858857
+     y: 0.25104106972873297
+     angle: 0.47800000000000004
+     velocity: 2.24
+     spin: 1.4000000000000001
+     new_velocity: 2.24
+     new_spin: 1.4000000000000001
+   - !python/named_tuple/SpacialHistory
+     x: 109.71834749300292
+     y: 0.5572584944308271
+     angle: 0.8160999999999999
+     velocity: 2.268
+     spin: 1.4175
+     new_velocity: 2.268
+     new_spin: 1.4175
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15N\x01\0\0\r\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\fenvs.w\0arthog\x14@\f\x12Spaci\x01alInfor\0mation\x14@\x13\x14(G@[s\x03pI|-JG?\ee\x01%\x1A\f'_IG?lV8\x06Y,JtG@\x02$]B/\x1A\x1F>G?vL.\x14zaG.K)\x04t\x14\x01\x14\f\x11<relativ\0e_veloc\0ity\x14G?bH+jgUfO\fl\rrelati\0ve_spin\0\x14G?b+jgIUfO\f\x0Fac\rtion_du\0ration\x14@G?.8Qk\x05l\x1E8\f\bep_\x06poses\x14] \x14(\f\x13env\x05s.warth\0og_simp\0le\x14\f\x0ESp\facialHi\0story\x14\x13`\x14(G@[2o\x01l|b]G?<H\x03g\b~NXG/?DzaG.\x14*zG@\0\0\0\0\0\0\0\0G?t\0 \0\0\0\0\0G@\0\0\0\0\0\0\0\0\0G?t\0\0\0\0\x04\0\0t\x14\x01\x14h8\x0E(G@[Q\x1E@F\x1D\x03]G?PI\x11\x0E\x10\x1C\x04RG\x04?^\x17\rO_;.eG@\x01k\x05\x1E08QlG?vf%ffffgG@\0\x01k\x05\x1E8QlVG?vffff\x04fgt\x14\x01\x14h8\x0E(G@[my@gCg\x1DG?aBU\x0FD\x1Ft\tG5?j\x1D}?H\x7F\x12KG@\x02$]/!\x1A\x1F>G?v.f\x14zaG.G@\x14\x02$]/\x1A\x1F>dG?v.\x14zaLG.t\x14\x01\x14e:u\x06\x14.\0\0\0\x06\x03"
+...

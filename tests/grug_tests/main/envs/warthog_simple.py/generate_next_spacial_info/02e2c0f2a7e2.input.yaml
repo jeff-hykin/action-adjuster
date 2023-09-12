@@ -1,0 +1,15 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: 108.54849000640368
+      y: 0.1
+      angle: 0.01
+      velocity: 0
+      spin: 0
+      timestep: 1
+   relative_velocity: 0.5
+   relative_spin: 0.5
+   action_duration: 0.06
+   ep_poses: []
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15v\x04\0\0\x05\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\fenvs.w\0arthog\x14@\f\x12Spaci\x01alInfor\0mation\x14@\x13\x14(\f\\__\vdepende\0ncies__\0.grug_t\0est.__d\0ependen\0cies__.\0ez_yaml\0.__depe\0ndencie\0s__.rua\0mel.yam\0l.scala\0rfloat\x14@\f\vScala\x01rFloat\x14@\x13\x14G@[#\x1A\x03uSkr\x05\x14\x01~\x14}\x14(\f\x06_\x15width\x14K \x12\f\x05_pre\x02c\x14K\x03\f\a_\x12m_sign\x14@\t\f\b_m_l\x03ead0\x14K\0\x10\f\x04_exp\x14AN\f\b_e_w\x02idth\x14N\fP\a_e_sig\0n\x14N\f\v_u\nndersco\0re\x14N\f\f_\x14yaml_an\0chor\x14\fW0__depen\0dencies\0__.grug\0_test._\0_depend\0encies_\0_.ez_ya\0ml.__de\0pendenc\0ies__.r\0uamel.y\0aml.anc\0hor\x14\f\x06A\x18nchor\x14\x13`\x14)\x01\x14N}\x14M(\f\x05valu\x02e\x14N\f\val\nways_du\0mp\x14\tu\x06\x14lbubh\aG?\09\x19\x19\x19\x19\x19\x1A\x7F\x05\x14\x01\x14}\x14(/h\vK\x03h\fK\0\x01h\r\th\x0EK\b\x01h\x0FNh\x10N\0h\x11Nh\x12Nh\0\x13h\x16)\x01\x14N0}\x14(h\x19Nh\x02\x1A\tu\x06\x14bu\x1Abh\aG?\x04z aG.\x14{\x05\x14e\x01\x14}\x14(h\v\vK\x04h\fK\x01h\0\r\th\x0EK\x02h\x02\x0FNh\x10Nh\x11\0Nh\x12Nh\x13h\0\x16)\x01\x14N}\x14L(h\x19Nh\x1A\t@u\x06\x14bubK\x06\0K\0K\x01t\x14@\x01\x14\f\x11rel\aative_v\0elocity\0\x14h\aG?`\0!\0\0\0\0\0\x05\x14`\x01\x14}\x14(h\v\vK\x03h\fK\x01h\0\r\th\x0EK\x01h\x02\x0FNh\x10Nh\x11\0Nh\x12Nh\x13h\0\x16)\x01\x14N}\x14L(h\x19Nh\x1A\t@u\x06\x14bub\fF\rrelati\0ve_spin\0\x14h\aG?`\0!\0\0\0\0\0\x05\x14`\x01\x14}\x14(h\v\vK\x03h\fK\x01h\0\r\th\x0EK\x01h\x02\x0FNh\x10Nh\x11\0Nh\x12Nh\x13h\0\x16)\x01\x14N}\x14L(h\x19Nh\x1A\t@u\x06\x14bub\fF\x0Faction\0_durati\0on\x14h\aG?\x04.8Qk\x05\x1E8[\x05\x14\x01\x14}\x14(/h\vK\x04h\fK\0\x01h\r\th\x0EK\b\x02h\x0FNh\x10N\0h\x11Nh\x12Nh\0\x13h\x16)\x01\x14N0}\x14(h\x19Nh\x02\x1A\tu\x06\x14bu\x1Ab\f\bep_p\x02oses\x14\fY0__depen\0dencies\0__.grug\0_test._\0_depend\0encies_\0_.ez_ya\0ml.__de\0pendenc\0ies__.r\0uamel.y\0aml.com\0ments\x14\f`\fCommen\0tedSeq\x14@\x13\x14)\x01\x14}\x14[(\f\x0E_yam\x02l_line_\0col\x14h@\fH\aLineCo\0l\x14\x13\x14)\x01\x14n}\x14(\f\x04li\nne\x14K\t\f\x03$col\x14K\r\fH\x04data\x14N ubh\x13h\x16)\0\x01\x14N}\x14(h\x13\x19Nh\x1A\tu\x06P\x14b\f\t_ya\x05ml_tag\x14@h@\f\x03Tag\x04\x14\x13\x14)\x01\x14N7}\x14h\x19Ns\x06B\x14b\f\f_ya\x05ml_form\0at\x14h@\f\x06$Format\x14@\x13\x14)\x01\x14N}\e\x14\f\v_flo\x03w_style\0\x14Ns\x06\x14bu\x19bu\x06\x14.\0\0\f\x02"
+...

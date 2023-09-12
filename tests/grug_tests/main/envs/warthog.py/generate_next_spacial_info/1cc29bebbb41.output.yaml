@@ -1,0 +1,10 @@
+error_output: None
+traceback: ''
+normal_output: !python/named_tuple/SpacialInformation
+   x: !<python/numpy/float64> 21.04268223184473
+   y: !<python/numpy/float64> 9.032751087009473
+   angle: !<python/numpy/float64> 0.8163302889220215
+   velocity: 2.24
+   spin: 1.4000000000000001
+   timestep: 2
+...
