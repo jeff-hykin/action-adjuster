@@ -1,38 +1,10 @@
 error_output: None
 traceback: ''
-normal_output: !python/named_tuple/SimWarthogOutput
-   twist: !python/named_tuple/TwistEntry
-      velocity: 2.268
-      spin: 1.4175
-      unknown: null
-   prev_angle: 0.8160999999999999
-   pose: !python/named_tuple/PoseEntry
-      x: 109.81157147575064
-      y: 0.6563900002231512
-      angle: 0.9011499999999999
-   ep_poses:
-   - !python/named_tuple/SpacialHistory
-     x: 108.78805076739395
-     y: 0.11138770193638992
-     angle: 0.15999999999999998
-     velocity: 2.0
-     spin: 1.25
-     new_velocity: 2.0
-     new_spin: 1.25
-   - !python/named_tuple/SpacialHistory
-     x: 109.27531578858857
-     y: 0.25104106972873297
-     angle: 0.47800000000000004
-     velocity: 2.24
-     spin: 1.4000000000000001
-     new_velocity: 2.24
-     new_spin: 1.4000000000000001
-   - !python/named_tuple/SpacialHistory
-     x: 109.71834749300292
-     y: 0.5572584944308271
-     angle: 0.8160999999999999
-     velocity: 2.268
-     spin: 1.4175
-     new_velocity: 2.268
-     new_spin: 1.4175
+normal_output: !python/named_tuple/SpacialInformation
+   x: 109.56946098534648
+   y: 0.43538091023824343
+   angle: 0.6955
+   velocity: 4
+   spin: 2.5
+   timestep: 4
 ...

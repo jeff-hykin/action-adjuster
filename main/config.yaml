@@ -1,8 +1,7 @@
 # NOTE: names in parentheses are special, all other names are not!
 (project):
     next_time:
-        - make spacial_info update a pure function for both and see whats causing them to be different after 1 timestep
-        - check with akhil if the traj of warthog_simple makes sense
+        - figure out why the pending change to warthog_simple changed the output of generate_next_spacial_info
     
     # a central place for filepaths
     (path_to):

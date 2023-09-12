@@ -417,6 +417,7 @@ class WarthogEnv(gym.Env):
                 relative_velocity: a value between 0 and 1, which will be scaled between 0 and controller_max_velocity
                 relative_spin: a value between -1 and 1, which will be scaled between 0 and controller_max_velocity
         '''
+        effective_action_duration = action_duration/config.simulator.granularity_of_calculations
         absolute_velocity = clip(relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity
         absolute_spin     = clip(relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
         
@@ -429,7 +430,7 @@ class WarthogEnv(gym.Env):
             timestep=old_spacial_info.timestep+1,
         )
         
-        effective_action_duration = action_duration/config.simulator.granularity_of_calculations
+        
         # granularity substeps, having at least 3 of these steps is important
         for each in range(config.simulator.granularity_of_calculations):
             old_absolute_velocity = old_spacial_info.velocity
