@@ -72,6 +72,7 @@ if True:
         "prev_angle",
         "pose",
         "ep_poses",
+        "absolute_action",
     ])
     PoseEntry = namedtuple('PoseEntry', [
         "x",
@@ -92,7 +93,7 @@ if True:
         "new_velocity",
         "new_spin",
     ])
-    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, SpacialHistory, PoseEntry]:
+    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, ]:
         register_named_tuple(each)
     
 
@@ -106,6 +107,11 @@ def generate_next_spacial_info(
     ep_poses,
     **kwargs,
 ):
+    absolute_action = Action(
+        np.clip(relative_velocity, 0, 1) * 4.0,
+        np.clip(relative_spin, -1, 1) * 2.5,
+    )
+    effective_action_duration = action_duration/config.simulator.granularity_of_calculations
     pose = PoseEntry(
         x=old_spacial_info.x,
         y=old_spacial_info.y,
@@ -116,13 +122,15 @@ def generate_next_spacial_info(
         spin=old_spacial_info.spin,
         unknown=None,
     )
-    effective_action_duration = action_duration/config.simulator.granularity_of_calculations
+    absolute_velocity = absolute_action.velocity
+    absolute_spin = absolute_action.spin
+    
     for each in range(config.simulator.granularity_of_calculations):
         old_x, old_y, prev_angle = pose
         old_v, old_w, *unknown = twist
         twist = TwistEntry(
-            velocity=float(relative_velocity),
-            spin=float(relative_spin),
+            velocity=float(absolute_velocity),
+            spin=float(absolute_spin),
             unknown=(None if len(unknown) == 0 else unknown[0]),
         )
         pose = PoseEntry(
@@ -138,11 +146,11 @@ def generate_next_spacial_info(
             angle=float(prev_angle),
             velocity=float(old_v),
             spin=float(old_w),
-            new_velocity=float(relative_velocity),
-            new_spin=float(relative_spin),
+            new_velocity=float(absolute_velocity),
+            new_spin=float(absolute_spin),
         )
     )
-    return SimWarthogOutput(twist, prev_angle, pose, ep_poses)
+    return SimWarthogOutput(twist, prev_angle, pose, ep_poses, absolute_action)
 
 @grug_test(max_io=30, skip=False)
 def pure_get_observation(
@@ -302,11 +310,8 @@ def pure_step(
 ):
     episode_steps = episode_steps + 1
     num_steps = num_steps + 1
-    action = Action(
-        np.clip(action[0], 0, 1) * 4.0,
-        np.clip(action[1], -1, 1) * 2.5,
-    )
-    twist, prev_angle, pose, ep_poses = generate_next_spacial_info(
+    relative_action = Action(*action)
+    twist, prev_angle, pose, ep_poses, absolute_action = generate_next_spacial_info(
         old_spacial_info=SpacialInformation(
             x=pose.x,
             y=pose.y,
@@ -315,8 +320,8 @@ def pure_step(
             spin=twist.spin,
             timestep=episode_steps,
         ),
-        relative_velocity=action.velocity,
-        relative_spin=action.spin,
+        relative_velocity=relative_action.velocity,
+        relative_spin=relative_action.spin,
         action_duration=action_duration,
         ep_poses=ep_poses,
     )
@@ -344,7 +349,7 @@ def pure_step(
         closest_distance=closest_distance,
         episode_steps=episode_steps,
         max_number_of_timesteps_per_episode=max_number_of_timesteps_per_episode,
-        action=action,
+        action=absolute_action,
         prev_action=prev_action,
         done=done,
     )
@@ -357,7 +362,7 @@ def pure_step(
             {}
         ),
         StepSideEffects(
-            action,
+            absolute_action,
             crosstrack_error,
             episode_steps,
             num_steps,
