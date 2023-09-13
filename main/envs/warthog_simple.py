@@ -546,10 +546,10 @@ class WarthogEnv(gym.Env):
         self.prev_mutated_relative_velocity  = self.mutated_relative_velocity
         self.prev_mutated_relative_spin      = self.mutated_relative_spin
         self.original_relative_velocity, self.original_relative_spin = action
-        self.absolute_action = [
-            clip(self.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
-            clip(self.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
-        ]
+        self.absolute_action = Action(
+            velocity=clip(self.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
+            spin=clip(self.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin,
+        )
         
         # 
         # logging and counter-increments
@@ -635,7 +635,7 @@ class WarthogEnv(gym.Env):
             timestep=self.episode_steps,
         )
         
-        twist, prev_angle, pose, ep_poses, absolute_action = generate_next_spacial_info(
+        self.twist, self.prev_angle, self.pose, ep_poses, _ = generate_next_spacial_info(
             old_spacial_info=self.spacial_info,
             relative_velocity=self.relative_action.velocity,
             relative_spin=self.relative_action.spin,
@@ -652,9 +652,29 @@ class WarthogEnv(gym.Env):
             timestep=self.episode_steps,
         )
         
-        output, (self.absolute_action, self.crosstrack_error, self.episode_steps, self.omega_reward, self.phi_error, self.prev_absolute_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
+        output, 
+        (
+            _,
+            self.crosstrack_error,
+            self.episode_steps,
+            self.omega_reward,
+            self.phi_error,
+            self.prev_absolute_action,
+            self.prev_closest_index,
+            self.reward,
+            self.total_ep_reward,
+            self.vel_error,
+            self.vel_reward,
+            _,
+            _,
+            _,
+            self.is_episode_start,
+            self.closest_distance,
+            self.closest_index,
+            self.ep_poses,
+        ), other = pure_step(
             relative_action=self.relative_action,
-            absolute_action=absolute_action,
+            absolute_action=self.absolute_action,
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
             crosstrack_error=self.crosstrack_error,
@@ -667,13 +687,13 @@ class WarthogEnv(gym.Env):
             number_of_waypoints=self.number_of_waypoints,
             omega_reward=self.omega_reward,
             phi_error=self.phi_error,
-            pose=pose,
+            pose=self.pose,
             prev_absolute_action=self.prev_absolute_action,
-            prev_angle=prev_angle,
+            prev_angle=self.prev_angle,
             prev_closest_index=self.prev_closest_index,
             reward=self.reward,
             total_ep_reward=self.total_ep_reward,
-            twist=twist,
+            twist=self.twist,
             vel_error=self.vel_error,
             vel_reward=self.vel_reward,
             waypoints_list=self.waypoints_list,
