@@ -15,13 +15,15 @@ from .__dependencies__.blissful_basics import FS, bytes_to_valid_string, valid_s
 from .__dependencies__.informative_iterator import ProgressBar
 
 # Version 1.0
+    # DONE: add counting-caps (max IO for a particular function, or in-general)
+    # DONE: run tests atexit to avoid import errors
+    # have grug_test recurse down from CWD instead of having project_folder and test_folder
     # create a global list of registered named tuples to make sure all are loaded (and the same) before replaying inputs 
     # make API more local:
         # grug_test(record=True, test=True, max=10, path="override/path")
         # grug_test.force_disable_all = False
         # grug_test.force_record_all = False
         # grug_test.force_test_all = False
-    # DONE: add counting-caps (max IO for a particular function, or in-general)
     # add a generated-time somewhere in the output to show when a test was last updated (maybe a .touch.yaml with commit hash, date and epoch)
     # check in-memory hash of prev-output and use that to not-overwrite outputs if they're the same
     # write to a temp file then move it to reduce partial-write problems
@@ -32,11 +34,12 @@ from .__dependencies__.informative_iterator import ProgressBar
     # add CLI tools
         # capture all stdout/stderr
         # run all .test.py files
+    # add checker to see if the function signature has changed, offer to clear existing tests
     # create add_input_for(func_id, args, kwargs, input_name)
     # use threads to offload the work
     # report which tests have recordings but were not tested during replay mode (e.g. couldn't reach/find function)
-    # autodetect the git folder
 # Version 2.0
+    # add checker to see if the function signature has changed, offer to clear existing tests
     # fuzzing/coverage-tools; like analyzing boolean arguments, and generating inputs for all combinations of them
     # option to record stdout/stderr of a function
     # add `additional_inputs` in the decorator
@@ -131,7 +134,7 @@ if True:
             name = yaml_name or named_tuple_class.__name__
             if name in named_tuple_name_registry and named_tuple_class not in named_tuple_class_registry:
                 named_tuple_class_registry[named_tuple_class] = None
-                warn(f"(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}. Please rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple(SomeNamedTupleClass, 'SomeNamedTupleClass1234')")
+                warn(f"\n\n(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}.\nPlease rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple(SomeNamedTupleClass, 'SomeNamedTupleClass1234')\n\n")
             
             named_tuple_name_registry[name] = True
             named_tuple_class_registry[named_tuple_class] = True
@@ -389,13 +392,11 @@ class GrugTest:
                 # 
                 # setup name/folder
                 # 
-                relative_path_to_function = FS.normalize(FS.make_relative_path(coming_from=self.project_folder, to=FS.normalize(source)))
                 function_name = func_name or getattr(function_being_wrapped, "__name__", "<unknown_func>")
                 if not save_to:
-                    relative_path_to_test = self.test_folder+"/"+relative_path_to_function
-                    save_to = relative_path_to_test+"/"+function_name
+                    save_to = f"{source}.grug/{function_name}"
                 
-                function_id = f"{relative_path_to_function}:{function_name}"
+                function_id = f"{source}:{function_name}"
                 grug_folder_for_this_func = save_to
                 if function_id not in self.grug_info["functions_with_tests"]:
                     self.grug_info["functions_with_tests"].append(function_id)
@@ -432,12 +433,13 @@ class GrugTest:
                                 )
                             
                             if error_catcher.error:
+                                content = FS.read(path)
                                 # corrupted file
-                                if FS.read(path) == "":
+                                if content == "" or not (content.strip().endswith("...")):
                                     FS.remove(path)
                                     continue
                                 
-                                print(f"\n    corrupted_input: {path}\n{indent(indent(traceback_to_string(error_catcher.traceback)))}")
+                                print(f"\n    corrupted_input: {path}n\n\n{indent(indent(traceback_to_string(error_catcher.traceback)))}\n\n")
                         decorator.replaying_inputs = False
                         self.has_been_tested[function_id] = True
                     replay_inputs_at_end.append(replay_inputs)
