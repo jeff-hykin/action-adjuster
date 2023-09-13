@@ -440,7 +440,7 @@ class GrugTest:
                             if error_catcher.error:
                                 content = FS.read(path)
                                 # corrupted file
-                                if content == "" or not (content.strip().endswith("...")):
+                                if content == "" or not ((content or "").strip().endswith("...")):
                                     FS.remove(path)
                                     continue
                                 

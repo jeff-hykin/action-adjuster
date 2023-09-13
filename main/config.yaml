@@ -252,7 +252,7 @@
             grug_test:
                 disable: False
                 replay_inputs: True
-                record_io: True
+                record_io: False
                 verbose: True
                 
         WARTHOG:

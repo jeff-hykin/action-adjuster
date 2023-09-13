@@ -98,7 +98,7 @@ if True:
     
 
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=5, skip=False)
 def generate_next_spacial_info(
     old_spacial_info,
     relative_velocity,
@@ -152,7 +152,7 @@ def generate_next_spacial_info(
     )
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses, absolute_action)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=5, skip=False)
 def pure_get_observation(
     closest_distance,
     closest_index,
@@ -202,7 +202,7 @@ def pure_get_observation(
     
     return GetObservationOutput(obs, closest_distance, closest_index)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=5, skip=False)
 def pure_reward(
     closest_waypoint,
     pose,
@@ -237,7 +237,7 @@ def pure_reward(
     
     return RewardOutput(reward, vel_error, crosstrack_error, phi_error)
 
-@grug_test(max_io=30, skip=False)
+@grug_test(max_io=5, skip=False)
 def pure_reward_wrapper(
     total_ep_reward,
     closest_index,
@@ -505,7 +505,6 @@ class WarthogEnv(gym.Env):
         self.vel_error               = 0
         self.phi_error               = 0
         self.start_step_for_sup_data = 500000
-        self.episode_steps                = 0
         self.max_number_of_timesteps_per_episode            = 700
         self.tprev                   = time.time()
         self.total_ep_reward         = 0
@@ -553,10 +552,89 @@ class WarthogEnv(gym.Env):
         
         self.reset()
     
+    def __del__(self):
+        if self.trajectory_file:
+            self.trajectory_file.close()
+            
     # just a wrapper around the pure_step
-    def step(self, action):
-        self.global_timestep += 1
+    def step(self, action, override_next_spacial_info=None):
+        #  
+        # push new action
+        # 
+        self.prev_original_relative_velocity = self.original_relative_velocity
+        self.prev_original_relative_spin     = self.original_relative_spin
+        self.prev_mutated_relative_velocity  = self.mutated_relative_velocity
+        self.prev_mutated_relative_spin      = self.mutated_relative_spin
         self.original_relative_velocity, self.original_relative_spin = action
+        self.absolute_action = [
+            clip(self.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
+            clip(self.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
+        ]
+        
+        # 
+        # logging and counter-increments
+        # 
+        if self.save_data and self.trajectory_file is not None:
+            self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self.original_relative_spin}, {self.is_episode_start}\n")
+        self.global_timestep += 1
+        # self.episode_steps = self.episode_steps + 1 # FIXME: enable this later
+        self.is_episode_start = 0
+        
+        # 
+        # modify action
+        # 
+        if True:
+            # first force them to be within normal ranges
+            mutated_relative_velocity_action = clip(self.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+            mutated_relative_spin_action     = clip(self.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
+            
+            # 
+            # ADVERSITY
+            # 
+            if True:
+                # battery adversity
+                if config.simulator.battery_adversity_enabled:
+                    self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
+                    self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
+                    self.recorder.commit()
+                    mutated_relative_velocity_action *= self.simulated_battery_level
+                    # make sure velocity never goes negative (treat low battery as resistance)
+                    mutated_relative_velocity_action = clip(mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+                
+                # additive adversity
+                mutated_relative_velocity_action += config.simulator.velocity_offset
+                mutated_relative_spin_action     += config.simulator.spin_offset
+        
+            # 
+            # add noise
+            # 
+            if config.simulator.use_gaussian_action_noise:
+                mutated_relative_velocity_action += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+                mutated_relative_spin_action     += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
+            
+            # 
+            # action delay
+            # 
+            self.action_buffer.append((mutated_relative_velocity_action, mutated_relative_spin_action))
+            mutated_relative_velocity_action, mutated_relative_spin_action = self.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
+            
+            # 
+            # save
+            # 
+            self.mutated_relative_velocity = mutated_relative_velocity_action
+            self.mutated_relative_spin     = mutated_relative_spin_action
+        
+        
+        # 
+        # modify spacial_info
+        # 
+        self.prev_spacial_info = self.spacial_info
+        if type(override_next_spacial_info) != type(None):
+            # this is when the spacial_info is coming from the real world
+            self.spacial_info = override_next_spacial_info
+        
+        
+        self.global_timestep += 1
         self.action = action
         output, (self.absolute_action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_absolute_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
             action=Action(*action),
@@ -760,49 +838,3 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
     if grug_test.replay_inputs:
         smoke_test_warthog("real1.csv")
     # exit()
-
-
-def original_reward_function(*, spacial_info, closest_distanceance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
-    x_diff     = closest_waypoint.x - spacial_info.x
-    y_diff     = closest_waypoint.y - spacial_info.y
-    angle_diff = get_angle_from_origin(x_diff, y_diff)
-    yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
-
-    velocity_error   = closest_waypoint.velocity - spacial_info.velocity
-    crosstrack_error = closest_distanceance * math.sin(yaw_error)
-    phi_error        = pi_to_pi(zero_to_2pi(closest_waypoint.angle) - spacial_info.angle)
-    
-    
-    max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
-    max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
-    max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
-
-    # base rewards
-    crosstrack_reward = max_expected_crosstrack_error - math.fabs(crosstrack_error)
-    velocity_reward   = max_expected_velocity_error   - math.fabs(velocity_error)
-    angle_reward      = max_expected_angle_error      - math.fabs(phi_error)
-
-    # combine
-    running_reward = crosstrack_reward * velocity_reward * angle_reward
-
-    # smoothing penalties (jerky=costly to machine and high energy/breaks consumption)
-    running_reward -= config.reward_parameters.velocity_jerk_cost_coefficient * math.fabs(relative_velocity - prev_relative_velocity)
-    running_reward -= config.reward_parameters.spin_jerk_cost_coefficient     * math.fabs(relative_spin - prev_relative_spin)
-    # direct energy consumption
-    running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(relative_velocity)
-    running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
-    
-    if config.reward_parameters.velocity_caps_enabled:
-        abs_velocity_error = math.fabs(velocity_error)
-        for min_waypoint_speed, max_error_allowed in config.reward_parameters.velocity_caps.items():
-            # convert %'s to vehicle-specific values
-            min_waypoint_speed = float(min_waypoint_speed.replace("%", ""))/100 * config.vehicle.controller_max_velocity
-            max_error_allowed  = float(max_error_allowed.replace( "%", ""))/100 * config.vehicle.controller_max_velocity
-            # if rule-is-active
-            if closest_waypoint.velocity >= min_waypoint_speed: # old code: self.waypoints_list[k][3] >= 2.5
-                # if rule is broken, no reward
-                if abs_velocity_error > max_error_allowed: # old code: math.fabs(self.vel_error) > 1.5
-                    running_reward = 0
-                    break
-    
-    return RewardOutput(running_reward, velocity_error, crosstrack_error, phi_error)
