@@ -200,7 +200,13 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: null
+  spacial_info: !python/named_tuple/SpacialInformation
+     x: 0
+     y: 0
+     angle: 0
+     velocity: 0
+     spin: 0
+     timestep: 0
   pose: !python/named_tuple/PoseEntry
      x: 20.948369383136743
      y: 8.942170746065676
@@ -633,7 +639,7 @@ normal_output:
   max_number_of_timesteps_per_episode: 700
   total_ep_reward: 0
   reward: 0
-  original_relative_velocity: null
+  original_relative_velocity: 0
   original_relative_spin: 0
   action:
   - 0.0
@@ -645,7 +651,7 @@ normal_output:
   prev_absolute_action:
   - 0.0
   - 0.0
-  action_buffer: null
+  action_buffer: []
   prev_reaction: null
   omega_reward: 0
   vel_reward: 0
@@ -856,7 +862,13 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: null
+  spacial_info: !python/named_tuple/SpacialInformation
+     x: 0
+     y: 0
+     angle: 0
+     velocity: 0
+     spin: 0
+     timestep: 0
   pose: !python/named_tuple/PoseEntry
      x: 21.19914378444955
      y: 9.199516588491827
@@ -1299,7 +1311,7 @@ normal_output:
      spin: !<python/numpy/float64> 1.25
   reaction: null
   prev_absolute_action: *id001
-  action_buffer: null
+  action_buffer: []
   prev_reaction: null
   omega_reward: -2.5
   vel_reward: -2.0
@@ -1518,7 +1530,13 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: null
+  spacial_info: !python/named_tuple/SpacialInformation
+     x: 0
+     y: 0
+     angle: 0
+     velocity: 0
+     spin: 0
+     timestep: 0
   pose: !python/named_tuple/PoseEntry
      x: 21.448935975040907
      y: 9.656827754438055
@@ -1961,7 +1979,7 @@ normal_output:
      spin: !<python/numpy/float64> 1.4000000000000001
   reaction: null
   prev_absolute_action: *id002
-  action_buffer: null
+  action_buffer: []
   prev_reaction: null
   omega_reward: -2.8000000000000003
   vel_reward: -0.2400000000000002
@@ -2188,7 +2206,13 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: null
+  spacial_info: !python/named_tuple/SpacialInformation
+     x: 0
+     y: 0
+     angle: 0
+     velocity: 0
+     spin: 0
+     timestep: 0
   pose: !python/named_tuple/PoseEntry
      x: 21.539418041491036
      y: 10.189410143300089
@@ -2631,7 +2655,7 @@ normal_output:
      spin: !<python/numpy/float64> 1.4175
   reaction: null
   prev_absolute_action: *id003
-  action_buffer: null
+  action_buffer: []
   prev_reaction: null
   omega_reward: -2.835
   vel_reward: -0.02799999999999958
@@ -2866,7 +2890,13 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.087976634851657, "y": 7.47232278669253, "angle": 1.3092594302841205, "velocity": 0.8839240632036743}'
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
-  spacial_info: null
+  spacial_info: !python/named_tuple/SpacialInformation
+     x: 0
+     y: 0
+     angle: 0
+     velocity: 0
+     spin: 0
+     timestep: 0
   pose: !python/named_tuple/PoseEntry
      x: 21.446903099963915
      y: 10.723893866721124
@@ -3309,7 +3339,7 @@ normal_output:
      spin: !<python/numpy/float64> 1.4195
   reaction: null
   prev_absolute_action: *id004
-  action_buffer: null
+  action_buffer: []
   prev_reaction: null
   omega_reward: -2.839
   vel_reward: -0.0032000000000000917

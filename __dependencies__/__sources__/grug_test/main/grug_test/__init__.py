@@ -126,18 +126,23 @@ if True:
                 field_summary = ",".join(fields)
                 return f'{the_class.__name__}({field_summary})'
         
-        def register_named_tuple(named_tuple_class, yaml_name=None):
+        def register_named_tuple(named_tuple_class=None, yaml_name=None):
+            # if called as a decorator with a yaml_name argument
+            if named_tuple_class == None:
+                return lambda func: register_named_tuple(func, yaml_name=yaml_name)
+            
             # already registered
             if named_tuple_class_registry.get(named_tuple_class, None):
                 return named_tuple_class
             
             name = yaml_name or named_tuple_class.__name__
-            if name in named_tuple_name_registry and named_tuple_class not in named_tuple_class_registry:
+            if name in named_tuple_name_registry and not (named_tuple_class in named_tuple_class_registry):
                 named_tuple_class_registry[named_tuple_class] = None
-                warn(f"\n\n(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}.\nPlease rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple(SomeNamedTupleClass, 'SomeNamedTupleClass1234')\n\n")
+                if named_tuple_summary(named_tuple_class) != named_tuple_summary(named_tuple_name_registry[name]):
+                    warn(f"\n\n(from grug_test) I try to auto-register named tuples so that they seralize nicely, however it looks like there are two named tuples that are both called {name}.\nPlease rename one of them, or register one under a different name using:\n    from grug_test import register_named_tuple\n    register_named_tuple({name}, '{name}1234')\n\n")
             
-            named_tuple_name_registry[name] = True
-            named_tuple_class_registry[named_tuple_class] = True
+            named_tuple_name_registry[name] = named_tuple_class
+            named_tuple_class_registry[named_tuple_class] = name
             named_tuple_class.yaml_tag = f"!python/named_tuple/{name}"
             named_tuple_class.from_yaml = lambda constructor, node: named_tuple_class(**ez_yaml.ruamel.yaml.BaseConstructor.construct_mapping(constructor, node, deep=True))
             named_tuple_class.to_yaml = lambda representer, object_of_this_class: representer.represent_mapping(tag=named_tuple_class.yaml_tag, mapping=object_of_this_class._asdict())
@@ -439,7 +444,7 @@ class GrugTest:
                                     FS.remove(path)
                                     continue
                                 
-                                print(f"\n    corrupted_input: {path}n\n\n{indent(indent(traceback_to_string(error_catcher.traceback)))}\n\n")
+                                print(f"\n    corrupted_input: {path}\n\n{indent(indent(traceback_to_string(error_catcher.traceback)))}\n\n{error_catcher.error}\n")
                         decorator.replaying_inputs = False
                         self.has_been_tested[function_id] = True
                     replay_inputs_at_end.append(replay_inputs)

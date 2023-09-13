@@ -23,30 +23,8 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 magic_number_1_point_5 = 1.5
 magic_number_1_point_4 = 1.4
 
-g = LazyDict()
-
 class Unknown:
     pass
-
-class WarthogEnv(gym.Env):
-    random_start_position_offset = config.simulator.random_start_position_offset
-    random_start_angle_offset    = config.simulator.random_start_angle_offset
-    max_relative_velocity = 1
-    min_relative_velocity = 0
-    max_relative_spin = 1
-    min_relative_spin = -1
-    
-    action_space = gym.spaces.Box(
-        low=np.array(config.simulator.action_space.low),
-        high=np.array(config.simulator.action_space.high),
-        shape=np.array(config.simulator.action_space.low).shape,
-    )
-    observation_space = gym.spaces.Box(
-        low=config.simulator.observation_space.low,
-        high=config.simulator.observation_space.high,
-        shape=config.simulator.observation_space.shape,
-        dtype=float,
-    )
 
 @grug_test(max_io=10, skip=True)
 def read_waypoint_file(filename):

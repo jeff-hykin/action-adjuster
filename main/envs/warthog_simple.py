@@ -16,18 +16,18 @@ from envs.warthog import read_waypoint_file, SpacialInformation
 
 from generic_tools.plotting import create_slider_from_traces
 from generic_tools.geometry import zero_to_2pi, pi_to_pi
-from __dependencies__.blissful_basics import FS
+from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip, countdown, LazyDict
 from __dependencies__.grug_test import register_named_tuple
 
-def get_dist(waypoint, pose):
-    xdiff = pose[0] - waypoint[0]
-    ydiff = pose[1] - waypoint[1]
-    return math.sqrt(xdiff * xdiff + ydiff * ydiff)
+from config import config, path_to, grug_test
+from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference, angle_created_by
 
+# bb.Warnings.disable()
+magic_number_1_point_5 = 1.5
+magic_number_1_point_4 = 1.4
 
-def get_theta(xdiff, ydiff):
-    theta = math.atan2(ydiff, xdiff)
-    return zero_to_2pi(theta)
+class Unknown:
+    pass
 
 # 
 # data structures (for test cases)
@@ -94,7 +94,7 @@ if True:
         "new_spin",
     ])
     for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, ]:
-        register_named_tuple(each)
+        register_named_tuple(each, f"{each.__name__}")
     
 
 
@@ -168,7 +168,7 @@ def pure_get_observation(
     
     closest_distance = math.inf
     for i in range(closest_index, number_of_waypoints):
-        dist = get_dist(waypoints_list[i], pose)
+        dist = get_distance(x1=waypoints_list[i][0], y1=waypoints_list[i][1], x2=pose[0], y2=pose[1])
         if dist <= closest_distance:
             closest_distance = dist
             index = i
@@ -180,10 +180,10 @@ def pure_get_observation(
     for i in range(0, horizon):
         k = i + closest_index
         if k < number_of_waypoints:
-            r = get_dist(waypoints_list[k], pose)
+            r = get_distance(x1=waypoints_list[k][0], y1=waypoints_list[k][1], x2=pose[0], y2=pose[1])
             xdiff = waypoints_list[k][0] - pose[0]
             ydiff = waypoints_list[k][1] - pose[1]
-            th = get_theta(xdiff, ydiff)
+            th = get_angle_from_origin(xdiff, ydiff)
             vehicle_th = zero_to_2pi(pose[2])
             yaw_error = pi_to_pi(waypoints_list[k][2] - vehicle_th)
             vel = waypoints_list[k][3]
@@ -217,7 +217,7 @@ def pure_reward(
     
     x_diff = waypoint_x - pose_x
     y_diff = waypoint_y - pose_y
-    yaw_error = pi_to_pi(get_theta(x_diff, y_diff) - pose_phi)
+    yaw_error = pi_to_pi(get_angle_from_origin(x_diff, y_diff) - pose_phi)
     phi_error = pi_to_pi(
         waypoint_phi - pose_phi
     )
@@ -254,7 +254,7 @@ def pure_reward_wrapper(
 ):
     xdiff         = waypoints_list[closest_index][0] - pose[0]
     ydiff         = waypoints_list[closest_index][1] - pose[1]
-    yaw_error     = pi_to_pi(get_theta(xdiff, ydiff) - pose[2])
+    yaw_error     = pi_to_pi(get_angle_from_origin(xdiff, ydiff) - pose[2])
     omega_reward  = -2 * math.fabs(action[1])
     vel_reward    = -math.fabs(action[0] - prev_absolute_action[0])
     
@@ -390,22 +390,86 @@ def pure_step(
     )
 
 class WarthogEnv(gym.Env):
-    action_space = spaces.Box(
-        low=np.array([0.0, -1.5]),
-        high=np.array([1.0, 1.5]),
-        shape=(2,)
+    random_start_position_offset = config.simulator.random_start_position_offset
+    random_start_angle_offset    = config.simulator.random_start_angle_offset
+    max_relative_velocity = 1
+    min_relative_velocity = 0
+    max_relative_spin = 1
+    min_relative_spin = -1
+    
+    action_space = gym.spaces.Box(
+        low=np.array(config.simulator.action_space.low),
+        high=np.array(config.simulator.action_space.high),
+        shape=np.array(config.simulator.action_space.low).shape,
     )
-    observation_space = spaces.Box(
-        low=-100,
-        high=1000,
-        shape=(42,),
+    observation_space = gym.spaces.Box(
+        low=config.simulator.observation_space.low,
+        high=config.simulator.observation_space.high,
+        shape=config.simulator.observation_space.shape,
         dtype=float,
     )
     
     render_axis_size = 20
     
-    def __init__(self, waypoint_file, *args, **kwargs):
+    def __init__(self, waypoint_file_path, trajectory_output_path=None, recorder=None, *args, **kwargs):
         super(WarthogEnv, self).__init__()
+        if True:
+            self.waypoint_file_path = waypoint_file_path
+            self.out_trajectory_file = trajectory_output_path
+            self.recorder = recorder
+            
+            self.waypoints_list   = []
+            self.prev_spacial_info = SpacialInformation(0,0,0,0,0,-1)
+            self.prev_spacial_info_with_noise = SpacialInformation(0,0,0,0,0,-1)
+            self.spacial_info_with_noise = SpacialInformation(0,0,0,0,0,0)
+            self.spacial_info = SpacialInformation(
+                x                = 0,
+                y                = 0,
+                angle            = 0,
+                velocity         = 0,
+                spin             = 0,
+                timestep         = 0,
+            )
+            self.observation = None
+            
+            self.max_number_of_timesteps_per_episode      = config.simulator.max_number_of_timesteps_per_episode
+            self.save_data              = config.simulator.save_data
+            self.action_duration        = config.simulator.action_duration  
+            self.number_of_trajectories = config.simulator.number_of_trajectories
+            self.render_axis_size       = 20
+            self.next_waypoint_index    = 0
+            self.prev_closest_index     = 0
+            self.closest_distance       = math.inf
+            self.desired_velocities     = []
+            self.episode_steps          = 0
+            self.total_episode_reward   = 0
+            self.reward                 = 0
+            self.original_relative_spin           = 0 
+            self.original_relative_velocity       = 0 
+            self.prev_original_relative_spin      = 0 
+            self.prev_original_relative_velocity  = 0 # "original" is what the actor said to do
+            self.mutated_relative_spin            = 0 # "mutated" is after adversity+noise was added
+            self.mutated_relative_velocity        = 0
+            self.prev_mutated_relative_spin       = 0
+            self.prev_mutated_relative_velocity   = 0
+            self.prev_observation        = None
+            self.is_episode_start        = 1
+            self.trajectory_file         = None
+            self.global_timestep         = 0
+            self.action_buffer           = [ (0,0) ] * config.simulator.action_delay # seed the buffer with delays
+            self.simulated_battery_level = 1.0 # proportion 
+            
+            if self.waypoint_file_path is not None:
+                self.desired_velocities, self.waypoints_list = read_waypoint_file(self.waypoint_file_path)
+            
+            self.x_pose = [0.0] * self.number_of_trajectories
+            self.y_pose = [0.0] * self.number_of_trajectories
+            self.crosstrack_error = 0
+            self.velocity_error   = 0
+            self.phi_error        = 0
+            self.prev_timestamp   = time.time()
+            self.should_render    = config.simulator.should_render and countdown(config.simulator.render_rate)
+        
         self.waypoints_list = []
         self.pose = PoseEntry(
             x=0,
@@ -423,7 +487,7 @@ class WarthogEnv(gym.Env):
         self.horizon = 10
         self.action_duration = 0.06
         self.num_steps = 0
-        self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file)
+        self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file_path)
         self.number_of_waypoints = len(self.waypoints_list)
         self.max_vel = 1
         self.waypoints_dist = 0.5
@@ -701,7 +765,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
 def original_reward_function(*, spacial_info, closest_distanceance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint):
     x_diff     = closest_waypoint.x - spacial_info.x
     y_diff     = closest_waypoint.y - spacial_info.y
-    angle_diff = get_theta(x_diff, y_diff)
+    angle_diff = get_angle_from_origin(x_diff, y_diff)
     yaw_error  = pi_to_pi(angle_diff - spacial_info.angle)
 
     velocity_error   = closest_waypoint.velocity - spacial_info.velocity
