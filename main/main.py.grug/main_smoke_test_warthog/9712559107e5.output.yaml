@@ -1305,8 +1305,8 @@ normal_output:
   - 0.5
   - 0.5
   absolute_action: &id001 !python/named_tuple/Action
-     velocity: !<python/numpy/float64> 2.0
-     spin: !<python/numpy/float64> 1.25
+     velocity: 2.0
+     spin: 1.25
   reaction: null
   prev_absolute_action: *id001
   action_buffer: []
@@ -1972,8 +1972,8 @@ normal_output:
   - 0.56
   - 0.56
   absolute_action: &id002 !python/named_tuple/Action
-     velocity: !<python/numpy/float64> 2.24
-     spin: !<python/numpy/float64> 1.4000000000000001
+     velocity: 2.24
+     spin: 1.4000000000000001
   reaction: null
   prev_absolute_action: *id002
   action_buffer: []
@@ -2647,8 +2647,8 @@ normal_output:
   - 0.567
   - 0.567
   absolute_action: &id003 !python/named_tuple/Action
-     velocity: !<python/numpy/float64> 2.268
-     spin: !<python/numpy/float64> 1.4175
+     velocity: 2.268
+     spin: 1.4175
   reaction: null
   prev_absolute_action: *id003
   action_buffer: []
@@ -3330,8 +3330,8 @@ normal_output:
   - 0.5678
   - 0.5678
   absolute_action: &id004 !python/named_tuple/Action
-     velocity: !<python/numpy/float64> 2.2712
-     spin: !<python/numpy/float64> 1.4195
+     velocity: 2.2712
+     spin: 1.4195
   reaction: null
   prev_absolute_action: *id004
   action_buffer: []

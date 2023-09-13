@@ -279,7 +279,7 @@ def pure_reward_wrapper(
     return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_absolute_action, total_ep_reward
 
 
-@grug_test(max_io=60, skip=False)
+@grug_test(max_io=10, skip=False)
 def pure_step(
     relative_action,
     absolute_action,
@@ -557,7 +557,7 @@ class WarthogEnv(gym.Env):
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self.original_relative_spin}, {self.is_episode_start}\n")
         self.global_timestep += 1
-        self.episode_steps = self.episode_steps + 1 # FIXME: enable this later
+        self.episode_steps = self.episode_steps + 1
         self.is_episode_start = 0
         
         # 
