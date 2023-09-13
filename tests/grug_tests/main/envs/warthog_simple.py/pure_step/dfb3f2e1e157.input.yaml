@@ -20,7 +20,7 @@ kwargs:
       x: 108.54849000640368
       y: 0.1
       angle: 0.01
-   prev_action:
+   prev_absolute_action:
    - 0.0
    - 0.0
    prev_angle: 0

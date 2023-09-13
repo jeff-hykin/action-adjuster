@@ -36,7 +36,7 @@ kwargs:
       x: 109.39465179394558
       y: 0.3128656427190136
       angle: 0.562
-   prev_action: !python/named_tuple/Action
+   prev_absolute_action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 2.24
       spin: !<python/numpy/float64> 1.4000000000000001
    prev_angle: 0.47800000000000004

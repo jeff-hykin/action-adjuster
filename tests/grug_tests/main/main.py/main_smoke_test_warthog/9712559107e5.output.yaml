@@ -638,8 +638,11 @@ normal_output:
   action:
   - 0.0
   - 0.0
+  absolute_action:
+  - 0.0
+  - 0.0
   reaction: null
-  prev_action:
+  prev_absolute_action:
   - 0.0
   - 0.0
   action_buffer: null
@@ -1288,11 +1291,14 @@ normal_output:
   reward: 0
   original_relative_velocity: 0.5
   original_relative_spin: 0.5
-  action: &id001 !python/named_tuple/Action
+  action:
+  - 0.5
+  - 0.5
+  absolute_action: &id001 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.0
      spin: !<python/numpy/float64> 1.25
   reaction: null
-  prev_action: *id001
+  prev_absolute_action: *id001
   action_buffer: null
   prev_reaction: null
   omega_reward: -2.5
@@ -1947,11 +1953,14 @@ normal_output:
   reward: 0
   original_relative_velocity: 0.56
   original_relative_spin: 0.56
-  action: &id002 !python/named_tuple/Action
+  action:
+  - 0.56
+  - 0.56
+  absolute_action: &id002 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.24
      spin: !<python/numpy/float64> 1.4000000000000001
   reaction: null
-  prev_action: *id002
+  prev_absolute_action: *id002
   action_buffer: null
   prev_reaction: null
   omega_reward: -2.8000000000000003
@@ -2614,11 +2623,14 @@ normal_output:
   reward: 0
   original_relative_velocity: 0.567
   original_relative_spin: 0.567
-  action: &id003 !python/named_tuple/Action
+  action:
+  - 0.567
+  - 0.567
+  absolute_action: &id003 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.268
      spin: !<python/numpy/float64> 1.4175
   reaction: null
-  prev_action: *id003
+  prev_absolute_action: *id003
   action_buffer: null
   prev_reaction: null
   omega_reward: -2.835
@@ -3289,11 +3301,14 @@ normal_output:
   reward: 0
   original_relative_velocity: 0.5678
   original_relative_spin: 0.5678
-  action: &id004 !python/named_tuple/Action
+  action:
+  - 0.5678
+  - 0.5678
+  absolute_action: &id004 !python/named_tuple/Action
      velocity: !<python/numpy/float64> 2.2712
      spin: !<python/numpy/float64> 1.4195
   reaction: null
-  prev_action: *id004
+  prev_absolute_action: *id004
   action_buffer: null
   prev_reaction: null
   omega_reward: -2.839

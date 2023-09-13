@@ -42,7 +42,7 @@ if True:
         'num_steps',
         'omega_reward',
         'phi_error',
-        'prev_action',
+        'prev_absolute_action',
         'prev_closest_index',
         'reward',
         'total_ep_reward',
@@ -209,7 +209,7 @@ def pure_reward(
     twist,
     closest_distance,
     action,
-    prev_action,
+    prev_absolute_action,
     **kwargs,
 ):
     waypoint_x, waypoint_y, waypoint_phi, waypoint_velocity, *_ = closest_waypoint
@@ -227,7 +227,7 @@ def pure_reward(
         (2.0 - math.fabs(crosstrack_error))
         * (4.5 - math.fabs(vel_error))
         * (math.pi / 3.0 - math.fabs(phi_error))
-        - math.fabs(action[0] - prev_action[0])
+        - math.fabs(action[0] - prev_absolute_action[0])
         - 2 * math.fabs(action[1])
     )
     if waypoint_velocity >= 2.5 and math.fabs(vel_error) > 1.5:
@@ -248,7 +248,7 @@ def pure_reward_wrapper(
     episode_steps,
     max_number_of_timesteps_per_episode,
     action,
-    prev_action,
+    prev_absolute_action,
     done,
     **kwargs,
 ):
@@ -256,7 +256,7 @@ def pure_reward_wrapper(
     ydiff         = waypoints_list[closest_index][1] - pose[1]
     yaw_error     = pi_to_pi(get_theta(xdiff, ydiff) - pose[2])
     omega_reward  = -2 * math.fabs(action[1])
-    vel_reward    = -math.fabs(action[0] - prev_action[0])
+    vel_reward    = -math.fabs(action[0] - prev_absolute_action[0])
     
     reward, vel_error, crosstrack_error, phi_error = pure_reward(
         closest_waypoint=waypoints_list[closest_index],
@@ -264,7 +264,7 @@ def pure_reward_wrapper(
         twist=twist,
         closest_distance=closest_distance,
         action=action,
-        prev_action=prev_action,
+        prev_absolute_action=prev_absolute_action,
     )
     
     if math.fabs(crosstrack_error) > 1.5 or math.fabs(phi_error) > 1.4:
@@ -275,9 +275,9 @@ def pure_reward_wrapper(
         episode_steps = 0
     
     total_ep_reward = total_ep_reward + reward
-    prev_action = action
+    prev_absolute_action = action
     
-    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward
+    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_absolute_action, total_ep_reward
 
 
 @grug_test(max_io=60, skip=False)
@@ -297,7 +297,7 @@ def pure_step(
     omega_reward,
     phi_error,
     pose,
-    prev_action,
+    prev_absolute_action,
     prev_angle,
     prev_closest_index,
     reward,
@@ -340,7 +340,7 @@ def pure_step(
     if closest_index >= number_of_waypoints - 1:
         done = True
     
-    reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_action, total_ep_reward = pure_reward_wrapper(
+    reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_absolute_action, total_ep_reward = pure_reward_wrapper(
         total_ep_reward=total_ep_reward,
         closest_index=closest_index,
         waypoints_list=waypoints_list,
@@ -350,7 +350,7 @@ def pure_step(
         episode_steps=episode_steps,
         max_number_of_timesteps_per_episode=max_number_of_timesteps_per_episode,
         action=absolute_action,
-        prev_action=prev_action,
+        prev_absolute_action=prev_absolute_action,
         done=done,
     )
     
@@ -368,7 +368,7 @@ def pure_step(
             num_steps,
             omega_reward,
             phi_error,
-            prev_action,
+            prev_absolute_action,
             prev_closest_index,
             reward,
             total_ep_reward,
@@ -447,7 +447,8 @@ class WarthogEnv(gym.Env):
         self.total_ep_reward         = 0
         self.reward                  = 0
         self.action                  = [0.0, 0.0]
-        self.prev_action             = [0.0, 0.0]
+        self.absolute_action         = [0.0, 0.0]
+        self.prev_absolute_action             = [0.0, 0.0]
         self.omega_reward            = 0
         self.vel_reward              = 0
         self.delay_steps             = 5
@@ -492,7 +493,8 @@ class WarthogEnv(gym.Env):
     def step(self, action):
         self.global_timestep += 1
         self.original_relative_velocity, self.original_relative_spin = action
-        output, (self.action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
+        self.action = action
+        output, (self.absolute_action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_absolute_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
             action=Action(*action),
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
@@ -512,7 +514,7 @@ class WarthogEnv(gym.Env):
                 y=float(self.pose[1]),
                 angle=float(self.pose[2]),
             ),
-            prev_action=self.prev_action,
+            prev_absolute_action=self.prev_absolute_action,
             prev_angle=self.prev_angle,
             prev_closest_index=self.prev_closest_index,
             reward=self.reward,
@@ -667,7 +669,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     total_ep_reward=env.total_ep_reward,
                     reward=env.reward,
                     action=env.action,
-                    prev_action=env.prev_action,
+                    absolute_action=env.absolute_action,
+                    prev_absolute_action=env.prev_absolute_action,
                     omega_reward=env.omega_reward,
                     vel_reward=env.vel_reward,
                     delay_steps=env.delay_steps,

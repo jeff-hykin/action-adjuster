@@ -5785,7 +5785,7 @@ kwargs:
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 2.0
       spin: !<python/numpy/float64> 1.25
-   prev_action:
+   prev_absolute_action:
    - 0.0
    - 0.0
    done: false

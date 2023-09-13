@@ -13,7 +13,7 @@ kwargs:
    action: !python/named_tuple/Action
       velocity: !<python/numpy/float64> 2.0
       spin: !<python/numpy/float64> 1.25
-   prev_action:
+   prev_absolute_action:
    - 0.0
    - 0.0
 pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15U\x01\0\0\r\0\0\0\0)}\x14@(\f\x10clos\x02est_way\0point\x14\f`\x15numpy.\0core.mu\0ltiarra\0y\x14\f\f_re\x06constru\0ct\x14\x13\x14\f\f<envs.wa\0rthog\x14\f`\bWaypoi\0nt\x14\x13\x14K\0\x1C\x05\x14C\x01b\x14\ac\x14R\x14(K\x01K\x05\x04\x05\x14\f\x05nu\x0Empy\x14\f\x05d\x18type\x14\x13\x14p\f\x02f8\x14\t\bq\a\x14R\x14(K\x03\v\f\x01<\x14NNN\tJ\x7F\x7F\x7F\x7FJ\x7F^\x7F\x7F\x7FK\0t\x14Gb\tC \0\0qb\x0FR:5@\0\0\0H0NW\"@\a@=zD\x12\x0E\x05@\x19j\rS\x04t]\x1A_?\x14t\x14b\f\x04+pose\x14\f\x130envs.wa\0rthog_s\0imple\x14\f`\tPoseEn\0try\x14\x13\x14G8@52{\x16Ii\b\x19G@\"f'\t\x01M)mG?nX%8C\x17=v\a\x14s\x01\x14\f\x05twi\ast\x14h\x18\f\n$TwistEn\0try\x14\x13\x14G8@\0\0\0\0\0\0\0\0G?t\0\0\0\b\0\0\0N\a\x14\x01p\x14\f\x10clos\x03est_dis\0tance\x14G ?$`w\x04E=\x0El\f\x06acti\x03on\x14h\x18\f\x06$Action\x14@\x13\x14h\x02\f\x06s\x13calar\x14\x13`\x14h\x12C\b\0\0\x01\0\0\0\0\0@\x14@\x06\x14R\x14h'h\v\x12C\b\0\0\0\0\0\0\0t?\x14\x06\x14tR\x14\x06\x14\x01\x14\f~\vprev_a\0ction\x14] \x14(G\0\0\0\0\x01\0\0\0\0G\0\0\0\0\0\0\0\0\0e\0u\x06\x14.\0\0\0\x06\x03"

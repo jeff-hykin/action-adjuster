@@ -613,6 +613,10 @@ class WarthogEnv(gym.Env):
         self.prev_mutated_relative_velocity  = self.mutated_relative_velocity
         self.prev_mutated_relative_spin      = self.mutated_relative_spin
         self.original_relative_velocity, self.original_relative_spin = action
+        self.absolute_action = [
+            clip(self.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
+            clip(self.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
+        ]
         
         # 
         # logging and counter-increments
