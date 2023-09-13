@@ -420,7 +420,6 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: 0
   max_vel: 1
   waypoints_dist: 0.5
   warthog_length: 0.25
@@ -863,12 +862,12 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: !python/named_tuple/SpacialInformation
-     x: 0
-     y: 0
-     angle: 0
+     x: 20.948369383136743
+     y: 8.942170746065676
+     angle: 0.7233302889220217
      velocity: 0
      spin: 0
-     timestep: 0
+     timestep: 1
   pose: !python/named_tuple/PoseEntry
      x: 21.19914378444955
      y: 9.199516588491827
@@ -1082,7 +1081,6 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: 1
   max_vel: 1
   waypoints_dist: 0.5
   warthog_length: 0.25
@@ -1531,12 +1529,12 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: !python/named_tuple/SpacialInformation
-     x: 0
-     y: 0
-     angle: 0
-     velocity: 0
-     spin: 0
-     timestep: 0
+     x: 21.19914378444955
+     y: 9.199516588491827
+     angle: 0.9483302889220215
+     velocity: 2.0
+     spin: 1.25
+     timestep: 2
   pose: !python/named_tuple/PoseEntry
      x: 21.448935975040907
      y: 9.656827754438055
@@ -1750,7 +1748,6 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: 2
   max_vel: 1
   waypoints_dist: 0.5
   warthog_length: 0.25
@@ -2207,12 +2204,12 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: !python/named_tuple/SpacialInformation
-     x: 0
-     y: 0
-     angle: 0
-     velocity: 0
-     spin: 0
-     timestep: 0
+     x: 21.448935975040907
+     y: 9.656827754438055
+     angle: 1.2753302889220217
+     velocity: 2.24
+     spin: 1.4000000000000001
+     timestep: 3
   pose: !python/named_tuple/PoseEntry
      x: 21.539418041491036
      y: 10.189410143300089
@@ -2426,7 +2423,6 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: 3
   max_vel: 1
   waypoints_dist: 0.5
   warthog_length: 0.25
@@ -2891,12 +2887,12 @@ normal_output:
   - !python/warthog/Waypoint '{"x": 21.22208006249275, "y": 7.973329594824463, "angle": 1.3829384366045798, "velocity": 0.5002149163472218}'
   - !python/warthog/Waypoint '{"x": 21.31644946488086, "y": 8.469750929623842, "angle": 1.3829384366045798, "velocity": -0.02614780550966681}'
   spacial_info: !python/named_tuple/SpacialInformation
-     x: 0
-     y: 0
-     angle: 0
-     velocity: 0
-     spin: 0
-     timestep: 0
+     x: 21.539418041491036
+     y: 10.189410143300089
+     angle: 1.614480288922022
+     velocity: 2.268
+     spin: 1.4175
+     timestep: 4
   pose: !python/named_tuple/PoseEntry
      x: 21.446903099963915
      y: 10.723893866721124
@@ -3110,7 +3106,6 @@ normal_output:
   - 0.8839240632036743
   - 0.5002149163472218
   - -0.02614780550966681
-  num_steps: 4
   max_vel: 1
   waypoints_dist: 0.5
   warthog_length: 0.25

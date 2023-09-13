@@ -39,7 +39,6 @@ if True:
         'action',
         'crosstrack_error',
         'episode_steps',
-        'num_steps',
         'omega_reward',
         'phi_error',
         'prev_absolute_action',
@@ -282,7 +281,8 @@ def pure_reward_wrapper(
 
 @grug_test(max_io=60, skip=False)
 def pure_step(
-    action,
+    relative_action,
+    absolute_action,
     closest_distance,
     closest_index,
     crosstrack_error,
@@ -292,7 +292,6 @@ def pure_step(
     episode_steps,
     horizon,
     max_number_of_timesteps_per_episode,
-    num_steps,
     number_of_waypoints,
     omega_reward,
     phi_error,
@@ -308,23 +307,6 @@ def pure_step(
     waypoints_list,
     **kwargs,
 ):
-    episode_steps = episode_steps + 1
-    num_steps = num_steps + 1
-    relative_action = Action(*action)
-    twist, prev_angle, pose, ep_poses, absolute_action = generate_next_spacial_info(
-        old_spacial_info=SpacialInformation(
-            x=pose.x,
-            y=pose.y,
-            angle=pose.angle,
-            velocity=twist.velocity,
-            spin=twist.spin,
-            timestep=episode_steps,
-        ),
-        relative_velocity=relative_action.velocity,
-        relative_spin=relative_action.spin,
-        action_duration=action_duration,
-        ep_poses=ep_poses,
-    )
     is_episode_start = 0
     prev_closest_index = closest_index
     obs, closest_distance, closest_index = pure_get_observation(
@@ -365,7 +347,6 @@ def pure_step(
             absolute_action,
             crosstrack_error,
             episode_steps,
-            num_steps,
             omega_reward,
             phi_error,
             prev_absolute_action,
@@ -486,7 +467,6 @@ class WarthogEnv(gym.Env):
         self.closest_distance = math.inf
         self.horizon = 10
         self.action_duration = 0.06
-        self.num_steps = 0
         self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file_path)
         self.number_of_waypoints = len(self.waypoints_list)
         self.max_vel = 1
@@ -577,7 +557,7 @@ class WarthogEnv(gym.Env):
         if self.save_data and self.trajectory_file is not None:
             self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self.original_relative_spin}, {self.is_episode_start}\n")
         self.global_timestep += 1
-        # self.episode_steps = self.episode_steps + 1 # FIXME: enable this later
+        self.episode_steps = self.episode_steps + 1 # FIXME: enable this later
         self.is_episode_start = 0
         
         # 
@@ -632,12 +612,49 @@ class WarthogEnv(gym.Env):
         if type(override_next_spacial_info) != type(None):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = override_next_spacial_info
-        
-        
+        else:
+            # FIXME:
+            # self.spacial_info = generate_next_spacial_info(
+            #     old_spacial_info=SpacialInformation(*self.spacial_info),
+            #     relative_velocity=self.mutated_relative_velocity,
+            #     relative_spin=self.mutated_relative_spin,
+            #     action_duration=self.action_duration,
+            # )
+            pass
+            
         self.global_timestep += 1
         self.action = action
-        output, (self.absolute_action, self.crosstrack_error, self.episode_steps, self.num_steps, self.omega_reward, self.phi_error, self.prev_absolute_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
-            action=Action(*action),
+        self.relative_action = Action(velocity=self.original_relative_velocity, spin=self.original_relative_spin) 
+        
+        self.spacial_info = SpacialInformation(
+            x=self.pose.x,
+            y=self.pose.y,
+            angle=self.pose.angle,
+            velocity=self.twist.velocity,
+            spin=self.twist.spin,
+            timestep=self.episode_steps,
+        )
+        
+        twist, prev_angle, pose, ep_poses, absolute_action = generate_next_spacial_info(
+            old_spacial_info=self.spacial_info,
+            relative_velocity=self.relative_action.velocity,
+            relative_spin=self.relative_action.spin,
+            action_duration=self.action_duration,
+            ep_poses=self.ep_poses,
+        )
+        
+        self.spacial_info = SpacialInformation(
+            x=self.pose.x,
+            y=self.pose.y,
+            angle=self.pose.angle,
+            velocity=self.twist.velocity,
+            spin=self.twist.spin,
+            timestep=self.episode_steps,
+        )
+        
+        output, (self.absolute_action, self.crosstrack_error, self.episode_steps, self.omega_reward, self.phi_error, self.prev_absolute_action, self.prev_closest_index, self.reward, self.total_ep_reward, self.vel_error, self.vel_reward, self.twist, self.prev_angle, self.pose, self.is_episode_start, self.closest_distance, self.closest_index, self.ep_poses, ), other = pure_step(
+            relative_action=self.relative_action,
+            absolute_action=absolute_action,
             closest_distance=self.closest_distance,
             closest_index=self.closest_index,
             crosstrack_error=self.crosstrack_error,
@@ -647,21 +664,16 @@ class WarthogEnv(gym.Env):
             episode_steps=self.episode_steps,
             horizon=self.horizon,
             max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
-            num_steps=self.num_steps,
             number_of_waypoints=self.number_of_waypoints,
             omega_reward=self.omega_reward,
             phi_error=self.phi_error,
-            pose=PoseEntry(
-                x=float(self.pose[0]),
-                y=float(self.pose[1]),
-                angle=float(self.pose[2]),
-            ),
+            pose=pose,
             prev_absolute_action=self.prev_absolute_action,
-            prev_angle=self.prev_angle,
+            prev_angle=prev_angle,
             prev_closest_index=self.prev_closest_index,
             reward=self.reward,
             total_ep_reward=self.total_ep_reward,
-            twist=self.twist,
+            twist=twist,
             vel_error=self.vel_error,
             vel_reward=self.vel_reward,
             waypoints_list=self.waypoints_list,
@@ -791,7 +803,6 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     horizon=env.horizon,
                     action_duration=env.action_duration,
                     desired_velocities=env.desired_velocities,
-                    num_steps=env.num_steps,
                     max_vel=env.max_vel,
                     waypoints_dist=env.waypoints_dist,
                     warthog_length=env.warthog_length,

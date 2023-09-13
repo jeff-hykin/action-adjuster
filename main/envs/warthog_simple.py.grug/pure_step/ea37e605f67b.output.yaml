@@ -1,0 +1,89 @@
+error_output: None
+traceback: ''
+normal_output:
+- !python/named_tuple/StepOutput
+  observation:
+  - 0.1327724187046053
+  - -1.9908346759552673
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.4017122983932495
+  - 0.14181157203409614
+  - -1.4037871072454715
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.30890846252441406
+  - 0.19142426392667672
+  - -0.985169143134371
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.2985968589782715
+  - 0.26020528131459597
+  - -0.7603891677248855
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.27281808853149414
+  - 0.33770617664388464
+  - -0.6317773088542955
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.26250648498535156
+  - 0.41917825974504264
+  - -0.5516000976784063
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.20063722133636475
+  - 0.5054516502741507
+  - -0.4961550186015007
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.16454684734344482
+  - 0.594584859101133
+  - -0.45629247850707966
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.11814522743225098
+  - 0.6866937411565149
+  - -0.42621269063622513
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.05627596378326416
+  - 0.7823267392743251
+  - -0.40260117844485066
+  - !<python/numpy/float64> -0.235
+  - !<python/numpy/float64> -0.025341272354125977
+  - 2.0
+  - 1.25
+  reward: 1.753706795902211
+  done: false
+  debug: {}
+- !python/named_tuple/StepSideEffects
+  action: &id001 !python/named_tuple/Action
+     velocity: !<python/numpy/float64> 2.0
+     spin: !<python/numpy/float64> 1.25
+  crosstrack_error: -0.12123095081025091
+  episode_steps: 1
+  omega_reward: -2.5
+  phi_error: !<python/numpy/float64> -0.235
+  prev_absolute_action: *id001
+  prev_closest_index: 15
+  reward: 1.753706795902211
+  total_ep_reward: 1.753706795902211
+  vel_error: !<python/numpy/float64> -0.4017122983932495
+  vel_reward: -2.0
+  twist: !python/named_tuple/TwistEntry
+     velocity: 2.0
+     spin: 1.25
+     unknown: null
+  prev_angle: 0.15999999999999998
+  pose: !python/named_tuple/PoseEntry
+     x: 108.90651804139902
+     y: 0.13050588673009944
+     angle: 0.235
+  is_episode_start: 0
+  closest_distance: 0.1327724187046053
+  closest_index: 21
+  ep_poses:
+  - !python/named_tuple/SpacialHistory
+    x: 108.78805076739395
+    y: 0.11138770193638992
+    angle: 0.15999999999999998
+    velocity: 2.0
+    spin: 1.25
+    new_velocity: 2.0
+    new_spin: 1.25
+- - -1.9908346759552673
+  - !<python/numpy/float64> -0.13050588673009944
+  - !<python/numpy/float64> -0.024428030977986737
+...

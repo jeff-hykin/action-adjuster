@@ -69,7 +69,7 @@ agent = Agent(
 # 
 if __name__ == '__main__':
     if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
-        @grug_test
+        @grug_test(max_io=2)
         def main_smoke_test_warthog(trajectory_file):
             actual_starting_setting = config.simulator.starting_waypoint
             config.simulator.starting_waypoint = 0 # force override it for test
@@ -90,7 +90,6 @@ if __name__ == '__main__':
                         horizon=                                       getattr(env, "horizon"                                       , None),
                         action_duration=                               getattr(env, "action_duration"                               , None),
                         desired_velocities=                            getattr(env, "desired_velocities"                            , None),
-                        num_steps=                                     getattr(env, "num_steps"                                     , None),
                         max_vel=                                       getattr(env, "max_vel"                                       , None),
                         waypoints_dist=                                getattr(env, "waypoints_dist"                                , None),
                         warthog_length=                                getattr(env, "warthog_length"                                , None),
