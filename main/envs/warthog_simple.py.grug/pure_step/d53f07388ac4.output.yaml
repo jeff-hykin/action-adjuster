@@ -71,7 +71,6 @@ normal_output:
      x: 21.448935975040907
      y: 9.656827754438055
      angle: 1.2753302889220217
-  is_episode_start: 0
   closest_distance: 0.5342203785235284
   closest_index: 1
   ep_poses:

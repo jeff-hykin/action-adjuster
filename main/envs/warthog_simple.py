@@ -50,7 +50,6 @@ if True:
         'twist',
         'prev_angle',
         'pose',
-        'is_episode_start',
         'closest_distance',
         'closest_index',
         'ep_poses',
@@ -288,7 +287,6 @@ def pure_step(
     crosstrack_error,
     action_duration,
     ep_poses,
-    is_episode_start,
     episode_steps,
     horizon,
     max_number_of_timesteps_per_episode,
@@ -307,7 +305,6 @@ def pure_step(
     waypoints_list,
     **kwargs,
 ):
-    is_episode_start = 0
     prev_closest_index = closest_index
     obs, closest_distance, closest_index = pure_get_observation(
         closest_distance=closest_distance,
@@ -358,7 +355,6 @@ def pure_step(
             twist,
             prev_angle,
             pose,
-            is_episode_start,
             closest_distance,
             closest_index,
             ep_poses,
@@ -423,7 +419,7 @@ class WarthogEnv(gym.Env):
             self.closest_distance       = math.inf
             self.desired_velocities     = []
             self.episode_steps          = 0
-            self.total_episode_reward   = 0
+            self.total_ep_reward        = 0
             self.reward                 = 0
             self.original_relative_spin           = 0 
             self.original_relative_velocity       = 0 
@@ -496,7 +492,6 @@ class WarthogEnv(gym.Env):
         self.vel_reward              = 0
         self.delay_steps             = 5
         self.save_data               = False
-        self.is_episode_start                = 1
         self.ep_dist                 = 0
         self.ep_poses                = []
         
@@ -652,8 +647,42 @@ class WarthogEnv(gym.Env):
             timestep=self.episode_steps,
         )
         
-        output, 
-        (
+        closest_relative_index = 0
+        last_waypoint_index = len(self.waypoints_list)-1
+        next_waypoint          = self.waypoints_list[self.next_waypoint_index]
+        if len(self.waypoints_list) > 1:
+            distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
+            got_further_away           = self.closest_distance < distance_to_waypoint
+            was_within_waypoint_radius = min(distance_to_waypoint, self.closest_distance) < config.simulator.waypoint_radius
+            # went past waypoint? increment the index
+            if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
+                closest_relative_index  = 1
+            # went past waypoint, but edgecase of getting further away:
+            elif was_within_waypoint_radius and self.next_waypoint_index < last_waypoint_index:
+                next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
+                waypoint_arm_angle = angle_created_by(
+                    start=(self.spacial_info.x, self.spacial_info.y),
+                    midpoint=(next_waypoint.x, next_waypoint.y),
+                    end=(next_next_waypoint.x, next_next_waypoint.y),
+                )
+                we_passed_the_waypoint = waypoint_arm_angle < abs(math.degrees(90))
+                if we_passed_the_waypoint:
+                    closest_relative_index  = 1
+                    
+        if closest_relative_index > 0:
+            self.next_waypoint_index += 1
+            # prevent indexing error
+            self.next_waypoint_index = min(self.next_waypoint_index, len(self.waypoints_list)-1)
+            next_waypoint = self.waypoints_list[self.next_waypoint_index]
+        
+        self.closest_distance = get_distance(
+            next_waypoint.x,
+            next_waypoint.y,
+            self.spacial_info.x,
+            self.spacial_info.y
+        )
+        
+        output, (
             _,
             self.crosstrack_error,
             self.episode_steps,
@@ -668,8 +697,7 @@ class WarthogEnv(gym.Env):
             _,
             _,
             _,
-            self.is_episode_start,
-            self.closest_distance,
+            _,
             self.closest_index,
             self.ep_poses,
         ), other = pure_step(
@@ -680,7 +708,6 @@ class WarthogEnv(gym.Env):
             crosstrack_error=self.crosstrack_error,
             action_duration=self.action_duration,
             ep_poses=self.ep_poses,
-            is_episode_start=self.is_episode_start,
             episode_steps=self.episode_steps,
             horizon=self.horizon,
             max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
@@ -701,17 +728,41 @@ class WarthogEnv(gym.Env):
         self.render()
         return output
     
-    def reset(self):
+    def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
         self.ep_poses = []
         self.total_ep_reward = 0
-        # if self.max_vel >= 5:
-            # self.max_vel = 1
+        
+        index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
             assert self.number_of_waypoints > 21
             index = np.random.randint(self.number_of_waypoints-20, size=1)[0]
+            
+        # if position is overriden by (most likely) the real world position
+        if type(override_next_spacial_info) != type(None):
+            # this is when the spacial_info is coming from the real world
+            self.spacial_info = override_next_spacial_info
+            self.next_waypoint_index = index
+            self.prev_closest_index = index
+        # simulator position
         else:
-            index = config.simulator.starting_waypoint
+            waypoint = self.waypoints_list[index]
+            self.next_waypoint_index = index
+            self.prev_closest_index = index
+            
+            self.spacial_info = SpacialInformation(
+                x=waypoint.x + self.random_start_position_offset,
+                y=waypoint.y + self.random_start_position_offset,
+                angle=waypoint.angle + self.random_start_angle_offset,
+                velocity=0,
+                spin=0,
+                timestep=0,
+            )
+            self.x_pose = [self.spacial_info.x] * self.number_of_trajectories
+            self.y_pose = [self.spacial_info.y] * self.number_of_trajectories
+            for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
+                waypoint.velocity = desired_velocity
+        
         self.closest_index = index
         self.prev_closest_index = index
         self.pose = PoseEntry(
@@ -816,6 +867,7 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                     waypoints_list=env.waypoints_list,
                     pose=env.pose,
                     twist=env.twist,
+                    next_waypoint_index=env.next_waypoint_index,
                     closest_index=env.closest_index,
                     prev_closest_index=env.prev_closest_index,
                     closest_distance=env.closest_distance,

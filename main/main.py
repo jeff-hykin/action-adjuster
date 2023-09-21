@@ -83,6 +83,7 @@ if __name__ == '__main__':
                         spacial_info=                                  getattr(env, "spacial_info"                                  , None),
                         pose=                                          getattr(env, "pose"                                          , None),
                         twist=                                         getattr(env, "twist"                                         , None),
+                        next_waypoint_index=                           getattr(env, "next_waypoint_index"                           , None),
                         closest_index=                                 getattr(env, "closest_index"                                 , None),
                         prev_closest_index=                            getattr(env, "prev_closest_index"                            , None),
                         closest_distance=                              getattr(env, "closest_distance"                              , None),
