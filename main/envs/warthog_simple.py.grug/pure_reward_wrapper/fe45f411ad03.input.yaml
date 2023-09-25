@@ -1,7 +1,7 @@
 args: []
 kwargs:
    total_ep_reward: 1.753706795902211
-   closest_index: 27
+   next_waypoint_index_: 27
    waypoints_list:
    - !python/warthog/Waypoint '{"x": 108.44849000640369, "y": 0.0, "angle": 0.0, "velocity": 0.0}'
    - !python/warthog/Waypoint '{"x": 108.44849000640369, "y": 0.0, "angle": 0.0, "velocity": 0.0}'

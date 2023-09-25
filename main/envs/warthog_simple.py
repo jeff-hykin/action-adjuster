@@ -42,7 +42,7 @@ if True:
         'omega_reward',
         'phi_error',
         'prev_absolute_action',
-        'prev_closest_index',
+        'prev_next_waypoint_index_',
         'reward',
         'total_ep_reward',
         'vel_error',
@@ -51,13 +51,13 @@ if True:
         'prev_angle',
         'pose',
         'closest_distance',
-        'closest_index',
+        'next_waypoint_index_',
         'ep_poses',
     ])
     GetObservationOutput = namedtuple('GetObservationOutput', [
         'obs',
         'closest_distance',
-        'closest_index'
+        'next_waypoint_index_'
     ])
     RewardOutput = namedtuple('RewardOutput', [
         "running_reward",
@@ -152,8 +152,7 @@ def generate_next_spacial_info(
 
 @grug_test(max_io=5, skip=False)
 def pure_get_observation(
-    closest_distance,
-    closest_index,
+    next_waypoint_index_,
     horizon,
     number_of_waypoints,
     pose,
@@ -162,21 +161,21 @@ def pure_get_observation(
     **kwargs,
 ):
     obs   = [0] * (horizon * 4 + 2)
-    index   = closest_index
+    index   = next_waypoint_index_
     
     closest_distance = math.inf
-    for i in range(closest_index, number_of_waypoints):
+    for i in range(next_waypoint_index_, number_of_waypoints):
         dist = get_distance(x1=waypoints_list[i][0], y1=waypoints_list[i][1], x2=pose[0], y2=pose[1])
         if dist <= closest_distance:
             closest_distance = dist
             index = i
         else:
             break
-    closest_index = index
+    next_waypoint_index_ = index
     
     j = 0
     for i in range(0, horizon):
-        k = i + closest_index
+        k = i + next_waypoint_index_
         if k < number_of_waypoints:
             r = get_distance(x1=waypoints_list[k][0], y1=waypoints_list[k][1], x2=pose[0], y2=pose[1])
             xdiff = waypoints_list[k][0] - pose[0]
@@ -198,7 +197,7 @@ def pure_get_observation(
     obs[j] = twist[0]
     obs[j + 1] = twist[1]
     
-    return GetObservationOutput(obs, closest_distance, closest_index)
+    return GetObservationOutput(obs, closest_distance, next_waypoint_index_)
 
 @grug_test(max_io=5, skip=False)
 def pure_reward(
@@ -238,7 +237,7 @@ def pure_reward(
 @grug_test(max_io=5, skip=False)
 def pure_reward_wrapper(
     total_ep_reward,
-    closest_index,
+    next_waypoint_index_,
     waypoints_list,
     pose,
     twist,
@@ -250,14 +249,14 @@ def pure_reward_wrapper(
     done,
     **kwargs,
 ):
-    xdiff         = waypoints_list[closest_index][0] - pose[0]
-    ydiff         = waypoints_list[closest_index][1] - pose[1]
+    xdiff         = waypoints_list[next_waypoint_index_][0] - pose[0]
+    ydiff         = waypoints_list[next_waypoint_index_][1] - pose[1]
     yaw_error     = pi_to_pi(get_angle_from_origin(xdiff, ydiff) - pose[2])
     omega_reward  = -2 * math.fabs(action[1])
     vel_reward    = -math.fabs(action[0] - prev_absolute_action[0])
     
     reward, vel_error, crosstrack_error, phi_error = pure_reward(
-        closest_waypoint=waypoints_list[closest_index],
+        closest_waypoint=waypoints_list[next_waypoint_index_],
         pose=pose,
         twist=twist,
         closest_distance=closest_distance,
@@ -282,8 +281,7 @@ def pure_reward_wrapper(
 def pure_step(
     relative_action,
     absolute_action,
-    closest_distance,
-    closest_index,
+    next_waypoint_index_,
     crosstrack_error,
     action_duration,
     ep_poses,
@@ -296,7 +294,6 @@ def pure_step(
     pose,
     prev_absolute_action,
     prev_angle,
-    prev_closest_index,
     reward,
     total_ep_reward,
     twist,
@@ -305,10 +302,9 @@ def pure_step(
     waypoints_list,
     **kwargs,
 ):
-    prev_closest_index = closest_index
-    obs, closest_distance, closest_index = pure_get_observation(
-        closest_distance=closest_distance,
-        closest_index=closest_index,
+    prev_next_waypoint_index_ = next_waypoint_index_
+    obs, closest_distance, next_waypoint_index_ = pure_get_observation(
+        next_waypoint_index_=next_waypoint_index_,
         horizon=horizon,
         number_of_waypoints=number_of_waypoints,
         pose=pose,
@@ -316,12 +312,12 @@ def pure_step(
         waypoints_list=waypoints_list,
     )
     done = False
-    if closest_index >= number_of_waypoints - 1:
+    if next_waypoint_index_ >= number_of_waypoints - 1:
         done = True
     
     reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, vel_error, done, episode_steps, omega_reward, vel_reward, prev_absolute_action, total_ep_reward = pure_reward_wrapper(
         total_ep_reward=total_ep_reward,
-        closest_index=closest_index,
+        next_waypoint_index_=next_waypoint_index_,
         waypoints_list=waypoints_list,
         pose=pose,
         twist=twist,
@@ -347,7 +343,7 @@ def pure_step(
             omega_reward,
             phi_error,
             prev_absolute_action,
-            prev_closest_index,
+            prev_next_waypoint_index_,
             reward,
             total_ep_reward,
             vel_error,
@@ -356,7 +352,7 @@ def pure_step(
             prev_angle,
             pose,
             closest_distance,
-            closest_index,
+            next_waypoint_index_,
             ep_poses,
         ),
         (
@@ -391,6 +387,7 @@ class WarthogEnv(gym.Env):
     def __init__(self, waypoint_file_path, trajectory_output_path=None, recorder=None, *args, **kwargs):
         super(WarthogEnv, self).__init__()
         self._ = LazyDict()
+        self.log = LazyDict()
         if True:
             self.waypoint_file_path = waypoint_file_path
             self.out_trajectory_file = trajectory_output_path
@@ -416,7 +413,7 @@ class WarthogEnv(gym.Env):
             self.number_of_trajectories = config.simulator.number_of_trajectories
             self.render_axis_size       = 20
             self.next_waypoint_index    = 0
-            self._.prev_closest_index     = 0
+            self._.prev_next_waypoint_index_     = 0
             self._.closest_distance       = math.inf
             self._.desired_velocities     = []
             self.episode_steps          = 0
@@ -459,8 +456,8 @@ class WarthogEnv(gym.Env):
             spin=0,
             unknown=0,
         )
-        self._.closest_index = 0
-        self._.prev_closest_index = 0
+        self._.next_waypoint_index_ = 0
+        self._.prev_next_waypoint_index_ = 0
         self._.closest_distance = math.inf
         self._.horizon = 10
         self._.action_duration = 0.06
@@ -690,7 +687,7 @@ class WarthogEnv(gym.Env):
             self._.omega_reward,
             self._.phi_error,
             self._.prev_absolute_action,
-            self._.prev_closest_index,
+            self._.prev_next_waypoint_index_,
             self._.reward,
             self._.total_ep_reward,
             self._.vel_error,
@@ -699,13 +696,12 @@ class WarthogEnv(gym.Env):
             _,
             _,
             _,
-            self._.closest_index,
+            self._.next_waypoint_index_,
             self._.ep_poses,
         ), other = pure_step(
             relative_action=self._.relative_action,
             absolute_action=self._.absolute_action,
-            closest_distance=self._.closest_distance,
-            closest_index=self._.closest_index,
+            next_waypoint_index_=self._.next_waypoint_index_,
             crosstrack_error=self._.crosstrack_error,
             action_duration=self._.action_duration,
             ep_poses=self._.ep_poses,
@@ -718,7 +714,6 @@ class WarthogEnv(gym.Env):
             pose=self._.pose,
             prev_absolute_action=self._.prev_absolute_action,
             prev_angle=self._.prev_angle,
-            prev_closest_index=self._.prev_closest_index,
             reward=self._.reward,
             total_ep_reward=self._.total_ep_reward,
             twist=self._.twist,
@@ -744,12 +739,12 @@ class WarthogEnv(gym.Env):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = override_next_spacial_info
             self.next_waypoint_index = index
-            self._.prev_closest_index = index
+            self._.prev_next_waypoint_index_ = index
         # simulator position
         else:
             waypoint = self._.waypoints_list[index]
             self.next_waypoint_index = index
-            self._.prev_closest_index = index
+            self._.prev_next_waypoint_index_ = index
             
             self.spacial_info = SpacialInformation(
                 x=waypoint.x + self.random_start_position_offset,
@@ -764,8 +759,8 @@ class WarthogEnv(gym.Env):
             for desired_velocity, waypoint in zip(self._.desired_velocities, self._.waypoints_list):
                 waypoint.velocity = desired_velocity
         
-        self._.closest_index = index
-        self._.prev_closest_index = index
+        self._.next_waypoint_index_ = index
+        self._.prev_next_waypoint_index_ = index
         self._.pose = PoseEntry(
             x=float(self._.waypoints_list[index][0] + 0.1),
             y=float(self._.waypoints_list[index][1] + 0.1),
@@ -785,9 +780,8 @@ class WarthogEnv(gym.Env):
         #         self._.waypoints_list[i][3] = self._.desired_velocities[i]
         # self._.max_vel = 2
         # self._.max_vel = self._.max_vel + 1
-        obs, self._.closest_distance, self._.closest_index = pure_get_observation(
-            closest_distance=self._.closest_distance,
-            closest_index=self._.closest_index,
+        obs, self._.closest_distance, self._.next_waypoint_index_ = pure_get_observation(
+            next_waypoint_index_=self._.next_waypoint_index_,
             horizon=self._.horizon,
             number_of_waypoints=self._.number_of_waypoints,
             pose=self._.pose,
@@ -810,7 +804,7 @@ class WarthogEnv(gym.Env):
         # plot remaining points in red
         x = []
         y = []
-        for each_x, each_y, *_ in self._.waypoints_list[self._.closest_index:]:
+        for each_x, each_y, *_ in self._.waypoints_list[self._.next_waypoint_index_:]:
             x.append(each_x)
             y.append(each_y)
         self._.ax.plot(x, y, "+r")
@@ -837,7 +831,7 @@ class WarthogEnv(gym.Env):
         self._.text = self._.ax.text(
             spacial_info_x + 1,
             spacial_info_y + 2,
-            f"remaining_waypoints={len(self._.waypoints_list[self._.closest_index:])},\nvel_error={self._.vel_error:.3f}\nclosest_index={self._.closest_index}\ncrosstrack_error={self._.crosstrack_error:.3f}\nReward={self._.reward:.4f}\nphi_error={self._.phi_error*180/math.pi:.4f}\nsim step={time.time() - self._.prev_timestamp:.4f}\nep_reward={self._.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self._.vel_error:.4f}",
+            f"remaining_waypoints={len(self._.waypoints_list[self._.next_waypoint_index_:])},\nvel_error={self._.vel_error:.3f}\nnext_waypoint_index_={self._.next_waypoint_index_}\ncrosstrack_error={self._.crosstrack_error:.3f}\nReward={self._.reward:.4f}\nphi_error={self._.phi_error*180/math.pi:.4f}\nsim step={time.time() - self._.prev_timestamp:.4f}\nep_reward={self._.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self._.vel_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
@@ -870,8 +864,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
                         pose=                                          getattr(env._, "pose"                                          , None),
                         twist=                                         getattr(env._, "twist"                                         , None),
                         next_waypoint_index=                           getattr(env  , "next_waypoint_index"                           , None),
-                        closest_index=                                 getattr(env._, "closest_index"                                 , None),
-                        prev_closest_index=                            getattr(env._, "prev_closest_index"                            , None),
+                        next_waypoint_index_=                                 getattr(env._, "next_waypoint_index_"                                 , None),
+                        prev_next_waypoint_index_=                            getattr(env._, "prev_next_waypoint_index_"                            , None),
                         closest_distance=                              getattr(env._, "closest_distance"                              , None),
                         number_of_waypoints=                           getattr(env._, "number_of_waypoints"                           , None),
                         horizon=                                       getattr(env._, "horizon"                                       , None),

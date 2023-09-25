@@ -7,7 +7,7 @@ kwargs:
       velocity: !<python/numpy/float64> 2.24
       spin: !<python/numpy/float64> 1.4000000000000001
    closest_distance: 0.04077884604577861
-   closest_index: 1
+   next_waypoint_index_: 1
    crosstrack_error: -0.04020057766138824
    action_duration: 0.06
    ep_poses:
@@ -42,7 +42,7 @@ kwargs:
       velocity: !<python/numpy/float64> 2.0
       spin: !<python/numpy/float64> 1.25
    prev_angle: 1.1913302889220216
-   prev_closest_index: 0
+   prev_next_waypoint_index_: 0
    reward: 0
    total_ep_reward: 0
    twist: !python/named_tuple/TwistEntry

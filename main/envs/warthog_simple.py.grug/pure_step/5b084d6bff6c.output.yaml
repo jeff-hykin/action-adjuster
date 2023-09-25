@@ -57,7 +57,7 @@ normal_output:
   omega_reward: -2.839
   phi_error: !<python/numpy/float64> 1.0540996985226287
   prev_absolute_action: *id001
-  prev_closest_index: 1
+  prev_next_waypoint_index_: 1
   reward: 0
   total_ep_reward: 0
   vel_error: !<python/numpy/float64> -1.3874077582062596
@@ -72,7 +72,7 @@ normal_output:
      y: 10.723893866721124
      angle: 1.955040288922022
   closest_distance: 1.4986532509146635
-  closest_index: 2
+  next_waypoint_index_: 2
   ep_poses:
   - !python/named_tuple/SpacialHistory
     x: 21.12207047965822

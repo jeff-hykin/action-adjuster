@@ -1,7 +1,7 @@
 args: []
 kwargs:
    closest_distance: 22.645937592387142
-   closest_index: 0
+   next_waypoint_index_: 0
    horizon: 10
    number_of_waypoints: 99
    pose:
