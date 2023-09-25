@@ -390,12 +390,13 @@ class WarthogEnv(gym.Env):
     
     def __init__(self, waypoint_file_path, trajectory_output_path=None, recorder=None, *args, **kwargs):
         super(WarthogEnv, self).__init__()
+        self._ = LazyDict()
         if True:
             self.waypoint_file_path = waypoint_file_path
             self.out_trajectory_file = trajectory_output_path
             self.recorder = recorder
             
-            self.waypoints_list   = []
+            self._.waypoints_list   = []
             self.prev_spacial_info = SpacialInformation(0,0,0,0,0,-1)
             self.prev_spacial_info_with_noise = SpacialInformation(0,0,0,0,0,-1)
             self.spacial_info_with_noise = SpacialInformation(0,0,0,0,0,0)
@@ -409,19 +410,19 @@ class WarthogEnv(gym.Env):
             )
             self.observation = None
             
-            self.max_number_of_timesteps_per_episode      = config.simulator.max_number_of_timesteps_per_episode
-            self.save_data              = config.simulator.save_data
-            self.action_duration        = config.simulator.action_duration  
+            self._.max_number_of_timesteps_per_episode      = config.simulator.max_number_of_timesteps_per_episode
+            self._.save_data              = config.simulator.save_data
+            self._.action_duration        = config.simulator.action_duration  
             self.number_of_trajectories = config.simulator.number_of_trajectories
             self.render_axis_size       = 20
             self.next_waypoint_index    = 0
-            self.prev_closest_index     = 0
-            self.closest_distance       = math.inf
-            self.desired_velocities     = []
+            self._.prev_closest_index     = 0
+            self._.closest_distance       = math.inf
+            self._.desired_velocities     = []
             self.episode_steps          = 0
-            self.total_ep_reward        = 0
-            self.reward                 = 0
-            self.original_relative_spin           = 0 
+            self._.total_ep_reward        = 0
+            self._.reward                 = 0
+            self._.original_relative_spin           = 0 
             self.original_relative_velocity       = 0 
             self.prev_original_relative_spin      = 0 
             self.prev_original_relative_velocity  = 0 # "original" is what the actor said to do
@@ -432,98 +433,98 @@ class WarthogEnv(gym.Env):
             self.prev_observation        = None
             self.is_episode_start        = 1
             self.trajectory_file         = None
-            self.global_timestep         = 0
+            self._.global_timestep         = 0
             self.action_buffer           = [ (0,0) ] * config.simulator.action_delay # seed the buffer with delays
             self.simulated_battery_level = 1.0 # proportion 
             
             if self.waypoint_file_path is not None:
-                self.desired_velocities, self.waypoints_list = read_waypoint_file(self.waypoint_file_path)
+                self._.desired_velocities, self._.waypoints_list = read_waypoint_file(self.waypoint_file_path)
             
-            self.x_pose = [0.0] * self.number_of_trajectories
-            self.y_pose = [0.0] * self.number_of_trajectories
-            self.crosstrack_error = 0
+            self._.x_pose = [0.0] * self.number_of_trajectories
+            self._.y_pose = [0.0] * self.number_of_trajectories
+            self._.crosstrack_error = 0
             self.velocity_error   = 0
-            self.phi_error        = 0
-            self.prev_timestamp   = time.time()
-            self.should_render    = config.simulator.should_render and countdown(config.simulator.render_rate)
+            self._.phi_error        = 0
+            self._.prev_timestamp   = time.time()
+            self._.should_render    = config.simulator.should_render and countdown(config.simulator.render_rate)
         
-        self.waypoints_list = []
-        self.pose = PoseEntry(
+        self._.waypoints_list = []
+        self._.pose = PoseEntry(
             x=0,
             y=0,
             angle=0,
         )
-        self.twist = TwistEntry(
+        self._.twist = TwistEntry(
             velocity=0,
             spin=0,
             unknown=0,
         )
-        self.closest_index = 0
-        self.prev_closest_index = 0
-        self.closest_distance = math.inf
-        self.horizon = 10
-        self.action_duration = 0.06
-        self.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file_path)
-        self.number_of_waypoints = len(self.waypoints_list)
-        self.max_vel = 1
-        self.waypoints_dist = 0.5
-        self.warthog_length = 0.5 / 2.0
-        self.warthog_width = 1.0 / 2.0
-        self.warthog_diag = math.sqrt(
-            self.warthog_width**2 + self.warthog_length**2
+        self._.closest_index = 0
+        self._.prev_closest_index = 0
+        self._.closest_distance = math.inf
+        self._.horizon = 10
+        self._.action_duration = 0.06
+        self._.desired_velocities, self._.waypoints_list = read_waypoint_file(waypoint_file_path)
+        self._.number_of_waypoints = len(self._.waypoints_list)
+        self._.max_vel = 1
+        self._.waypoints_dist = 0.5
+        self._.warthog_length = 0.5 / 2.0
+        self._.warthog_width = 1.0 / 2.0
+        self._.warthog_diag = math.sqrt(
+            self._.warthog_width**2 + self._.warthog_length**2
         )
-        self.diag_angle              = math.atan2(self.warthog_length, self.warthog_width)
-        self.prev_angle              = 0
-        self.n_traj                  = 100
-        self.x_pose                   = [0.0] * self.n_traj
-        self.y_pose                   = [0.0] * self.n_traj
-        self.crosstrack_error        = 0
-        self.vel_error               = 0
-        self.phi_error               = 0
-        self.start_step_for_sup_data = 500000
-        self.max_number_of_timesteps_per_episode            = 700
-        self.tprev                   = time.time()
-        self.total_ep_reward         = 0
-        self.reward                  = 0
-        self.action                  = [0.0, 0.0]
-        self.absolute_action         = [0.0, 0.0]
-        self.prev_absolute_action             = [0.0, 0.0]
-        self.omega_reward            = 0
-        self.vel_reward              = 0
-        self.delay_steps             = 5
-        self.save_data               = False
-        self.ep_dist                 = 0
-        self.ep_poses                = []
+        self._.diag_angle              = math.atan2(self._.warthog_length, self._.warthog_width)
+        self._.prev_angle              = 0
+        self._.n_traj                  = 100
+        self._.x_pose                   = [0.0] * self._.n_traj
+        self._.y_pose                   = [0.0] * self._.n_traj
+        self._.crosstrack_error        = 0
+        self._.vel_error               = 0
+        self._.phi_error               = 0
+        self._.start_step_for_sup_data = 500000
+        self._.max_number_of_timesteps_per_episode            = 700
+        self._.tprev                   = time.time()
+        self._.total_ep_reward         = 0
+        self._.reward                  = 0
+        self._.action                  = [0.0, 0.0]
+        self._.absolute_action         = [0.0, 0.0]
+        self._.prev_absolute_action             = [0.0, 0.0]
+        self._.omega_reward            = 0
+        self._.vel_reward              = 0
+        self._.delay_steps             = 5
+        self._.save_data               = False
+        self._.ep_dist                 = 0
+        self._.ep_poses                = []
         
-        self.should_render = True
-        self.global_timestep = 0
-        self.original_relative_spin = 0 
+        self._.should_render = True
+        self._.global_timestep = 0
+        self._.original_relative_spin = 0 
         
-        if self.should_render:
+        if self._.should_render:
             from matplotlib.patches import Rectangle
-            self.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
-            self.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
-            self.prev_timestamp = time.time()
+            self._.warthog_diag   = math.sqrt(config.vehicle.render_width**2 + config.vehicle.render_length**2)
+            self._.diagonal_angle = math.atan2(config.vehicle.render_length, config.vehicle.render_width)
+            self._.prev_timestamp = time.time()
             
-            self.render_path = f"{config.output_folder}/render/"
-            print(f'''rendering to: {self.render_path}''')
-            FS.remove(self.render_path)
-            FS.ensure_is_folder(self.render_path)
+            self._.render_path = f"{config.output_folder}/render/"
+            print(f'''rendering to: {self._.render_path}''')
+            FS.remove(self._.render_path)
+            FS.ensure_is_folder(self._.render_path)
             plt.ion
-            self.fig = plt.figure(dpi=100, figsize=(10, 10))
-            self.ax  = self.fig.add_subplot(111)
-            self.ax.set_xlim([-4, 4])
-            self.ax.set_ylim([-4, 4])
-            self.rect = Rectangle((0.0, 0.0), config.vehicle.render_width * 2, config.vehicle.render_length * 2, fill=False)
-            self.ax.add_artist(self.rect)
-            (self.cur_pos,) = self.ax.plot(self.x_pose, self.y_pose, "+g")
-            self.text = self.ax.text(1, 2, f"vel_error={self.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
+            self._.fig = plt.figure(dpi=100, figsize=(10, 10))
+            self._.ax  = self._.fig.add_subplot(111)
+            self._.ax.set_xlim([-4, 4])
+            self._.ax.set_ylim([-4, 4])
+            self._.rect = Rectangle((0.0, 0.0), config.vehicle.render_width * 2, config.vehicle.render_length * 2, fill=False)
+            self._.ax.add_artist(self._.rect)
+            (self._.cur_pos,) = self._.ax.plot(self._.x_pose, self._.y_pose, "+g")
+            self._.text = self._.ax.text(1, 2, f"vel_error={self._.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
             x = []
             y = []
-            for each_x, each_y, *_ in self.waypoints_list:
+            for each_x, each_y, *_ in self._.waypoints_list:
                 x.append(each_x)
                 y.append(each_y)
-            self.ax.plot(x, y, "+b")
+            self._.ax.plot(x, y, "+b")
         
         self.reset()
     
@@ -537,21 +538,21 @@ class WarthogEnv(gym.Env):
         # push new action
         # 
         self.prev_original_relative_velocity = self.original_relative_velocity
-        self.prev_original_relative_spin     = self.original_relative_spin
+        self.prev_original_relative_spin     = self._.original_relative_spin
         self.prev_mutated_relative_velocity  = self.mutated_relative_velocity
         self.prev_mutated_relative_spin      = self.mutated_relative_spin
-        self.original_relative_velocity, self.original_relative_spin = action
-        self.absolute_action = Action(
+        self.original_relative_velocity, self._.original_relative_spin = action
+        self._.absolute_action = Action(
             velocity=clip(self.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
-            spin=clip(self.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin,
+            spin=clip(self._.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin,
         )
         
         # 
         # logging and counter-increments
         # 
-        if self.save_data and self.trajectory_file is not None:
-            self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self.original_relative_spin}, {self.is_episode_start}\n")
-        self.global_timestep += 1
+        if self._.save_data and self.trajectory_file is not None:
+            self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.original_relative_velocity}, {self._.original_relative_spin}, {self.is_episode_start}\n")
+        self._.global_timestep += 1
         self.episode_steps = self.episode_steps + 1
         self.is_episode_start = 0
         
@@ -561,7 +562,7 @@ class WarthogEnv(gym.Env):
         if True:
             # first force them to be within normal ranges
             mutated_relative_velocity_action = clip(self.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
-            mutated_relative_spin_action     = clip(self.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
+            mutated_relative_spin_action     = clip(self._.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
             
             # 
             # ADVERSITY
@@ -570,7 +571,7 @@ class WarthogEnv(gym.Env):
                 # battery adversity
                 if config.simulator.battery_adversity_enabled:
                     self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
-                    self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
+                    self.recorder.add(timestep=self._.global_timestep, simulated_battery_level=self.simulated_battery_level)
                     self.recorder.commit()
                     mutated_relative_velocity_action *= self.simulated_battery_level
                     # make sure velocity never goes negative (treat low battery as resistance)
@@ -613,53 +614,53 @@ class WarthogEnv(gym.Env):
             #     old_spacial_info=SpacialInformation(*self.spacial_info),
             #     relative_velocity=self.mutated_relative_velocity,
             #     relative_spin=self.mutated_relative_spin,
-            #     action_duration=self.action_duration,
+            #     action_duration=self._.action_duration,
             # )
             pass
             
-        self.global_timestep += 1
-        self.action = action
-        self.relative_action = Action(velocity=self.original_relative_velocity, spin=self.original_relative_spin) 
+        self._.global_timestep += 1
+        self._.action = action
+        self._.relative_action = Action(velocity=self.original_relative_velocity, spin=self._.original_relative_spin) 
         
         self.spacial_info = SpacialInformation(
-            x=self.pose.x,
-            y=self.pose.y,
-            angle=self.pose.angle,
-            velocity=self.twist.velocity,
-            spin=self.twist.spin,
+            x=self._.pose.x,
+            y=self._.pose.y,
+            angle=self._.pose.angle,
+            velocity=self._.twist.velocity,
+            spin=self._.twist.spin,
             timestep=self.episode_steps,
         )
         
-        self.twist, self.prev_angle, self.pose, ep_poses, _ = generate_next_spacial_info(
+        self._.twist, self._.prev_angle, self._.pose, ep_poses, _ = generate_next_spacial_info(
             old_spacial_info=self.spacial_info,
-            relative_velocity=self.relative_action.velocity,
-            relative_spin=self.relative_action.spin,
-            action_duration=self.action_duration,
-            ep_poses=self.ep_poses,
+            relative_velocity=self._.relative_action.velocity,
+            relative_spin=self._.relative_action.spin,
+            action_duration=self._.action_duration,
+            ep_poses=self._.ep_poses,
         )
         
         self.spacial_info = SpacialInformation(
-            x=self.pose.x,
-            y=self.pose.y,
-            angle=self.pose.angle,
-            velocity=self.twist.velocity,
-            spin=self.twist.spin,
+            x=self._.pose.x,
+            y=self._.pose.y,
+            angle=self._.pose.angle,
+            velocity=self._.twist.velocity,
+            spin=self._.twist.spin,
             timestep=self.episode_steps,
         )
         
         closest_relative_index = 0
-        last_waypoint_index = len(self.waypoints_list)-1
-        next_waypoint          = self.waypoints_list[self.next_waypoint_index]
-        if len(self.waypoints_list) > 1:
+        last_waypoint_index = len(self._.waypoints_list)-1
+        next_waypoint          = self._.waypoints_list[self.next_waypoint_index]
+        if len(self._.waypoints_list) > 1:
             distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
-            got_further_away           = self.closest_distance < distance_to_waypoint
-            was_within_waypoint_radius = min(distance_to_waypoint, self.closest_distance) < config.simulator.waypoint_radius
+            got_further_away           = self._.closest_distance < distance_to_waypoint
+            was_within_waypoint_radius = min(distance_to_waypoint, self._.closest_distance) < config.simulator.waypoint_radius
             # went past waypoint? increment the index
             if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
                 closest_relative_index  = 1
             # went past waypoint, but edgecase of getting further away:
             elif was_within_waypoint_radius and self.next_waypoint_index < last_waypoint_index:
-                next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
+                next_next_waypoint         = self._.waypoints_list[self.next_waypoint_index+1]
                 waypoint_arm_angle = angle_created_by(
                     start=(self.spacial_info.x, self.spacial_info.y),
                     midpoint=(next_waypoint.x, next_waypoint.y),
@@ -672,10 +673,10 @@ class WarthogEnv(gym.Env):
         if closest_relative_index > 0:
             self.next_waypoint_index += 1
             # prevent indexing error
-            self.next_waypoint_index = min(self.next_waypoint_index, len(self.waypoints_list)-1)
-            next_waypoint = self.waypoints_list[self.next_waypoint_index]
+            self.next_waypoint_index = min(self.next_waypoint_index, len(self._.waypoints_list)-1)
+            next_waypoint = self._.waypoints_list[self.next_waypoint_index]
         
-        self.closest_distance = get_distance(
+        self._.closest_distance = get_distance(
             next_waypoint.x,
             next_waypoint.y,
             self.spacial_info.x,
@@ -684,71 +685,71 @@ class WarthogEnv(gym.Env):
         
         output, (
             _,
-            self.crosstrack_error,
+            self._.crosstrack_error,
             self.episode_steps,
-            self.omega_reward,
-            self.phi_error,
-            self.prev_absolute_action,
-            self.prev_closest_index,
-            self.reward,
-            self.total_ep_reward,
-            self.vel_error,
-            self.vel_reward,
+            self._.omega_reward,
+            self._.phi_error,
+            self._.prev_absolute_action,
+            self._.prev_closest_index,
+            self._.reward,
+            self._.total_ep_reward,
+            self._.vel_error,
+            self._.vel_reward,
             _,
             _,
             _,
             _,
-            self.closest_index,
-            self.ep_poses,
+            self._.closest_index,
+            self._.ep_poses,
         ), other = pure_step(
-            relative_action=self.relative_action,
-            absolute_action=self.absolute_action,
-            closest_distance=self.closest_distance,
-            closest_index=self.closest_index,
-            crosstrack_error=self.crosstrack_error,
-            action_duration=self.action_duration,
-            ep_poses=self.ep_poses,
+            relative_action=self._.relative_action,
+            absolute_action=self._.absolute_action,
+            closest_distance=self._.closest_distance,
+            closest_index=self._.closest_index,
+            crosstrack_error=self._.crosstrack_error,
+            action_duration=self._.action_duration,
+            ep_poses=self._.ep_poses,
             episode_steps=self.episode_steps,
-            horizon=self.horizon,
-            max_number_of_timesteps_per_episode=self.max_number_of_timesteps_per_episode,
-            number_of_waypoints=self.number_of_waypoints,
-            omega_reward=self.omega_reward,
-            phi_error=self.phi_error,
-            pose=self.pose,
-            prev_absolute_action=self.prev_absolute_action,
-            prev_angle=self.prev_angle,
-            prev_closest_index=self.prev_closest_index,
-            reward=self.reward,
-            total_ep_reward=self.total_ep_reward,
-            twist=self.twist,
-            vel_error=self.vel_error,
-            vel_reward=self.vel_reward,
-            waypoints_list=self.waypoints_list,
+            horizon=self._.horizon,
+            max_number_of_timesteps_per_episode=self._.max_number_of_timesteps_per_episode,
+            number_of_waypoints=self._.number_of_waypoints,
+            omega_reward=self._.omega_reward,
+            phi_error=self._.phi_error,
+            pose=self._.pose,
+            prev_absolute_action=self._.prev_absolute_action,
+            prev_angle=self._.prev_angle,
+            prev_closest_index=self._.prev_closest_index,
+            reward=self._.reward,
+            total_ep_reward=self._.total_ep_reward,
+            twist=self._.twist,
+            vel_error=self._.vel_error,
+            vel_reward=self._.vel_reward,
+            waypoints_list=self._.waypoints_list,
         )
         self.render()
         return output
     
     def reset(self, override_next_spacial_info=None):
         self.is_episode_start = 1
-        self.ep_poses = []
-        self.total_ep_reward = 0
+        self._.ep_poses = []
+        self._.total_ep_reward = 0
         
         index = config.simulator.starting_waypoint
         if config.simulator.starting_waypoint == 'random':
-            assert self.number_of_waypoints > 21
-            index = np.random.randint(self.number_of_waypoints-20, size=1)[0]
+            assert self._.number_of_waypoints > 21
+            index = np.random.randint(self._.number_of_waypoints-20, size=1)[0]
             
         # if position is overriden by (most likely) the real world position
         if type(override_next_spacial_info) != type(None):
             # this is when the spacial_info is coming from the real world
             self.spacial_info = override_next_spacial_info
             self.next_waypoint_index = index
-            self.prev_closest_index = index
+            self._.prev_closest_index = index
         # simulator position
         else:
-            waypoint = self.waypoints_list[index]
+            waypoint = self._.waypoints_list[index]
             self.next_waypoint_index = index
-            self.prev_closest_index = index
+            self._.prev_closest_index = index
             
             self.spacial_info = SpacialInformation(
                 x=waypoint.x + self.random_start_position_offset,
@@ -758,40 +759,40 @@ class WarthogEnv(gym.Env):
                 spin=0,
                 timestep=0,
             )
-            self.x_pose = [self.spacial_info.x] * self.number_of_trajectories
-            self.y_pose = [self.spacial_info.y] * self.number_of_trajectories
-            for desired_velocity, waypoint in zip(self.desired_velocities, self.waypoints_list):
+            self._.x_pose = [self.spacial_info.x] * self.number_of_trajectories
+            self._.y_pose = [self.spacial_info.y] * self.number_of_trajectories
+            for desired_velocity, waypoint in zip(self._.desired_velocities, self._.waypoints_list):
                 waypoint.velocity = desired_velocity
         
-        self.closest_index = index
-        self.prev_closest_index = index
-        self.pose = PoseEntry(
-            x=float(self.waypoints_list[index][0] + 0.1),
-            y=float(self.waypoints_list[index][1] + 0.1),
-            angle=float(self.waypoints_list[index][2] + 0.01),
+        self._.closest_index = index
+        self._.prev_closest_index = index
+        self._.pose = PoseEntry(
+            x=float(self._.waypoints_list[index][0] + 0.1),
+            y=float(self._.waypoints_list[index][1] + 0.1),
+            angle=float(self._.waypoints_list[index][2] + 0.01),
         )
-        self.x_pose = [self.pose[0]] * self.n_traj
-        self.y_pose = [self.pose[1]] * self.n_traj
-        self.twist = TwistEntry(
+        self._.x_pose = [self._.pose[0]] * self._.n_traj
+        self._.y_pose = [self._.pose[1]] * self._.n_traj
+        self._.twist = TwistEntry(
             velocity=0,
             spin=0,
             unknown=0,
         )
-        # for i in range(0, self.number_of_waypoints):
-        #     if self.desired_velocities[i] > self.max_vel:
-        #         self.waypoints_list[i][3] = self.max_vel
+        # for i in range(0, self._.number_of_waypoints):
+        #     if self._.desired_velocities[i] > self._.max_vel:
+        #         self._.waypoints_list[i][3] = self._.max_vel
         #     else:
-        #         self.waypoints_list[i][3] = self.desired_velocities[i]
-        # self.max_vel = 2
-        # self.max_vel = self.max_vel + 1
-        obs, self.closest_distance, self.closest_index = pure_get_observation(
-            closest_distance=self.closest_distance,
-            closest_index=self.closest_index,
-            horizon=self.horizon,
-            number_of_waypoints=self.number_of_waypoints,
-            pose=self.pose,
-            twist=self.twist,
-            waypoints_list=self.waypoints_list,
+        #         self._.waypoints_list[i][3] = self._.desired_velocities[i]
+        # self._.max_vel = 2
+        # self._.max_vel = self._.max_vel + 1
+        obs, self._.closest_distance, self._.closest_index = pure_get_observation(
+            closest_distance=self._.closest_distance,
+            closest_index=self._.closest_index,
+            horizon=self._.horizon,
+            number_of_waypoints=self._.number_of_waypoints,
+            pose=self._.pose,
+            twist=self._.twist,
+            waypoints_list=self._.waypoints_list,
         )
         return obs
 
@@ -801,57 +802,57 @@ class WarthogEnv(gym.Env):
         # plot all the points in blue
         x = []
         y = []
-        for each_x, each_y, *_ in self.waypoints_list:
+        for each_x, each_y, *_ in self._.waypoints_list:
             x.append(each_x)
             y.append(each_y)
-        self.ax.plot(x, y, "+b")
+        self._.ax.plot(x, y, "+b")
         
         # plot remaining points in red
         x = []
         y = []
-        for each_x, each_y, *_ in self.waypoints_list[self.closest_index:]:
+        for each_x, each_y, *_ in self._.waypoints_list[self._.closest_index:]:
             x.append(each_x)
             y.append(each_y)
-        self.ax.plot(x, y, "+r")
+        self._.ax.plot(x, y, "+r")
             
-        spacial_info_x = self.pose[0]
-        spacial_info_y = self.pose[1]
-        spacial_info_angle = self.pose[2]
+        spacial_info_x = self._.pose[0]
+        spacial_info_y = self._.pose[1]
+        spacial_info_angle = self._.pose[2]
         
-        self.ax.set_xlim([spacial_info_x - self.render_axis_size / 2.0, spacial_info_x + self.render_axis_size / 2.0])
-        self.ax.set_ylim([spacial_info_y - self.render_axis_size / 2.0, spacial_info_y + self.render_axis_size / 2.0])
-        total_diag_ang = self.diagonal_angle + spacial_info_angle
-        xl = spacial_info_x - self.warthog_diag * math.cos(total_diag_ang)
-        yl = spacial_info_y - self.warthog_diag * math.sin(total_diag_ang)
-        self.rect.remove()
-        self.rect = Rectangle(
+        self._.ax.set_xlim([spacial_info_x - self.render_axis_size / 2.0, spacial_info_x + self.render_axis_size / 2.0])
+        self._.ax.set_ylim([spacial_info_y - self.render_axis_size / 2.0, spacial_info_y + self.render_axis_size / 2.0])
+        total_diag_ang = self._.diagonal_angle + spacial_info_angle
+        xl = spacial_info_x - self._.warthog_diag * math.cos(total_diag_ang)
+        yl = spacial_info_y - self._.warthog_diag * math.sin(total_diag_ang)
+        self._.rect.remove()
+        self._.rect = Rectangle(
             xy=(xl, yl), 
             width=config.vehicle.render_width * 2, 
             height=config.vehicle.render_length * 2, 
             angle=180.0 * spacial_info_angle / math.pi,
             facecolor="blue",
         )
-        self.text.remove()
-        omega_reward = -2 * math.fabs(self.original_relative_spin)
-        self.text = self.ax.text(
+        self._.text.remove()
+        omega_reward = -2 * math.fabs(self._.original_relative_spin)
+        self._.text = self._.ax.text(
             spacial_info_x + 1,
             spacial_info_y + 2,
-            f"remaining_waypoints={len(self.waypoints_list[self.closest_index:])},\nvel_error={self.vel_error:.3f}\nclosest_index={self.closest_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nphi_error={self.phi_error*180/math.pi:.4f}\nsim step={time.time() - self.prev_timestamp:.4f}\nep_reward={self.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self.vel_error:.4f}",
+            f"remaining_waypoints={len(self._.waypoints_list[self._.closest_index:])},\nvel_error={self._.vel_error:.3f}\nclosest_index={self._.closest_index}\ncrosstrack_error={self._.crosstrack_error:.3f}\nReward={self._.reward:.4f}\nphi_error={self._.phi_error*180/math.pi:.4f}\nsim step={time.time() - self._.prev_timestamp:.4f}\nep_reward={self._.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self._.vel_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
         )
-        self.prev_timestamp = time.time()
-        self.ax.add_artist(self.rect)
-        self.x_pose.append(spacial_info_x)
-        self.y_pose.append(spacial_info_y)
-        del self.x_pose[0]
-        del self.y_pose[0]
-        self.cur_pos.set_xdata(self.x_pose)
-        self.cur_pos.set_ydata(self.y_pose)
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-        self.fig.savefig(f'{self.render_path}/{self.global_timestep}.png')
+        self._.prev_timestamp = time.time()
+        self._.ax.add_artist(self._.rect)
+        self._.x_pose.append(spacial_info_x)
+        self._.y_pose.append(spacial_info_y)
+        del self._.x_pose[0]
+        del self._.y_pose[0]
+        self._.cur_pos.set_xdata(self._.x_pose)
+        self._.cur_pos.set_ydata(self._.y_pose)
+        self._.fig.canvas.draw()
+        self._.fig.canvas.flush_events()
+        self._.fig.savefig(f'{self._.render_path}/{self._.global_timestep}.png')
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
     @grug_test(skip=False)
@@ -864,46 +865,55 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
             outputs = []
             def env_snapshot(env):
                 return deepcopy(dict(
-                    waypoints_list=env.waypoints_list,
-                    pose=env.pose,
-                    twist=env.twist,
-                    next_waypoint_index=env.next_waypoint_index,
-                    closest_index=env.closest_index,
-                    prev_closest_index=env.prev_closest_index,
-                    closest_distance=env.closest_distance,
-                    number_of_waypoints=env.number_of_waypoints,
-                    horizon=env.horizon,
-                    action_duration=env.action_duration,
-                    desired_velocities=env.desired_velocities,
-                    max_vel=env.max_vel,
-                    waypoints_dist=env.waypoints_dist,
-                    warthog_length=env.warthog_length,
-                    warthog_width=env.warthog_width,
-                    warthog_diag=env.warthog_diag,
-                    diag_angle=env.diag_angle,
-                    prev_angle=env.prev_angle,
-                    n_traj=env.n_traj,
-                    x_pose=env.x_pose,
-                    y_pose=env.y_pose,
-                    crosstrack_error=env.crosstrack_error,
-                    vel_error=env.vel_error,
-                    phi_error=env.phi_error,
-                    start_step_for_sup_data=env.start_step_for_sup_data,
-                    episode_steps=env.episode_steps,
-                    max_number_of_timesteps_per_episode=env.max_number_of_timesteps_per_episode,
-                    total_ep_reward=env.total_ep_reward,
-                    reward=env.reward,
-                    action=env.action,
-                    absolute_action=env.absolute_action,
-                    prev_absolute_action=env.prev_absolute_action,
-                    omega_reward=env.omega_reward,
-                    vel_reward=env.vel_reward,
-                    delay_steps=env.delay_steps,
-                    save_data=env.save_data,
-                    is_episode_start=env.is_episode_start,
-                    ep_dist=env.ep_dist,
-                    ep_poses=env.ep_poses,
-                ))
+                        waypoints_list=                                getattr(env._, "waypoints_list"                                , None),
+                        spacial_info=                                  getattr(env  , "spacial_info"                                  , None),
+                        pose=                                          getattr(env._, "pose"                                          , None),
+                        twist=                                         getattr(env._, "twist"                                         , None),
+                        next_waypoint_index=                           getattr(env  , "next_waypoint_index"                           , None),
+                        closest_index=                                 getattr(env._, "closest_index"                                 , None),
+                        prev_closest_index=                            getattr(env._, "prev_closest_index"                            , None),
+                        closest_distance=                              getattr(env._, "closest_distance"                              , None),
+                        number_of_waypoints=                           getattr(env._, "number_of_waypoints"                           , None),
+                        horizon=                                       getattr(env._, "horizon"                                       , None),
+                        action_duration=                               getattr(env._, "action_duration"                               , None),
+                        desired_velocities=                            getattr(env._, "desired_velocities"                            , None),
+                        max_vel=                                       getattr(env._, "max_vel"                                       , None),
+                        waypoints_dist=                                getattr(env._, "waypoints_dist"                                , None),
+                        warthog_length=                                getattr(env._, "warthog_length"                                , None),
+                        warthog_width=                                 getattr(env._, "warthog_width"                                 , None),
+                        warthog_diag=                                  getattr(env._, "warthog_diag"                                  , None),
+                        diag_angle=                                    getattr(env._, "diag_angle"                                    , None),
+                        prev_angle=                                    getattr(env._, "prev_angle"                                    , None),
+                        n_traj=                                        getattr(env._, "n_traj"                                        , None),
+                        x_pose=                                        getattr(env._, "x_pose"                                        , None),
+                        y_pose=                                        getattr(env._, "y_pose"                                        , None),
+                        crosstrack_error=                              getattr(env._, "crosstrack_error"                              , None),
+                        vel_error=                                     getattr(env._, "vel_error"                                     , None),
+                        phi_error=                                     getattr(env._, "phi_error"                                     , None),
+                        start_step_for_sup_data=                       getattr(env._, "start_step_for_sup_data"                       , None),
+                        episode_steps=                                 getattr(env  , "episode_steps"                                 , None),
+                        max_number_of_timesteps_per_episode=           getattr(env._, "max_number_of_timesteps_per_episode"           , None),
+                        total_ep_reward=                               getattr(env._, "total_ep_reward"                               , None),
+                        reward=                                        getattr(env._, "reward"                                        , None),
+                        original_relative_velocity=                    getattr(env  , "original_relative_velocity"                    , None),
+                        original_relative_spin=                        getattr(env._, "original_relative_spin"                        , None),
+                        action=                                        getattr(env._, "action"                                        , None),
+                        absolute_action=                               getattr(env._, "absolute_action"                               , None),
+                        reaction=                                      getattr(env  , "reaction"                                      , None),
+                        prev_absolute_action=                          getattr(env._, "prev_absolute_action"                          , None),
+                        action_buffer=                                 getattr(env  , "action_buffer"                                 , None),
+                        prev_reaction=                                 getattr(env  , "prev_reaction"                                 , None),
+                        omega_reward=                                  getattr(env._, "omega_reward"                                  , None),
+                        vel_reward=                                    getattr(env._, "vel_reward"                                    , None),
+                        is_delayed_dynamics=                           getattr(env  , "is_delayed_dynamics"                           , None),
+                        delay_steps=                                   getattr(env._, "delay_steps"                                   , None),
+                        v_delay_data=                                  getattr(env  , "v_delay_data"                                  , None),
+                        w_delay_data=                                  getattr(env  , "w_delay_data"                                  , None),
+                        save_data=                                     getattr(env._, "save_data"                                     , None),
+                        is_episode_start=                              getattr(env  , "is_episode_start"                              , None),
+                        ep_dist=                                       getattr(env._, "ep_dist"                                       , None),
+                        ep_poses=                                      getattr(env._, "ep_poses"                                      , None),
+                    ))
             
             outputs.append(env_snapshot(env))
             env.step([0.5, 0.5])
