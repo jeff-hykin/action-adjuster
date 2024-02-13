@@ -10,10 +10,12 @@ from __dependencies__.rigorous_recorder import RecordKeeper
 from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 
 from specific_tools.train_ppo import * # required because of pickle lookup
-from envs.warthog import WarthogEnv
-# from envs.warthog_simple import WarthogEnv
-from action_adjuster import ActionAdjustedAgent, NormalAgent
 from config import config, path_to, selected_profiles, grug_test
+if config.use_simple:
+    from envs.warthog_simple import WarthogEnv
+else:
+    from envs.warthog import WarthogEnv
+from action_adjuster import ActionAdjustedAgent, NormalAgent
 from generic_tools.functions import cache_outputs
 from generic_tools.universe.agent import Skeleton
 from generic_tools.universe.timestep import Timestep

@@ -85,6 +85,7 @@
             
     (profiles):
         (default):
+            use_simple: False
             experiment_number: '32'
             number_of_episode_runs_per_scenario: 10
             should_use_ros: False
