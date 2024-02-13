@@ -61,7 +61,7 @@ agent = Agent(
     reaction_space=env.action_space,
     policy=policy,
     recorder=recorder,
-    waypoints_list=tuple(env.waypoints_list),
+    waypoints_list=tuple(getattr(env, "waypoints_list", env._.waypoints_list)),
 )
 
 # 
