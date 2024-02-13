@@ -10,8 +10,8 @@ from __dependencies__.rigorous_recorder import RecordKeeper
 from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks_if_needed
 
 from specific_tools.train_ppo import * # required because of pickle lookup
-# from envs.warthog import WarthogEnv
-from envs.warthog_simple import WarthogEnv
+from envs.warthog import WarthogEnv
+# from envs.warthog_simple import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, NormalAgent
 from config import config, path_to, selected_profiles, grug_test
 from generic_tools.functions import cache_outputs
@@ -61,7 +61,7 @@ agent = Agent(
     reaction_space=env.action_space,
     policy=policy,
     recorder=recorder,
-    waypoints_list=tuple(getattr(env, "waypoints_list", env._.waypoints_list)),
+    waypoints_list=tuple(getattr(env, "waypoints_list", getattr(env,"_", {}).get("waypoints_list", None))),
 )
 
 # 
