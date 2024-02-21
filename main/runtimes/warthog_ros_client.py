@@ -17,6 +17,7 @@ from __dependencies__.blissful_basics import LazyDict, stringify, Warnings, prin
 
 from generic_tools.universe.timestep import Timestep
 from config import config, path_to
+from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, SpacialInformation, ReactionClass, WaypointGap, Waypoint, Observation, AdditionalInfo
 
 # Warnings.disable()
 
@@ -115,7 +116,7 @@ class RosRuntime:
             temp_x   = gps_odom.pose.pose.orientation.w
             angle = ( qut((temp_x, 0, 0, temp_y)).radians )*numpy.sign(temp_y)
             
-            new_spacial_info = self.env.SpacialInformation( x, y, angle, velocity, spin, math.inf )
+            new_spacial_info = SpacialInformation( x, y, angle, velocity, spin, math.inf )
             print(f'''new_spacial_info = {new_spacial_info}''')
             
             env   = self.env

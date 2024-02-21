@@ -1,3 +1,10 @@
+- compare
+    `python ./main/main.py @NO_ADJUSTER @WARTHOG @NOISE=NONE @ADVERSITY=NONE use_simple:False grug_test:disable:False`
+    `python ./main/main.py @NO_ADJUSTER @WARTHOG @NOISE=NONE @ADVERSITY=NONE use_simple:True grug_test:disable:False`
+- figure out why `spacial_info.angle` is different after first step
+    - note: waypoint_index is also different
+
+
 - done:
     - fixed off by one problems in projection
     - fixed reward function using non-mutated action

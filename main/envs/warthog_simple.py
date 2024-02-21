@@ -22,78 +22,7 @@ from __dependencies__.grug_test import register_named_tuple
 from config import config, path_to, grug_test
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference, angle_created_by
 
-# bb.Warnings.disable()
-magic_number_1_point_5 = 1.5
-magic_number_1_point_4 = 1.4
-
-class Unknown:
-    pass
-
-# 
-# data structures (for test cases)
-# 
-if True:
-    Action = namedtuple('Action', ['velocity', 'spin'])
-    StepOutput = namedtuple('StepOutput', ['observation', 'reward', 'done', 'debug'])
-    StepSideEffects = namedtuple('StepSideEffects', [
-        'action',
-        'crosstrack_error',
-        'episode_steps',
-        'omega_reward',
-        'phi_error',
-        'prev_absolute_action',
-        'prev_next_waypoint_index_',
-        'reward',
-        'total_ep_reward',
-        'vel_error',
-        'vel_reward',
-        'twist',
-        'prev_angle',
-        'pose',
-        'closest_distance',
-        'next_waypoint_index_',
-        'ep_poses',
-    ])
-    GetObservationOutput = namedtuple('GetObservationOutput', [
-        'obs',
-        'closest_distance',
-        'next_waypoint_index_'
-    ])
-    RewardOutput = namedtuple('RewardOutput', [
-        "running_reward",
-        "velocity_error",
-        "crosstrack_error",
-        "phi_error"
-    ])
-    SimWarthogOutput = namedtuple('SimWarthogOutput', [
-        "twist",
-        "prev_angle",
-        "pose",
-        "ep_poses",
-        "absolute_action",
-    ])
-    PoseEntry = namedtuple('PoseEntry', [
-        "x",
-        "y",
-        "angle",
-    ])
-    TwistEntry = namedtuple('TwistEntry', [
-        "velocity",
-        "spin",
-        "unknown",
-    ])
-    SpacialHistory = namedtuple('SpacialHistory', [
-        "x",
-        "y",
-        "angle",
-        "velocity",
-        "spin",
-        "new_velocity",
-        "new_spin",
-    ])
-    for each in [Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, ]:
-        register_named_tuple(each, f"{each.__name__}")
-    
+from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, SpacialInformation, ReactionClass, WaypointGap, Waypoint, Observation, AdditionalInfo
 
 
 @grug_test(max_io=5, skip=False)

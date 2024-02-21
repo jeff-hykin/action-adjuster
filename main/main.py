@@ -11,6 +11,7 @@ from __dependencies__.blissful_basics import FS, print, LazyDict, run_main_hooks
 
 from specific_tools.train_ppo import * # required because of pickle lookup
 from config import config, path_to, selected_profiles, grug_test
+from data_structures import *
 if config.use_simple:
     from envs.warthog_simple import WarthogEnv
 else:

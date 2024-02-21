@@ -22,6 +22,7 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 from generic_tools.for_numpy import shift_towards
 from generic_tools.hill_climbing import guess_to_maximize
 from generic_tools.universe.agent import Skeleton
+from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, SpacialInformation, ReactionClass, WaypointGap, Waypoint, Observation, AdditionalInfo
 
 json.fallback_table[numpy.ndarray] = lambda array: array.tolist() # make numpy arrays jsonable
 mean_squared_error_core = torch.nn.MSELoss()
@@ -44,7 +45,7 @@ if True:
             # "records_to_log"
 
     # TODO: replace this with a normalization method
-    spacial_coefficients = WarthogEnv.SpacialInformation(
+    spacial_coefficients = SpacialInformation(
         x=100, 
         y=100, 
         angle=1, 
@@ -503,7 +504,7 @@ class ActionAdjustedAgent(Skeleton):
             additional_info = timestep.hidden_info
             shared_thread_data["timestep_data"] = shared_thread_data["timestep_data"] + [
                 # fill in the timestep index and the historic_transform, but otherwise preserve data
-                WarthogEnv.AdditionalInfo(
+                AdditionalInfo(
                     timestep_index=timestep.index,
                     action_duration=additional_info.action_duration,
                     spacial_info=additional_info.spacial_info,

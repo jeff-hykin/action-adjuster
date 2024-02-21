@@ -9,3 +9,6 @@ def cache_outputs(function):
             cache.setdefault(key, function(*args, **kwargs))
         )
     return caching_function
+
+def get_observation_subset(function):
+    return lambda *args, **kwargs: function(args[0])
