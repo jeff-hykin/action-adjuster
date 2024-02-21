@@ -322,7 +322,7 @@ class WarthogEnv(gym.Env):
             self.out_trajectory_file = trajectory_output_path
             self.recorder = recorder
             
-            self._.waypoints_list   = []
+            self.waypoints_list   = []
             self.prev_spacial_info = SpacialInformation(0,0,0,0,0,-1)
             self.prev_spacial_info_with_noise = SpacialInformation(0,0,0,0,0,-1)
             self.spacial_info_with_noise = SpacialInformation(0,0,0,0,0,0)
@@ -364,7 +364,7 @@ class WarthogEnv(gym.Env):
             self.simulated_battery_level = 1.0 # proportion 
             
             if self.waypoint_file_path is not None:
-                self._.desired_velocities, self._.waypoints_list = read_waypoint_file(self.waypoint_file_path)
+                self._.desired_velocities, self.waypoints_list = read_waypoint_file(self.waypoint_file_path)
             
             self._.x_pose = [0.0] * self.number_of_trajectories
             self._.y_pose = [0.0] * self.number_of_trajectories
@@ -374,7 +374,7 @@ class WarthogEnv(gym.Env):
             self._.prev_timestamp   = time.time()
             self._.should_render    = config.simulator.should_render and countdown(config.simulator.render_rate)
         
-        self._.waypoints_list = []
+        self.waypoints_list = []
         self._.pose = PoseEntry(
             x=0,
             y=0,
@@ -390,8 +390,8 @@ class WarthogEnv(gym.Env):
         self._.closest_distance = math.inf
         self._.horizon = 10
         self._.action_duration = 0.06
-        self._.desired_velocities, self._.waypoints_list = read_waypoint_file(waypoint_file_path)
-        self._.number_of_waypoints = len(self._.waypoints_list)
+        self._.desired_velocities, self.waypoints_list = read_waypoint_file(waypoint_file_path)
+        self._.number_of_waypoints = len(self.waypoints_list)
         self._.max_vel = 1
         self._.waypoints_dist = 0.5
         self._.warthog_length = 0.5 / 2.0
@@ -447,7 +447,7 @@ class WarthogEnv(gym.Env):
             self._.text = self._.ax.text(1, 2, f"vel_error={self._.vel_error}", style="italic", bbox={"facecolor": "red", "alpha": 0.5, "pad": 10}, fontsize=12)
             x = []
             y = []
-            for each_x, each_y, *_ in self._.waypoints_list:
+            for each_x, each_y, *_ in self.waypoints_list:
                 x.append(each_x)
                 y.append(each_y)
             self._.ax.plot(x, y, "+b")
@@ -575,9 +575,9 @@ class WarthogEnv(gym.Env):
         )
         
         closest_relative_index = 0
-        last_waypoint_index = len(self._.waypoints_list)-1
-        next_waypoint          = self._.waypoints_list[self.next_waypoint_index]
-        if len(self._.waypoints_list) > 1:
+        last_waypoint_index = len(self.waypoints_list)-1
+        next_waypoint          = self.waypoints_list[self.next_waypoint_index]
+        if len(self.waypoints_list) > 1:
             distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.spacial_info.x, self.spacial_info.y)
             got_further_away           = self._.closest_distance < distance_to_waypoint
             was_within_waypoint_radius = min(distance_to_waypoint, self._.closest_distance) < config.simulator.waypoint_radius
@@ -586,7 +586,7 @@ class WarthogEnv(gym.Env):
                 closest_relative_index  = 1
             # went past waypoint, but edgecase of getting further away:
             elif was_within_waypoint_radius and self.next_waypoint_index < last_waypoint_index:
-                next_next_waypoint         = self._.waypoints_list[self.next_waypoint_index+1]
+                next_next_waypoint         = self.waypoints_list[self.next_waypoint_index+1]
                 waypoint_arm_angle = angle_created_by(
                     start=(self.spacial_info.x, self.spacial_info.y),
                     midpoint=(next_waypoint.x, next_waypoint.y),
@@ -599,8 +599,8 @@ class WarthogEnv(gym.Env):
         if closest_relative_index > 0:
             self.next_waypoint_index += 1
             # prevent indexing error
-            self.next_waypoint_index = min(self.next_waypoint_index, len(self._.waypoints_list)-1)
-            next_waypoint = self._.waypoints_list[self.next_waypoint_index]
+            self.next_waypoint_index = min(self.next_waypoint_index, len(self.waypoints_list)-1)
+            next_waypoint = self.waypoints_list[self.next_waypoint_index]
         
         self._.closest_distance = get_distance(
             next_waypoint.x,
@@ -648,7 +648,7 @@ class WarthogEnv(gym.Env):
             twist=self._.twist,
             vel_error=self._.vel_error,
             vel_reward=self._.vel_reward,
-            waypoints_list=self._.waypoints_list,
+            waypoints_list=self.waypoints_list,
         )
         self.render()
         return output
@@ -671,7 +671,7 @@ class WarthogEnv(gym.Env):
             self._.prev_next_waypoint_index_ = index
         # simulator position
         else:
-            waypoint = self._.waypoints_list[index]
+            waypoint = self.waypoints_list[index]
             self.next_waypoint_index = index
             self._.prev_next_waypoint_index_ = index
             
@@ -685,15 +685,15 @@ class WarthogEnv(gym.Env):
             )
             self._.x_pose = [self.spacial_info.x] * self.number_of_trajectories
             self._.y_pose = [self.spacial_info.y] * self.number_of_trajectories
-            for desired_velocity, waypoint in zip(self._.desired_velocities, self._.waypoints_list):
+            for desired_velocity, waypoint in zip(self._.desired_velocities, self.waypoints_list):
                 waypoint.velocity = desired_velocity
         
         self._.next_waypoint_index_ = index
         self._.prev_next_waypoint_index_ = index
         self._.pose = PoseEntry(
-            x=float(self._.waypoints_list[index][0] + 0.1),
-            y=float(self._.waypoints_list[index][1] + 0.1),
-            angle=float(self._.waypoints_list[index][2] + 0.01),
+            x=float(self.waypoints_list[index][0] + 0.1),
+            y=float(self.waypoints_list[index][1] + 0.1),
+            angle=float(self.waypoints_list[index][2] + 0.01),
         )
         self._.x_pose = [self._.pose[0]] * self._.n_traj
         self._.y_pose = [self._.pose[1]] * self._.n_traj
@@ -704,9 +704,9 @@ class WarthogEnv(gym.Env):
         )
         # for i in range(0, self._.number_of_waypoints):
         #     if self._.desired_velocities[i] > self._.max_vel:
-        #         self._.waypoints_list[i][3] = self._.max_vel
+        #         self.waypoints_list[i][3] = self._.max_vel
         #     else:
-        #         self._.waypoints_list[i][3] = self._.desired_velocities[i]
+        #         self.waypoints_list[i][3] = self._.desired_velocities[i]
         # self._.max_vel = 2
         # self._.max_vel = self._.max_vel + 1
         obs, self._.closest_distance, self._.next_waypoint_index_ = pure_get_observation(
@@ -715,7 +715,7 @@ class WarthogEnv(gym.Env):
             number_of_waypoints=self._.number_of_waypoints,
             pose=self._.pose,
             twist=self._.twist,
-            waypoints_list=self._.waypoints_list,
+            waypoints_list=self.waypoints_list,
         )
         return obs
 
@@ -725,7 +725,7 @@ class WarthogEnv(gym.Env):
         # plot all the points in blue
         x = []
         y = []
-        for each_x, each_y, *_ in self._.waypoints_list:
+        for each_x, each_y, *_ in self.waypoints_list:
             x.append(each_x)
             y.append(each_y)
         self._.ax.plot(x, y, "+b")
@@ -733,7 +733,7 @@ class WarthogEnv(gym.Env):
         # plot remaining points in red
         x = []
         y = []
-        for each_x, each_y, *_ in self._.waypoints_list[self._.next_waypoint_index_:]:
+        for each_x, each_y, *_ in self.waypoints_list[self._.next_waypoint_index_:]:
             x.append(each_x)
             y.append(each_y)
         self._.ax.plot(x, y, "+r")
@@ -760,7 +760,7 @@ class WarthogEnv(gym.Env):
         self._.text = self._.ax.text(
             spacial_info_x + 1,
             spacial_info_y + 2,
-            f"remaining_waypoints={len(self._.waypoints_list[self._.next_waypoint_index_:])},\nvel_error={self._.vel_error:.3f}\nnext_waypoint_index_={self._.next_waypoint_index_}\ncrosstrack_error={self._.crosstrack_error:.3f}\nReward={self._.reward:.4f}\nphi_error={self._.phi_error*180/math.pi:.4f}\nsim step={time.time() - self._.prev_timestamp:.4f}\nep_reward={self._.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self._.vel_error:.4f}",
+            f"remaining_waypoints={len(self.waypoints_list[self._.next_waypoint_index_:])},\nvel_error={self._.vel_error:.3f}\nnext_waypoint_index_={self._.next_waypoint_index_}\ncrosstrack_error={self._.crosstrack_error:.3f}\nReward={self._.reward:.4f}\nphi_error={self._.phi_error*180/math.pi:.4f}\nsim step={time.time() - self._.prev_timestamp:.4f}\nep_reward={self._.total_ep_reward:.4f}\n\nomega_reward={omega_reward:.4f}\nvel_reward={self._.vel_error:.4f}",
             style="italic",
             bbox={"facecolor": "red", "alpha": 0.5, "pad": 10},
             fontsize=10,
