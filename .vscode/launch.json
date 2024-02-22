@@ -1,0 +1,20 @@
+{
+    "version": "0.2",
+    "configurations": [
+        {
+            "name": "Python: Your Debug Configuration Name",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main/main.py",
+            "args": [
+                "@NO_ADJUSTER",
+                "@WARTHOG",
+                "@NOISE=NONE",
+                "@ADVERSITY=NONE",
+                "use_simple:True",
+                "grug_test:disable:True",
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
