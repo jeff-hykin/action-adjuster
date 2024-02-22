@@ -3,6 +3,7 @@ import time
 import csv
 from copy import deepcopy
 from collections import namedtuple
+import json
 
 from gym import spaces
 from matplotlib import pyplot as plt
@@ -15,6 +16,7 @@ import numpy
 from __dependencies__ import blissful_basics as bb
 from __dependencies__.blissful_basics import Csv, create_named_list_class, FS, print, stringify, clip, countdown, LazyDict
 from __dependencies__.grug_test import yaml, ez_yaml, register_named_tuple
+from super_hash import super_hash
 
 class Unknown:
     pass
@@ -144,6 +146,9 @@ class Waypoint(numpy.ndarray):
             style=None,
             anchor=None
         )
+    
+    def __hash__(self):
+        return super().__hash__()
 
 @yaml.register_class
 class Observation:
@@ -193,7 +198,7 @@ class Observation:
         return numpy.array(as_list)
     
     def __hash__(self):
-        return super_hash(self.__repr__())
+        return hash(super_hash(self.__repr__()))
     
     def __repr__(self):
         """
