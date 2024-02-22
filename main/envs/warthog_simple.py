@@ -896,6 +896,33 @@ class WarthogEnv(gym.Env):
         
         
         return output
+    
+    def diff_compare(self, print_c=False, ignore=[]):
+        print(f'''diff_compare:''')
+        shared_keys = list(set(self.b.keys()) & set(self.a.keys()))
+        only_in_a = list(set(self.a.keys()) - set(self.b.keys()))
+        only_in_b = list(set(self.b.keys()) - set(self.a.keys()))
+        equal_keys = []
+        print("    differences:")
+        for each in shared_keys:
+            if each in ignore:
+                continue
+            if not are_equal(self.a[each], self.b[each]):
+                print(f'''        {each}:\n            {json.dumps(repr(self.a[each]))[1:-1]}\n            {json.dumps(repr(self.b[each]))[1:-1]}''')
+                if type(self.a[each]) != type(self.b[each]):
+                    print(f"            NOTE: types are not equal: {type(self.a[each])}!={type(self.b[each])}")
+            else:
+                equal_keys.append(each)
+        
+        if print_c:
+            print("    self.c.update({")
+            for each in equal_keys:
+                print(f'''        {repr(each)}: {repr(self.a[each])},''')
+            print("    })")
+            
+            print("    match-up helper:")
+            for each in sorted([f"{each}:a" for each in only_in_a] + [f"{each}:b" for each in only_in_b]):
+                print(f'''        {each}''')
 
 
 if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_io):
