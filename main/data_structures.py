@@ -148,7 +148,14 @@ class Waypoint(numpy.ndarray):
         )
     
     def __hash__(self):
-        return super().__hash__()
+        return hash(
+            json.dumps(dict(
+                x=self.x,
+                y=self.y,
+                angle=self.angle,
+                velocity=self.velocity,
+            ))
+        )
 
 @yaml.register_class
 class Observation:
