@@ -320,7 +320,7 @@ class WarthogEnv(gym.Env):
         self.a = LazyDict()
         if True:
             self.a.waypoint_file_path = waypoint_file_path
-            self.a.out_trajectory_file = trajectory_output_path
+            self.a.trajectory_output_path = trajectory_output_path
             self.a.recorder = recorder
             
             self.a.waypoints_list   = []
@@ -341,7 +341,7 @@ class WarthogEnv(gym.Env):
             self.a.save_data              = config.simulator.save_data
             self.a.action_duration        = config.simulator.action_duration  
             self.a.next_waypoint_index        = 0
-            self.a.prev_next_waypoint_index_  = 0
+            self.a.prev_next_waypoint_index  = 0
             self.a.closest_distance           = math.inf
             self.a.desired_velocities         = []
             self.a.episode_steps              = 0
@@ -381,7 +381,7 @@ class WarthogEnv(gym.Env):
                 unknown=0,
             )
             self.a.next_waypoint_index_ = 0
-            self.a.prev_next_waypoint_index_ = 0
+            self.a.prev_next_waypoint_index = 0
             self.a.closest_distance = math.inf
             self.a.horizon = 10
             self.a.action_duration = 0.06
@@ -398,8 +398,8 @@ class WarthogEnv(gym.Env):
             self.a.action                  = [0.0, 0.0]
             self.a.absolute_action         = [0.0, 0.0]
             self.a.prev_absolute_action    = [0.0, 0.0]
-            self.a.velocity_reward              = 0
-            self.a.save_data               = False
+            self.a.velocity_reward         = 0
+            self.a.save_data               = config.simulator.save_data
             self.a.ep_poses                = []
             
             self.a.global_timestep = 0
@@ -552,7 +552,7 @@ class WarthogEnv(gym.Env):
             self.c.global_timestep = 0
 
         self.reset()
-        self.diff_compare(print_c=True)
+        # self.diff_compare(print_c=True)
     
     def __del__(self):
         if self.a.trajectory_file:
@@ -563,7 +563,7 @@ class WarthogEnv(gym.Env):
         return LazyDict({
             key: getattr(self.a, key, getattr(self.b, key, None)) for key in [
                 "waypoint_file_path",
-                "out_trajectory_file",
+                "trajectory_output_path",
                 "recorder",
                 "waypoints_list",
                 "prev_spacial_info",
@@ -774,7 +774,7 @@ class WarthogEnv(gym.Env):
             omega_reward,
             self.a.phi_error,
             self.a.prev_absolute_action,
-            self.a.prev_next_waypoint_index_,
+            self.a.prev_next_waypoint_index,
             self.a.reward,
             self.a.total_episode_reward,
             self.a.velocity_error,
@@ -809,7 +809,7 @@ class WarthogEnv(gym.Env):
             waypoints_list=self.a.waypoints_list,
         )
         self.a.renderer.render_if_needed(
-            prev_next_waypoint_index=self.a.prev_next_waypoint_index_,
+            prev_next_waypoint_index=self.a.prev_next_waypoint_index,
             x_point=self.a.pose[0],
             y_point=self.a.pose[1],
             angle=self.a.pose[2],
@@ -831,230 +831,257 @@ class WarthogEnv(gym.Env):
     
     def reset(self, override_next_spacial_info=None):
         print(f'''resetting''')
-        # 
-        # A
-        # 
-        if True:
-            self.a.is_episode_start = 1
-            self.a.ep_poses = []
-            self.a.total_episode_reward = 0
-            
-            index = config.simulator.starting_waypoint
-            if config.simulator.starting_waypoint == 'random':
-                assert self.a.number_of_waypoints > 21
-                index = np.random.randint(self.a.number_of_waypoints-20, size=1)[0]
-                
-            # if position is overriden by (most likely) the real world position
-            if type(override_next_spacial_info) != type(None):
-                # this is when the spacial_info is coming from the real world
-                self.a.spacial_info = override_next_spacial_info
-                self.a.next_waypoint_index = index
-                self.a.prev_next_waypoint_index_ = index
-            # simulator position
-            else:
-                waypoint = self.a.waypoints_list[index]
-                self.a.next_waypoint_index = index
-                self.a.prev_next_waypoint_index_ = index
-                
-                self.a.spacial_info = SpacialInformation(
-                    x=waypoint.x + config.simulator.random_start_position_offset,
-                    y=waypoint.y + config.simulator.random_start_position_offset,
-                    angle=waypoint.angle + config.simulator.random_start_position_offset,
-                    velocity=0,
-                    spin=0,
-                    timestep=0,
-                )
-                for desired_velocity, waypoint in zip(self.a.desired_velocities, self.a.waypoints_list):
-                    waypoint.velocity = desired_velocity
-            
-            self.a.next_waypoint_index_ = index
-            self.a.prev_next_waypoint_index_ = index
-            self.a.pose = PoseEntry(
-                x=float(self.a.waypoints_list[index][0] + 0.1),
-                y=float(self.a.waypoints_list[index][1] + 0.1),
-                angle=float(self.a.waypoints_list[index][2] + 0.01),
-            )
-            self.a.twist = TwistEntry(
-                velocity=0,
-                spin=0,
-                unknown=0,
-            )
-            # for i in range(0, self.a.number_of_waypoints):
-            #     if self.a.desired_velocities[i] > self.a.max_vel:
-            #         self.a.waypoints_list[i][3] = self.a.max_vel
-            #     else:
-            #         self.a.waypoints_list[i][3] = self.a.desired_velocities[i]
-            # self.a.max_vel = 2
-            # self.a.max_vel = self.a.max_vel + 1
-            self.a.prev_observation, self.a.closest_distance, self.a.next_waypoint_index_ = pure_get_observation(
-                next_waypoint_index_=self.a.next_waypoint_index_,
-                horizon=self.a.horizon,
-                number_of_waypoints=self.a.number_of_waypoints,
-                pose=self.a.pose,
-                twist=self.a.twist,
-                waypoints_list=self.a.waypoints_list,
-            )
-            output = self.a.prev_observation
-            self.a.renderer = Renderer(
-                vehicle_render_width=config.vehicle.render_width,
-                vehicle_render_length=config.vehicle.render_length,
-                waypoints_list=self.a.waypoints_list,
-                should_render=config.simulator.should_render and countdown(config.simulator.render_rate),
-                inital_x=self.a.pose[0],
-                inital_y=self.a.pose[1],
-                render_axis_size=20,
-                render_path=f"{config.output_folder}/render/",
-                history_size=config.simulator.number_of_trajectories,
-            )
-        # 
-        # B
-        # 
-        if True:
-            self.b.is_episode_start = 1
-            self.b.total_episode_reward = 0
-            
-            index = config.simulator.starting_waypoint
-            if config.simulator.starting_waypoint == 'random':
-                assert len(self.b.waypoints_list) > 21
-                index = np.random.randint(len(self.b.waypoints_list)-20, size=1)[0]
-                
-            # if position is overriden by (most likely) the real world position
-            if type(override_next_spacial_info) != type(None):
-                # this is when the spacial_info is coming from the real world
-                self.b.spacial_info = override_next_spacial_info
-                self.b.next_waypoint_index = index
-                self.b.prev_next_waypoint_index = index
-            # simulator position
-            else:
-                waypoint = self.b.waypoints_list[index]
-                self.b.next_waypoint_index = index
-                self.b.prev_next_waypoint_index = index
-                
-                self.b.spacial_info = SpacialInformation(
-                    x=waypoint.x + config.simulator.random_start_position_offset,
-                    y=waypoint.y + config.simulator.random_start_position_offset,
-                    angle=waypoint.angle + config.simulator.random_start_position_offset,
-                    velocity=0,
-                    spin=0,
-                    timestep=0,
-                )
-                for desired_velocity, waypoint in zip(self.b.desired_velocities, self.b.waypoints_list):
-                    waypoint.velocity = desired_velocity
-                
-            
-            # 
-            # calculate closest index
-            # 
-            closest_relative_index, self.b.closest_distance = Helpers.get_closest(
-                remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
-                x=self.b.spacial_info.x,
-                y=self.b.spacial_info.y,
-            )
-            self.b.next_waypoint_index += closest_relative_index
-            self.b.prev_next_waypoint_index = self.b.next_waypoint_index
-            
-            output = self.b.prev_observation = Helpers.generate_observation(
-                closest_index=self.b.next_waypoint_index,
-                remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
-                current_spacial_info=self.b.spacial_info,
-            )
-            
-            # self.b.renderer = Renderer(
-            #     vehicle_render_width=config.vehicle.render_width,
-            #     vehicle_render_length=config.vehicle.render_length,
-            #     waypoints_list=self.b.waypoints_list,
-            #     should_render=config.simulator.should_render and countdown(config.simulator.render_rate),
-            #     inital_x=self.b.spacial_info.x,
-            #     inital_y=self.b.spacial_info.y,
-            #     render_axis_size=20,
-            #     render_path=f"{config.output_folder}/render/",
-            #     history_size=config.simulator.number_of_trajectories,
-            # )
         
         # 
-        # C
+        # stage 1
         # 
         if True:
-            self.c.is_episode_start = 1
-            self.c.ep_poses = []
-            self.c.total_episode_reward = 0
-            
-            index = config.simulator.starting_waypoint
-            if config.simulator.starting_waypoint == 'random':
-                size_limiter = 21
-                assert len(self.c.waypoints_list) > size_limiter
-                index = np.random.randint(len(self.c.waypoints_list)-(size_limiter-1), size=1)[0]
-            
-            # if position is overriden by (most likely) the real world position
-            if type(override_next_spacial_info) != type(None):
-                # this is when the spacial_info is coming from the real world
-                self.c.spacial_info = override_next_spacial_info
-                self.c.next_waypoint_index = index
-                self.c.prev_next_waypoint_index = index
-            # simulator position
-            else:
-                waypoint = self.c.waypoints_list[index]
-                self.c.next_waypoint_index = index
-                self.c.prev_next_waypoint_index = index
+            # 
+            # A
+            # 
+            if True:
+                self.a.is_episode_start = 1
+                self.a.ep_poses = []
+                self.a.total_episode_reward = 0
                 
-                self.c.spacial_info = SpacialInformation(
-                    x=waypoint.x + config.simulator.random_start_position_offset,
-                    y=waypoint.y + config.simulator.random_start_position_offset,
-                    angle=waypoint.angle + config.simulator.random_start_position_offset,
+                index_a = config.simulator.starting_waypoint
+                if config.simulator.starting_waypoint == 'random':
+                    assert self.a.number_of_waypoints > 21
+                    index_a = np.random.randint(self.a.number_of_waypoints-20, size=1)[0]
+                    
+                # if position is overriden by (most likely) the real world position
+                if type(override_next_spacial_info) != type(None):
+                    # this is when the spacial_info is coming from the real world
+                    self.a.spacial_info = override_next_spacial_info
+                    self.a.next_waypoint_index = index_a
+                    self.a.prev_next_waypoint_index = index_a
+                # simulator position
+                else:
+                    waypoint = self.a.waypoints_list[index_a]
+                    self.a.next_waypoint_index = index_a
+                    self.a.prev_next_waypoint_index = index_a
+                    
+                    self.a.spacial_info = SpacialInformation(
+                        x=waypoint.x + config.simulator.random_start_position_offset,
+                        y=waypoint.y + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        velocity=0,
+                        spin=0,
+                        timestep=0,
+                    )
+                    for desired_velocity, waypoint in zip(self.a.desired_velocities, self.a.waypoints_list):
+                        waypoint.velocity = desired_velocity
+            # 
+            # B
+            # 
+            if True:
+                self.b.is_episode_start = 1
+                self.b.total_episode_reward = 0
+                
+                index_b = config.simulator.starting_waypoint
+                if config.simulator.starting_waypoint == 'random':
+                    assert len(self.b.waypoints_list) > 21
+                    index_b = np.random.randint(len(self.b.waypoints_list)-20, size=1)[0]
+                    
+                # if position is overriden by (most likely) the real world position
+                if type(override_next_spacial_info) != type(None):
+                    # this is when the spacial_info is coming from the real world
+                    self.b.spacial_info = override_next_spacial_info
+                    self.b.next_waypoint_index = index_b
+                    self.b.prev_next_waypoint_index = index_b
+                # simulator position
+                else:
+                    waypoint = self.b.waypoints_list[index_b]
+                    self.b.next_waypoint_index = index_b
+                    self.b.prev_next_waypoint_index = index_b
+                    
+                    self.b.spacial_info = SpacialInformation(
+                        x=waypoint.x + config.simulator.random_start_position_offset,
+                        y=waypoint.y + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        velocity=0,
+                        spin=0,
+                        timestep=0,
+                    )
+                    for desired_velocity, waypoint in zip(self.b.desired_velocities, self.b.waypoints_list):
+                        waypoint.velocity = desired_velocity
+            # 
+            # C
+            # 
+            if True:
+                self.c.is_episode_start = 1
+                self.c.ep_poses = []
+                self.c.total_episode_reward = 0
+                
+                index_c = config.simulator.starting_waypoint
+                if config.simulator.starting_waypoint == 'random':
+                    size_limiter = 21
+                    assert len(self.c.waypoints_list) > size_limiter
+                    index_c = np.random.randint(len(self.c.waypoints_list)-(size_limiter-1), size=1)[0]
+                
+                # if position is overriden by (most likely) the real world position
+                if type(override_next_spacial_info) != type(None):
+                    # this is when the spacial_info is coming from the real world
+                    self.c.spacial_info = override_next_spacial_info
+                    self.c.next_waypoint_index = index_c
+                    self.c.prev_next_waypoint_index = index_c
+                # simulator position
+                else:
+                    waypoint = self.c.waypoints_list[index_c]
+                    self.c.next_waypoint_index = index_c
+                    self.c.prev_next_waypoint_index = index_c
+                    
+                    self.c.spacial_info = SpacialInformation(
+                        x=waypoint.x + config.simulator.random_start_position_offset,
+                        y=waypoint.y + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        velocity=0,
+                        spin=0,
+                        timestep=0,
+                    )
+                    for desired_velocity, waypoint in zip(self.c.desired_velocities, self.c.waypoints_list):
+                        waypoint.velocity = desired_velocity
+        
+        
+        # 
+        # Stage 2
+        #
+        if True:
+            # 
+            # A
+            # 
+            if True:
+                self.a.next_waypoint_index_ = index_a
+                self.a.prev_next_waypoint_index = index_a
+                self.a.pose = PoseEntry(
+                    x=float(self.a.waypoints_list[index_a][0] + 0.1),
+                    y=float(self.a.waypoints_list[index_a][1] + 0.1),
+                    angle=float(self.a.waypoints_list[index_a][2] + 0.01),
+                )
+                self.a.twist = TwistEntry(
                     velocity=0,
                     spin=0,
-                    timestep=0,
+                    unknown=0,
                 )
-                for desired_velocity, waypoint in zip(self.c.desired_velocities, self.c.waypoints_list):
-                    waypoint.velocity = desired_velocity
-            
-            self.c.next_waypoint_index = index
-            self.c.prev_next_waypoint_index = index
-            self.c.pose = PoseEntry(
-                x=float(self.c.waypoints_list[index][0] + 0.1),
-                y=float(self.c.waypoints_list[index][1] + 0.1),
-                angle=float(self.c.waypoints_list[index][2] + 0.01),
-            )
-            self.c.twist = TwistEntry(
-                velocity=0,
-                spin=0,
-                unknown=0,
-            )
+                # for i in range(0, self.a.number_of_waypoints):
+                #     if self.a.desired_velocities[i] > self.a.max_vel:
+                #         self.a.waypoints_list[i][3] = self.a.max_vel
+                #     else:
+                #         self.a.waypoints_list[i][3] = self.a.desired_velocities[i]
+                # self.a.max_vel = 2
+                # self.a.max_vel = self.a.max_vel + 1
+                self.a.prev_observation, self.a.closest_distance, self.a.next_waypoint_index_ = pure_get_observation(
+                    next_waypoint_index_=self.a.next_waypoint_index_,
+                    horizon=self.a.horizon,
+                    number_of_waypoints=self.a.number_of_waypoints,
+                    pose=self.a.pose,
+                    twist=self.a.twist,
+                    waypoints_list=self.a.waypoints_list,
+                )
+                output = self.a.prev_observation = Observation(self.a.prev_observation+[self.c.spacial_info.timestep])
+                self.a.renderer = Renderer(
+                    vehicle_render_width=config.vehicle.render_width,
+                    vehicle_render_length=config.vehicle.render_length,
+                    waypoints_list=self.a.waypoints_list,
+                    should_render=config.simulator.should_render and countdown(config.simulator.render_rate),
+                    inital_x=self.a.pose[0],
+                    inital_y=self.a.pose[1],
+                    render_axis_size=20,
+                    render_path=f"{config.output_folder}/render/",
+                    history_size=config.simulator.number_of_trajectories,
+                )
+            # 
+            # B
+            # 
+            if True:
+                # 
+                # calculate closest index
+                # 
+                closest_relative_index, self.b.closest_distance = Helpers.get_closest(
+                    remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
+                    x=self.b.spacial_info.x,
+                    y=self.b.spacial_info.y,
+                )
+                self.b.next_waypoint_index += closest_relative_index
+                self.b.prev_next_waypoint_index = self.b.next_waypoint_index
+                
+                output = self.b.prev_observation = Helpers.generate_observation(
+                    closest_index=self.b.next_waypoint_index,
+                    remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
+                    current_spacial_info=self.b.spacial_info,
+                )
+                
+                # self.b.renderer = Renderer(
+                #     vehicle_render_width=config.vehicle.render_width,
+                #     vehicle_render_length=config.vehicle.render_length,
+                #     waypoints_list=self.b.waypoints_list,
+                #     should_render=config.simulator.should_render and countdown(config.simulator.render_rate),
+                #     inital_x=self.b.spacial_info.x,
+                #     inital_y=self.b.spacial_info.y,
+                #     render_axis_size=20,
+                #     render_path=f"{config.output_folder}/render/",
+                #     history_size=config.simulator.number_of_trajectories,
+                # )
             
             # 
-            # calculate closest index
+            # C
             # 
-            closest_relative_index, self.c.closest_distance = Helpers.get_closest(
-                remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
-                x=self.c.spacial_info.x,
-                y=self.c.spacial_info.y,
-            )
-            self.c.next_waypoint_index += closest_relative_index
-            self.c.prev_next_waypoint_index = self.c.next_waypoint_index
-            
-            output = self.c.prev_observation = Helpers.generate_observation(
-                closest_index=self.c.next_waypoint_index,
-                remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
-                current_spacial_info=self.c.spacial_info,
-            )
-            
+            if True:
+                self.c.next_waypoint_index = index_c
+                self.c.prev_next_waypoint_index = index_c
+                self.c.pose = PoseEntry(
+                    x=float(self.c.waypoints_list[index_c][0] + 0.1),
+                    y=float(self.c.waypoints_list[index_c][1] + 0.1),
+                    angle=float(self.c.waypoints_list[index_c][2] + 0.01),
+                )
+                self.c.twist = TwistEntry(
+                    velocity=0,
+                    spin=0,
+                    unknown=0,
+                )
+                
+                # 
+                # calculate closest index
+                # 
+                closest_relative_index, self.c.closest_distance = Helpers.get_closest(
+                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    x=self.c.spacial_info.x,
+                    y=self.c.spacial_info.y,
+                )
+                self.c.next_waypoint_index += closest_relative_index
+                self.c.prev_next_waypoint_index = self.c.next_waypoint_index
+                
+                output = self.c.prev_observation = Helpers.generate_observation(
+                    closest_index=self.c.next_waypoint_index,
+                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    current_spacial_info=self.c.spacial_info,
+                )
+                
+            pass
         
+        print(f'''self.a.closest_distance = {self.a.closest_distance}''')
+        print(f'''self.b.closest_distance = {self.b.closest_distance}''')
+        print(f'''self.c.closest_distance = {self.c.closest_distance}''')
+        self.diff_compare(print_c=True)
+        exit()
+            
         return output
     
-    def diff_compare(self, print_c=False, ignore=[]):
+    def diff_compare(self, print_c=False, ignore=[], against_c=False):
         print(f'''diff_compare:''')
         shared_keys = list(set(self.b.keys()) & set(self.a.keys()))
         only_in_a = list(set(self.a.keys()) - set(self.b.keys()))
         only_in_b = list(set(self.b.keys()) - set(self.a.keys()))
         equal_keys = []
+        b = self.c if against_c else self.b
         print("    differences:")
         for each in shared_keys:
             if each in ignore:
                 continue
-            if not are_equal(self.a[each], self.b[each]):
-                print(f'''        {each}:\n            {json.dumps(repr(self.a[each]))[1:-1]}\n            {json.dumps(repr(self.b[each]))[1:-1]}''')
-                if type(self.a[each]) != type(self.b[each]):
-                    print(f"            NOTE: types are not equal: {type(self.a[each])}!={type(self.b[each])}")
+            if not are_equal(self.a[each], b[each]):
+                print(f'''        {each}:\n            {json.dumps(repr(self.a[each]))[1:-1]}\n            {json.dumps(repr(b[each]))[1:-1]}''')
+                if type(self.a[each]) != type(b[each]):
+                    print(f"            NOTE: types are not equal: {type(self.a[each])}!={type(b[each])}")
             else:
                 equal_keys.append(each)
         
@@ -1262,7 +1289,7 @@ class Helpers:
         closest_distance = math.inf
         for index, waypoint in enumerate(remaining_waypoints):
             distance = get_distance(waypoint.x, waypoint.y, x, y)
-            if distance <= closest_distance:
+            if distance < closest_distance:
                 closest_distance = distance
                 closest_index = index
         return closest_index, closest_distance
