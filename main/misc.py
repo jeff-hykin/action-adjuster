@@ -954,24 +954,39 @@ class ObjectInspector:
         return attributes
 
 def module_interface_to_json(module):
-    return json.dumps(ObjectInspector(bb).get_attributes())
+    import json
+    return json.dumps(ObjectInspector(module).get_attributes())
 
 def are_equal(a, b):
-    # deals with the stupid "The truth value of an array with more than one element is ambiguous" problem
-    if hasattr(a, '__iter__'):
-        if hasattr(b, '__iter__'):
-            if len(a) != len(b):
+    try:
+        return True if a == b else False
+    except Exception as error:
+        # deals with the stupid "The truth value of an array with more than one element is ambiguous" problem
+        if hasattr(a, '__iter__'):
+            if hasattr(b, '__iter__'):
+                if len(a) != len(b):
+                    return False
+                if isinstance(a, str):
+                    if isinstance(b, str):
+                        return True if a == b else False
+                    else:
+                        return False
+                if isinstance(a, dict):
+                    if isinstance(b, dict):
+                        return are_equal(a.keys(),b.keys()) and are_equal(b.values(), a.values())
+                    else:
+                        return False
+                try:
+                    return True if hash(a) == hash(b) else False
+                except Exception as error:
+                    for i in range(len(a)):
+                        value1 = a[i]
+                        value2 = b[i]
+                        theyre_equal = are_equal(value1, value2)
+                        if not theyre_equal:
+                            return False
+                return True
+            else:
                 return False
-            if isinstance(a, str):
-                if isinstance(b, str):
-                    return a == b
-                else:
-                    return False
-            for i in range(len(a)):
-                if not are_equal(a[i], b[i]):
-                    return False
-            return True
         else:
-            return False
-    else:
-        return a == b
+            raise error
