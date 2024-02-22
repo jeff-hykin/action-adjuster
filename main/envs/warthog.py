@@ -89,7 +89,7 @@ class WarthogEnv(gym.Env):
         self.log = LazyDict()
         if True:
             self.waypoint_file_path = waypoint_file_path
-            self.out_trajectory_file = trajectory_output_path
+            self.trajectory_output_path = trajectory_output_path
             self.recorder = recorder
             
             self.waypoints_list   = []
@@ -141,7 +141,7 @@ class WarthogEnv(gym.Env):
             # 
             # trajectory_file
             # 
-            if self.out_trajectory_file is not None:
+            if self.trajectory_output_path is not None:
                 print(f'''trajectory being logged to: {trajectory_output_path}''')
                 FS.ensure_is_folder(FS.parent_path(trajectory_output_path))
                 self.trajectory_file = open(trajectory_output_path, "w+")
