@@ -704,10 +704,3 @@ class WarthogEnv(gym.Env):
     def number_of_waypoints(self):
         return len(self.waypoints_list)
     
-    def plot_waypoints(self):
-        x = []
-        y = []
-        for each_waypoint in self.waypoints_list:
-            x.append(each_waypoint.x)
-            y.append(each_waypoint.y)
-        self.ax.plot(x, y, "+r")
