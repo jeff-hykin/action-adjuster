@@ -981,20 +981,21 @@ class WarthogEnv(gym.Env):
             
             index = config.simulator.starting_waypoint
             if config.simulator.starting_waypoint == 'random':
-                assert self.c.number_of_waypoints > 21
-                index = np.random.randint(self.c.number_of_waypoints-20, size=1)[0]
-                
+                size_limiter = 21
+                assert len(self.c.waypoints_list) > size_limiter
+                index = np.random.randint(len(self.c.waypoints_list)-(size_limiter-1), size=1)[0]
+            
             # if position is overriden by (most likely) the real world position
             if type(override_next_spacial_info) != type(None):
                 # this is when the spacial_info is coming from the real world
                 self.c.spacial_info = override_next_spacial_info
                 self.c.next_waypoint_index = index
-                self.c.prev_next_waypoint_index_ = index
+                self.c.prev_next_waypoint_index = index
             # simulator position
             else:
                 waypoint = self.c.waypoints_list[index]
                 self.c.next_waypoint_index = index
-                self.c.prev_next_waypoint_index_ = index
+                self.c.prev_next_waypoint_index = index
                 
                 self.c.spacial_info = SpacialInformation(
                     x=waypoint.x + config.simulator.random_start_position_offset,
@@ -1007,8 +1008,8 @@ class WarthogEnv(gym.Env):
                 for desired_velocity, waypoint in zip(self.c.desired_velocities, self.c.waypoints_list):
                     waypoint.velocity = desired_velocity
             
-            self.c.next_waypoint_index_ = index
-            self.c.prev_next_waypoint_index_ = index
+            self.c.next_waypoint_index = index
+            self.c.prev_next_waypoint_index = index
             self.c.pose = PoseEntry(
                 x=float(self.c.waypoints_list[index][0] + 0.1),
                 y=float(self.c.waypoints_list[index][1] + 0.1),
@@ -1019,22 +1020,23 @@ class WarthogEnv(gym.Env):
                 spin=0,
                 unknown=0,
             )
-            # for i in range(0, self.c.number_of_waypoints):
-            #     if self.c.desired_velocities[i] > self.c.max_vel:
-            #         self.c.waypoints_list[i][3] = self.c.max_vel
-            #     else:
-            #         self.c.waypoints_list[i][3] = self.c.desired_velocities[i]
-            # self.c.max_vel = 2
-            # self.c.max_vel = self.c.max_vel + 1
-            self.c.prev_observation, self.c.closest_distance, self.c.next_waypoint_index_ = pure_get_observation(
-                next_waypoint_index_=self.c.next_waypoint_index_,
-                horizon=self.c.horizon,
-                number_of_waypoints=self.c.number_of_waypoints,
-                pose=self.c.pose,
-                twist=self.c.twist,
-                waypoints_list=self.c.waypoints_list,
+            
+            # 
+            # calculate closest index
+            # 
+            closest_relative_index, self.c.closest_distance = Helpers.get_closest(
+                remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                x=self.c.spacial_info.x,
+                y=self.c.spacial_info.y,
             )
-            output = self.c.prev_observation
+            self.c.next_waypoint_index += closest_relative_index
+            self.c.prev_next_waypoint_index = self.c.next_waypoint_index
+            
+            output = self.c.prev_observation = Helpers.generate_observation(
+                closest_index=self.c.next_waypoint_index,
+                remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                current_spacial_info=self.c.spacial_info,
+            )
             
         
         return output
