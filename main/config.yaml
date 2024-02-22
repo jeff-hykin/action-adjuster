@@ -148,7 +148,7 @@
                 main_node_name: 'warthog_faker'
             
             simulator:
-                starting_waypoint: 'random' # integer or 'random' <- a string
+                starting_waypoint: 2 # integer or 'random' <- a string
                 waypoint_radius: 3 # meters
                 save_data: True
                 should_render: True
