@@ -82,8 +82,21 @@ def generate_next_spacial_info(
     )
     return SimWarthogOutput(twist, prev_angle, pose, ep_poses, absolute_action)
 
+def advance_the_index_if_needed(remaining_waypoints,x,y):
+    closest_distance = math.inf
+    for i, each in enumerate(remaining_waypoints):
+        dist = get_distance(x1=each[0], y1=each[1], x2=x, y2=y)
+        if dist <= closest_distance:
+            closest_distance = dist
+            change_in_waypoint_index = i
+        else:
+            break
+    
+    return  change_in_waypoint_index, closest_distance
+
+
 @grug_test(max_io=5, skip=False)
-def pure_get_observation(
+def generate_observation_array(
     next_waypoint_index_,
     horizon,
     number_of_waypoints,
@@ -93,19 +106,7 @@ def pure_get_observation(
     **kwargs,
 ):
     obs   = [0] * (horizon * 4 + 2)
-    index   = next_waypoint_index_
-    
-    closest_distance = math.inf
-    for i in range(next_waypoint_index_, number_of_waypoints):
-        dist = get_distance(x1=waypoints_list[i][0], y1=waypoints_list[i][1], x2=pose[0], y2=pose[1])
-        if dist <= closest_distance:
-            closest_distance = dist
-            index = i
-        else:
-            break
-    next_waypoint_index_ = index
-    
-    j = 0
+    index = 0
     for i in range(0, horizon):
         k = i + next_waypoint_index_
         if k < number_of_waypoints:
@@ -116,19 +117,46 @@ def pure_get_observation(
             vehicle_th = zero_to_2pi(pose[2])
             yaw_error = pi_to_pi(waypoints_list[k][2] - vehicle_th)
             vel = waypoints_list[k][3]
-            obs[j] = r
-            obs[j + 1] = pi_to_pi(th - vehicle_th)
-            obs[j + 2] = yaw_error
-            obs[j + 3] = vel - twist[0]
+            obs[index] = r
+            obs[index + 1] = pi_to_pi(th - vehicle_th)
+            obs[index + 2] = yaw_error
+            obs[index + 3] = vel - twist[0]
         else:
-            obs[j] = 0.0
-            obs[j + 1] = 0.0
-            obs[j + 2] = 0.0
-            obs[j + 3] = 0.0
-        j = j + 4
-    obs[j] = twist[0]
-    obs[j + 1] = twist[1]
+            obs[index] = 0.0
+            obs[index + 1] = 0.0
+            obs[index + 2] = 0.0
+            obs[index + 3] = 0.0
+        index = index + 4
+    obs[index] = twist[0]
+    obs[index + 1] = twist[1]
     
+    return obs
+
+@grug_test(max_io=5, skip=False)
+def pure_get_observation(
+    next_waypoint_index_,
+    horizon,
+    number_of_waypoints,
+    pose,
+    twist,
+    waypoints_list,
+    **kwargs,
+):
+    change_in_waypoint_index, closest_distance = advance_the_index_if_needed(
+        remaining_waypoints=waypoints_list[next_waypoint_index_:],
+        x=pose[0],
+        y=pose[1],
+    )
+    next_waypoint_index_ += change_in_waypoint_index
+    
+    obs = generate_observation_array(
+        next_waypoint_index_,
+        horizon,
+        number_of_waypoints,
+        pose,
+        twist,
+        waypoints_list,
+    )
     return GetObservationOutput(obs, closest_distance, next_waypoint_index_)
 
 @grug_test(max_io=5, skip=False)
@@ -1043,6 +1071,21 @@ class WarthogEnv(gym.Env):
                 # 
                 # calculate closest index
                 # 
+                change_in_waypoint_index_c, closest_distance_c = advance_the_index_if_needed(
+                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    x=self.c.pose[0],
+                    y=self.c.pose[1],
+                )
+                # self.c.next_waypoint_index += change_in_waypoint_index
+                
+                obs_c = generate_observation_array(
+                    self.c.next_waypoint_index,
+                    config.simulator.horizon,
+                    len(self.c.waypoints_list),
+                    self.c.pose,
+                    self.c.twist,
+                    self.c.waypoints_list,
+                )
                 closest_relative_index, self.c.closest_distance = Helpers.get_closest(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                     x=self.c.spacial_info.x,
