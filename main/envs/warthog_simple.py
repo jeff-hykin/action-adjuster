@@ -972,7 +972,7 @@ class WarthogEnv(gym.Env):
             # )
         
         # 
-        # A
+        # C
         # 
         if True:
             self.c.is_episode_start = 1
