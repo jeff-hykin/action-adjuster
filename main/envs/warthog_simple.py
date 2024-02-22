@@ -971,6 +971,71 @@ class WarthogEnv(gym.Env):
             #     history_size=config.simulator.number_of_trajectories,
             # )
         
+        # 
+        # A
+        # 
+        if True:
+            self.c.is_episode_start = 1
+            self.c.ep_poses = []
+            self.c.total_episode_reward = 0
+            
+            index = config.simulator.starting_waypoint
+            if config.simulator.starting_waypoint == 'random':
+                assert self.c.number_of_waypoints > 21
+                index = np.random.randint(self.c.number_of_waypoints-20, size=1)[0]
+                
+            # if position is overriden by (most likely) the real world position
+            if type(override_next_spacial_info) != type(None):
+                # this is when the spacial_info is coming from the real world
+                self.c.spacial_info = override_next_spacial_info
+                self.c.next_waypoint_index = index
+                self.c.prev_next_waypoint_index_ = index
+            # simulator position
+            else:
+                waypoint = self.c.waypoints_list[index]
+                self.c.next_waypoint_index = index
+                self.c.prev_next_waypoint_index_ = index
+                
+                self.c.spacial_info = SpacialInformation(
+                    x=waypoint.x + config.simulator.random_start_position_offset,
+                    y=waypoint.y + config.simulator.random_start_position_offset,
+                    angle=waypoint.angle + config.simulator.random_start_position_offset,
+                    velocity=0,
+                    spin=0,
+                    timestep=0,
+                )
+                for desired_velocity, waypoint in zip(self.c.desired_velocities, self.c.waypoints_list):
+                    waypoint.velocity = desired_velocity
+            
+            self.c.next_waypoint_index_ = index
+            self.c.prev_next_waypoint_index_ = index
+            self.c.pose = PoseEntry(
+                x=float(self.c.waypoints_list[index][0] + 0.1),
+                y=float(self.c.waypoints_list[index][1] + 0.1),
+                angle=float(self.c.waypoints_list[index][2] + 0.01),
+            )
+            self.c.twist = TwistEntry(
+                velocity=0,
+                spin=0,
+                unknown=0,
+            )
+            # for i in range(0, self.c.number_of_waypoints):
+            #     if self.c.desired_velocities[i] > self.c.max_vel:
+            #         self.c.waypoints_list[i][3] = self.c.max_vel
+            #     else:
+            #         self.c.waypoints_list[i][3] = self.c.desired_velocities[i]
+            # self.c.max_vel = 2
+            # self.c.max_vel = self.c.max_vel + 1
+            self.c.prev_observation, self.c.closest_distance, self.c.next_waypoint_index_ = pure_get_observation(
+                next_waypoint_index_=self.c.next_waypoint_index_,
+                horizon=self.c.horizon,
+                number_of_waypoints=self.c.number_of_waypoints,
+                pose=self.c.pose,
+                twist=self.c.twist,
+                waypoints_list=self.c.waypoints_list,
+            )
+            output = self.c.prev_observation
+            
         
         return output
     
