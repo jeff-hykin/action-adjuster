@@ -958,12 +958,20 @@ def module_interface_to_json(module):
 
 def are_equal(a, b):
     # deals with the stupid "The truth value of an array with more than one element is ambiguous" problem
-    if hasattr(a, '__iter__') and hasattr(b, '__iter__'):
-        if len(a) != len(b):
-            return False
-        for i in range(len(a)):
-            if not are_equal(a[i], b[i]):
+    if hasattr(a, '__iter__'):
+        if hasattr(b, '__iter__'):
+            if len(a) != len(b):
                 return False
-        return True
+            if isinstance(a, str):
+                if isinstance(b, str):
+                    return a == b
+                else:
+                    return False
+            for i in range(len(a)):
+                if not are_equal(a[i], b[i]):
+                    return False
+            return True
+        else:
+            return False
     else:
         return a == b
