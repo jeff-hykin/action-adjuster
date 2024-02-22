@@ -171,6 +171,9 @@ class Observation:
         else:
             raise Exception(f'''Observation() got non-iterable argument''')
     
+    def __len__(self):
+        return len(self.__json__())
+    
     def __iter__(self):
         return iter(self.to_numpy())
     
