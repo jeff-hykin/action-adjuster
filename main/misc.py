@@ -990,3 +990,10 @@ def are_equal(a, b):
                 return False
         else:
             raise error
+
+def scaled_sigmoid(x):
+    # normally sigmoid(10) = 0.9999092042625952
+    # normally sigmoid(100) = 1.0
+    # this streches it out to be sigmoid(1000) = 0.4621171572600098
+    x = x / 1000
+    return ((1 / (1 + math.exp(-x))) - 0.5) * 2

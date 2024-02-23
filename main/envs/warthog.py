@@ -20,6 +20,7 @@ from config import config, path_to, grug_test
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference, angle_created_by
 from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, SpacialInformation, ReactionClass, WaypointGap, Waypoint, Observation, AdditionalInfo
 from render import Renderer
+from misc import scaled_sigmoid
 
 # bb.Warnings.disable()
 magic_number_1_point_5 = 1.5
@@ -54,14 +55,6 @@ def read_waypoint_file(filename):
     
     return desired_velocities, waypoints_list
 
-@grug_test(func_name="scaled_sigmoid", max_io=30, record_io=None, additional_io_per_run=None, skip=True)
-def scaled_sigmoid(x):
-    # normally sigmoid(10) = 0.9999092042625952
-    # normally sigmoid(100) = 1.0
-    # this streches it out to be sigmoid(1000) = 0.4621171572600098
-    x = x / 1000
-    return ((1 / (1 + math.exp(-x))) - 0.5) * 2
-    
 
 class WarthogEnv(gym.Env):
     random_start_position_offset = config.simulator.random_start_position_offset
