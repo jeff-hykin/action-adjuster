@@ -96,43 +96,6 @@ def advance_the_index_if_needed(remaining_waypoints,x,y):
 
 
 @grug_test(max_io=5, skip=False)
-def generate_observation_array(
-    next_waypoint_index_,
-    horizon,
-    number_of_waypoints,
-    pose,
-    twist,
-    waypoints_list,
-    **kwargs,
-):
-    obs   = [0] * (horizon * 4 + 2)
-    index = 0
-    for i in range(0, horizon):
-        k = i + next_waypoint_index_
-        if k < number_of_waypoints:
-            r = get_distance(x1=waypoints_list[k][0], y1=waypoints_list[k][1], x2=pose[0], y2=pose[1])
-            xdiff = waypoints_list[k][0] - pose[0]
-            ydiff = waypoints_list[k][1] - pose[1]
-            th = get_angle_from_origin(xdiff, ydiff)
-            vehicle_th = zero_to_2pi(pose[2])
-            yaw_error = pi_to_pi(waypoints_list[k][2] - vehicle_th)
-            vel = waypoints_list[k][3]
-            obs[index] = r
-            obs[index + 1] = pi_to_pi(th - vehicle_th)
-            obs[index + 2] = yaw_error
-            obs[index + 3] = vel - twist[0]
-        else:
-            obs[index] = 0.0
-            obs[index + 1] = 0.0
-            obs[index + 2] = 0.0
-            obs[index + 3] = 0.0
-        index = index + 4
-    obs[index] = twist[0]
-    obs[index + 1] = twist[1]
-    
-    return obs
-
-@grug_test(max_io=5, skip=False)
 def pure_get_observation(
     next_waypoint_index_,
     horizon,
@@ -149,7 +112,7 @@ def pure_get_observation(
     )
     next_waypoint_index_ += change_in_waypoint_index
     
-    obs = generate_observation_array(
+    obs = SimpleHelpers.generate_observation_array(
         next_waypoint_index_,
         horizon,
         number_of_waypoints,
@@ -1078,7 +1041,16 @@ class WarthogEnv(gym.Env):
                 )
                 # self.c.next_waypoint_index += change_in_waypoint_index
                 
-                obs_c = generate_observation_array(
+                closest_relative_index, self.c.closest_distance = Helpers.get_closest(
+                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    x=self.c.spacial_info.x,
+                    y=self.c.spacial_info.y,
+                )
+                
+                self.c.next_waypoint_index += closest_relative_index
+                self.c.prev_next_waypoint_index = self.c.next_waypoint_index
+                
+                obs_c = SimpleHelpers.generate_observation_array(
                     self.c.next_waypoint_index,
                     config.simulator.horizon,
                     len(self.c.waypoints_list),
@@ -1086,13 +1058,6 @@ class WarthogEnv(gym.Env):
                     self.c.twist,
                     self.c.waypoints_list,
                 )
-                closest_relative_index, self.c.closest_distance = Helpers.get_closest(
-                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
-                    x=self.c.spacial_info.x,
-                    y=self.c.spacial_info.y,
-                )
-                self.c.next_waypoint_index += closest_relative_index
-                self.c.prev_next_waypoint_index = self.c.next_waypoint_index
                 
                 output = self.c.prev_observation = Helpers.generate_observation(
                     closest_index=self.c.next_waypoint_index,
@@ -1209,6 +1174,48 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
         smoke_test_warthog("real1.csv")
     # exit()
 
+class SimpleHelpers:
+    @staticmethod
+    @grug_test(max_io=5, skip=False)
+    def generate_observation_array(
+        next_waypoint_index_,
+        horizon,
+        number_of_waypoints,
+        pose,
+        twist,
+        waypoints_list,
+        **kwargs,
+    ):
+        observation   = [0] * (horizon * 4 + 2)
+        index = 0
+        for horizon_index in range(0, horizon):
+            waypoint_index = horizon_index + next_waypoint_index_
+            if waypoint_index < number_of_waypoints:
+                waypoint = waypoints_list[waypoint_index]
+                gap_of_distance = get_distance(x1=waypoint.x, y1=waypoint.y, x2=pose.x, y2=pose.y)
+                x_diff = waypoint.x - pose.x
+                y_diff = waypoint.y - pose.y
+                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+                current_angle = zero_to_2pi(pose.angle)
+                gap_of_desired_angle_at_next = pi_to_pi(waypoint.angle - current_angle)
+                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+                gap_of_velocity = waypoint.velocity - twist.velocity
+                
+                observation[index]     = gap_of_distance
+                observation[index + 1] = gap_of_angle_directly_towards_next
+                observation[index + 2] = gap_of_desired_angle_at_next
+                observation[index + 3] = gap_of_velocity
+            else:
+                observation[index] = 0.0
+                observation[index + 1] = 0.0
+                observation[index + 2] = 0.0
+                observation[index + 3] = 0.0
+            index = index + 4
+        observation[index] = twist.velocity
+        observation[index + 1] = twist.spin
+        
+        return observation
+
 class Helpers:
     @staticmethod
     @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
@@ -1220,36 +1227,34 @@ class Helpers:
         mutated_absolute_velocity = current_spacial_info.velocity
         mutated_absolute_spin     = current_spacial_info.spin
         
+        # observation_length = (config.simulator.horizon*4)+3
         observation = []
-        for horizon_index in range(0, config.simulator.horizon):
-            waypoint_index = horizon_index + closest_index
-            if waypoint_index < len(remaining_waypoints):
-                waypoint = remaining_waypoints[waypoint_index]
-                
-                x_diff = waypoint.x - current_spacial_info.x
-                y_diff = waypoint.y - current_spacial_info.y
-                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
-                current_angle       = zero_to_2pi(current_spacial_info.angle)
-                
-                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
-                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
-                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
-                gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
-                
-                observation.append(gap_of_distance)
-                observation.append(gap_of_angle_directly_towards_next)
-                observation.append(gap_of_desired_angle_at_next)
-                observation.append(gap_of_velocity)
-            else:
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
+        for waypoint in remaining_waypoints[0:config.simulator.horizon]:
+            x_diff = waypoint.x - current_spacial_info.x
+            y_diff = waypoint.y - current_spacial_info.y
+            angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+            current_angle       = zero_to_2pi(current_spacial_info.angle)
+            
+            gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+            gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+            gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
+            gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
+            
+            observation.append(gap_of_distance)
+            observation.append(gap_of_angle_directly_towards_next)
+            observation.append(gap_of_desired_angle_at_next)
+            observation.append(gap_of_velocity)
+        
+        while len(observation) < (config.simulator.horizon*4):
+            observation.append(0)
         
         observation.append(mutated_absolute_velocity)
         observation.append(mutated_absolute_spin)
-        observation = Observation(observation+[current_spacial_info.timestep])
+        observation.append(current_spacial_info.timestep)
+        
+        observation = Observation(observation)
         return observation
+    
     
     @staticmethod
     @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=False)
