@@ -383,7 +383,6 @@ class WarthogEnv(gym.Env):
             self.a.max_number_of_timesteps_per_episode = 700
             self.a.total_episode_reward    = 0
             self.a.reward                  = 0
-            self.a.action                  = [0.0, 0.0]
             self.a.absolute_action         = [0.0, 0.0]
             self.a.prev_absolute_action    = [0.0, 0.0]
             self.a.velocity_reward         = 0
@@ -604,7 +603,7 @@ class WarthogEnv(gym.Env):
     
     # just a wrapper around the pure_step
     def step(self, action, override_next_spacial_info=None):
-        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
         # 
         # part1
         # 
@@ -622,6 +621,7 @@ class WarthogEnv(gym.Env):
                 self.a.prev_mutated_relative_velocity  = self.a.mutated_relative_velocity
                 self.a.prev_mutated_relative_spin      = self.a.mutated_relative_spin
                 self.a.original_relative_velocity, self.a.original_relative_spin = action
+                self.a.original_action = Action(velocity=self.a.original_relative_velocity, spin=self.a.original_relative_spin)
                 self.a.absolute_action = Action(
                     velocity=clip(self.a.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
                     spin=clip(self.a.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin,
@@ -750,7 +750,7 @@ class WarthogEnv(gym.Env):
                     self.b.mutated_relative_velocity = b.mutated_relative_velocity_action
                     self.b.mutated_relative_spin     = b.mutated_relative_spin_action
         
-        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
         # 
         # part2
         # 
@@ -767,31 +767,19 @@ class WarthogEnv(gym.Env):
                     # this is when the spacial_info is coming from the real world
                     self.a.spacial_info = override_next_spacial_info
                 else:
-                    # FIXME:
-                    # self.a.spacial_info = generate_next_spacial_info(
-                    #     old_spacial_info=SpacialInformation(*self.a.spacial_info),
-                    #     relative_velocity=self.a.mutated_relative_velocity,
-                    #     relative_spin=self.a.mutated_relative_spin,
-                    #     action_duration=self.a.action_duration,
-                    # )
-                    pass
-                    
-                self.a.action = action
-                self.a.relative_action = Action(velocity=self.a.original_relative_velocity, spin=self.a.original_relative_spin) 
-                
-                self.a.spacial_info = SpacialInformation(
-                    x=self.a.pose.x,
-                    y=self.a.pose.y,
-                    angle=self.a.pose.angle,
-                    velocity=self.a.twist.velocity,
-                    spin=self.a.twist.spin,
-                    timestep=self.a.episode_steps,
-                )
+                    self.a.spacial_info = SpacialInformation(
+                        x=self.a.pose.x,
+                        y=self.a.pose.y,
+                        angle=self.a.pose.angle,
+                        velocity=self.a.twist.velocity,
+                        spin=self.a.twist.spin,
+                        timestep=self.a.episode_steps,
+                    )
                 
                 self.a.twist, self.a.prev_angle, self.a.pose, ep_poses, _ = generate_next_spacial_info(
                     old_spacial_info=self.a.spacial_info,
-                    relative_velocity=self.a.relative_action.velocity,
-                    relative_spin=self.a.relative_action.spin,
+                    relative_velocity=self.a.original_action.velocity,
+                    relative_spin=self.a.original_action.spin,
                     action_duration=self.a.action_duration,
                     ep_poses=self.a.ep_poses,
                 )
@@ -860,7 +848,7 @@ class WarthogEnv(gym.Env):
                     self.a.next_waypoint_index_,
                     self.a.ep_poses,
                 ), other = pure_step(
-                    relative_action=self.a.relative_action,
+                    relative_action=self.a.original_action,
                     absolute_action=self.a.absolute_action,
                     next_waypoint_index_=self.a.next_waypoint_index_,
                     crosstrack_error=self.a.crosstrack_error,
@@ -907,7 +895,7 @@ class WarthogEnv(gym.Env):
             # 
             # B
             # 
-            if True:
+            if False:
                 # 
                 # modify spacial_info
                 # 
@@ -1048,8 +1036,8 @@ class WarthogEnv(gym.Env):
                 
                 output = self.b.observation, self.b.reward, done, additional_info
         
-        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
-        exit()
+        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+        # exit()
         return output
     
     def reset(self, override_next_spacial_info=None):
