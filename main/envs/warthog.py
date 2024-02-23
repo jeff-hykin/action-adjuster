@@ -117,7 +117,7 @@ class WarthogEnv(gym.Env):
             self.mutated_relative_velocity        = 0
             self.prev_mutated_relative_spin       = 0
             self.prev_mutated_relative_velocity   = 0
-            self.prev_observation        = None
+            self.observation        = None
             self.is_episode_start        = 1
             self.trajectory_file         = None
             self.global_timestep         = 0
@@ -575,7 +575,7 @@ class WarthogEnv(gym.Env):
                 )
             
             # generate observation off potentially incorrect (noisey) spacial info
-            self.prev_observation = self.observation
+            prev_observation = self.observation
             self.observation = WarthogEnv.generate_observation(
                 closest_index=self.next_waypoint_index,
                 remaining_waypoints=self.waypoints_list[self.prev_next_waypoint_index:],
@@ -598,7 +598,7 @@ class WarthogEnv(gym.Env):
             action_duration=self.action_duration,
             spacial_info=self.prev_spacial_info,
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
-            observation_from_spacial_info_with_noise=self.prev_observation,
+            observation_from_spacial_info_with_noise=prev_observation,
             historic_transform=Unknown,
             original_reaction=ReactionClass(self.original_relative_velocity, self.original_relative_spin ),
             mutated_reaction=ReactionClass(self.mutated_relative_velocity, self.mutated_relative_spin ),
@@ -623,7 +623,6 @@ class WarthogEnv(gym.Env):
             if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
                 done = True
         
-        self.prev_observation = self.observation
         return self.observation, self.reward, done, additional_info
 
     def reset(self, override_next_spacial_info=None):
@@ -670,7 +669,7 @@ class WarthogEnv(gym.Env):
         self.next_waypoint_index += closest_relative_index
         self.prev_next_waypoint_index = self.next_waypoint_index
         
-        self.prev_observation = WarthogEnv.generate_observation(
+        self.observation = WarthogEnv.generate_observation(
             closest_index=self.next_waypoint_index,
             remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
             current_spacial_info=self.spacial_info,
@@ -688,7 +687,7 @@ class WarthogEnv(gym.Env):
             history_size=config.simulator.number_of_trajectories,
         )
         
-        return self.prev_observation
+        return self.observation
 
     @property
     def number_of_waypoints(self):
