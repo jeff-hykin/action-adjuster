@@ -20,7 +20,7 @@ from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_
 
 from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObservationOutput, RewardOutput, SimWarthogOutput, PoseEntry, TwistEntry, SpacialHistory, SpacialInformation, ReactionClass, WaypointGap, Waypoint, Observation, AdditionalInfo
 from render import Renderer
-from misc import are_equal, scaled_sigmoid
+from misc import are_equal, scaled_sigmoid, no_duplicates
 
 
 @grug_test(max_io=5, skip=False)
@@ -344,7 +344,6 @@ class WarthogEnv(gym.Env):
             self.a.mutated_relative_velocity        = 0
             self.a.prev_mutated_relative_spin       = 0
             self.a.prev_mutated_relative_velocity   = 0
-            self.a.prev_observation        = None
             self.a.is_episode_start        = 1
             self.a.trajectory_file         = None
             self.a.global_timestep         = 0
@@ -435,7 +434,7 @@ class WarthogEnv(gym.Env):
             self.b.mutated_relative_velocity        = 0
             self.b.prev_mutated_relative_spin       = 0
             self.b.prev_mutated_relative_velocity   = 0
-            self.b.prev_observation        = None
+            self.b.observation        = None
             self.b.is_episode_start        = 1
             self.b.trajectory_file         = None
             self.b.global_timestep         = 0
@@ -497,7 +496,6 @@ class WarthogEnv(gym.Env):
             self.c.mutated_relative_velocity        = 0
             self.c.prev_mutated_relative_spin       = 0
             self.c.prev_mutated_relative_velocity   = 0
-            self.c.prev_observation        = None
             self.c.is_episode_start        = 1
             self.c.trajectory_file         = None
             self.c.global_timestep         = 0
@@ -695,7 +693,6 @@ class WarthogEnv(gym.Env):
                 # )
                 pass
                 
-            self.a.global_timestep += 1
             self.a.action = action
             self.a.relative_action = Action(velocity=self.a.original_relative_velocity, spin=self.a.original_relative_spin) 
             
@@ -802,6 +799,8 @@ class WarthogEnv(gym.Env):
                 velocity_reward=self.a.velocity_reward,
                 waypoints_list=self.a.waypoints_list,
             )
+            self.a.observation, reward, done, additional_info = output
+            self.a.observation = Observation(self.a.observation+[self.a.global_timestep])
             self.a.renderer.render_if_needed(
                 prev_next_waypoint_index=self.a.prev_next_waypoint_index,
                 x_point=self.a.pose[0],
@@ -834,10 +833,10 @@ class WarthogEnv(gym.Env):
             self.b.prev_mutated_relative_velocity  = self.b.mutated_relative_velocity
             self.b.prev_mutated_relative_spin      = self.b.mutated_relative_spin
             self.b.original_relative_velocity, self.b.original_relative_spin = action
-            self.b.absolute_action = [
+            self.b.absolute_action = Action(
                 clip(self.b.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
                 clip(self.b.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin
-            ]
+            )
             
             # 
             # logging and counter-increments
@@ -983,7 +982,7 @@ class WarthogEnv(gym.Env):
                     )
                 
                 # generate observation off potentially incorrect (noisey) spacial info
-                self.b.prev_observation = self.b.observation
+                prev_observation = self.b.observation
                 self.b.observation = Helpers.generate_observation(
                     closest_index=self.b.next_waypoint_index,
                     remaining_waypoints=self.b.waypoints_list[self.b.prev_next_waypoint_index:],
@@ -1006,7 +1005,7 @@ class WarthogEnv(gym.Env):
                 action_duration=self.b.action_duration,
                 spacial_info=self.b.prev_spacial_info,
                 spacial_info_with_noise=self.b.prev_spacial_info_with_noise,
-                observation_from_spacial_info_with_noise=self.b.prev_observation,
+                observation_from_spacial_info_with_noise=prev_observation,
                 historic_transform=Unknown,
                 original_reaction=ReactionClass(self.b.original_relative_velocity, self.b.original_relative_spin ),
                 mutated_reaction=ReactionClass(self.b.mutated_relative_velocity, self.b.mutated_relative_spin ),
@@ -1031,10 +1030,9 @@ class WarthogEnv(gym.Env):
                 if math.fabs(self.b.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.b.phi_error) > magic_number_1_point_4:
                     done = True
             
-            self.b.prev_observation = self.b.observation
             output = self.b.observation, self.b.reward, done, additional_info
         
-        self.diff_compare(print_c=True, ignore=["recorder"])
+        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
         exit()
         return output
     
@@ -1179,7 +1177,7 @@ class WarthogEnv(gym.Env):
                 #         self.a.waypoints_list[i][3] = self.a.desired_velocities[i]
                 # self.a.max_vel = 2
                 # self.a.max_vel = self.a.max_vel + 1
-                self.a.prev_observation, self.a.closest_distance, self.a.next_waypoint_index_ = pure_get_observation(
+                self.a.observation, self.a.closest_distance, self.a.next_waypoint_index_ = pure_get_observation(
                     next_waypoint_index_=self.a.next_waypoint_index_,
                     horizon=self.a.horizon,
                     number_of_waypoints=self.a.number_of_waypoints,
@@ -1187,7 +1185,7 @@ class WarthogEnv(gym.Env):
                     twist=self.a.twist,
                     waypoints_list=self.a.waypoints_list,
                 )
-                output = self.a.prev_observation = Observation(self.a.prev_observation+[self.c.spacial_info.timestep])
+                output = self.a.observation = Observation(self.a.observation+[self.c.spacial_info.timestep])
                 self.a.renderer = Renderer(
                     vehicle_render_width=config.vehicle.render_width,
                     vehicle_render_length=config.vehicle.render_length,
@@ -1214,7 +1212,7 @@ class WarthogEnv(gym.Env):
                 self.b.next_waypoint_index += closest_relative_index
                 self.b.prev_next_waypoint_index = self.b.next_waypoint_index
                 
-                output = self.b.prev_observation = Helpers.generate_observation(
+                output = self.b.observation = Helpers.generate_observation(
                     closest_index=self.b.next_waypoint_index,
                     remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
                     current_spacial_info=self.b.spacial_info,
@@ -1295,6 +1293,31 @@ class WarthogEnv(gym.Env):
         equal_keys = []
         b = self.c if against_c else self.b
         print("    differences:")
+        helper_for_ordering = [ each for each in [
+            "prev_original_relative_velocity",
+            "prev_original_relative_spin",
+            "prev_mutated_relative_velocity",
+            "prev_mutated_relative_spin",
+            "original_relative_velocity",
+            "original_relative_spin",
+            "absolute_action",
+            "episode_steps",
+            "is_episode_start",
+            "mutated_relative_velocity",
+            "mutated_relative_spin",
+            "prev_spacial_info",
+            "spacial_info",
+            "next_waypoint_index",
+            "closest_distance",
+            "reward",
+            "velocity_error",
+            "crosstrack_error",
+            "phi_error",
+            "prev_spacial_info_with_noise",
+            "spacial_info_with_noise",
+            "observation",
+        ] if each in shared_keys ]
+        shared_keys = no_duplicates(helper_for_ordering + shared_keys)
         for each in shared_keys:
             if each in ignore:
                 continue

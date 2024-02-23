@@ -117,7 +117,6 @@ class WarthogEnv(gym.Env):
             self.mutated_relative_velocity        = 0
             self.prev_mutated_relative_spin       = 0
             self.prev_mutated_relative_velocity   = 0
-            self.observation        = None
             self.is_episode_start        = 1
             self.trajectory_file         = None
             self.global_timestep         = 0

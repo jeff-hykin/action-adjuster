@@ -997,3 +997,12 @@ def scaled_sigmoid(x):
     # this streches it out to be sigmoid(1000) = 0.4621171572600098
     x = x / 1000
     return ((1 / (1 + math.exp(-x))) - 0.5) * 2
+
+
+def no_duplicates(items): # preserving order
+    copy = []
+    for each in items:
+        if each in copy:
+            continue
+        copy.append(each)
+    return copy
