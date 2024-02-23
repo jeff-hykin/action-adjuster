@@ -855,7 +855,7 @@ class WarthogEnv(gym.Env):
                     self.a.spacial_info = SpacialInformation(
                         x=waypoint.x + config.simulator.random_start_position_offset,
                         y=waypoint.y + config.simulator.random_start_position_offset,
-                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_angle_offset,
                         velocity=0,
                         spin=0,
                         timestep=0,
@@ -889,7 +889,7 @@ class WarthogEnv(gym.Env):
                     self.b.spacial_info = SpacialInformation(
                         x=waypoint.x + config.simulator.random_start_position_offset,
                         y=waypoint.y + config.simulator.random_start_position_offset,
-                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_angle_offset,
                         velocity=0,
                         spin=0,
                         timestep=0,
@@ -925,7 +925,7 @@ class WarthogEnv(gym.Env):
                     self.c.spacial_info = SpacialInformation(
                         x=waypoint.x + config.simulator.random_start_position_offset,
                         y=waypoint.y + config.simulator.random_start_position_offset,
-                        angle=waypoint.angle + config.simulator.random_start_position_offset,
+                        angle=waypoint.angle + config.simulator.random_start_angle_offset,
                         velocity=0,
                         spin=0,
                         timestep=0,
@@ -945,9 +945,9 @@ class WarthogEnv(gym.Env):
                 self.a.next_waypoint_index_ = index_a
                 self.a.prev_next_waypoint_index = index_a
                 self.a.pose = PoseEntry(
-                    x=float(self.a.waypoints_list[index_a][0] + 0.1),
-                    y=float(self.a.waypoints_list[index_a][1] + 0.1),
-                    angle=float(self.a.waypoints_list[index_a][2] + 0.01),
+                    x=float(self.a.waypoints_list[index_a][0] + config.simulator.random_start_position_offset),
+                    y=float(self.a.waypoints_list[index_a][1] + config.simulator.random_start_position_offset),
+                    angle=float(self.a.waypoints_list[index_a][2] + config.simulator.random_start_angle_offset),
                 )
                 self.a.twist = TwistEntry(
                     velocity=0,
@@ -1021,9 +1021,9 @@ class WarthogEnv(gym.Env):
                 self.c.next_waypoint_index = index_c
                 self.c.prev_next_waypoint_index = index_c
                 self.c.pose = PoseEntry(
-                    x=float(self.c.waypoints_list[index_c][0] + 0.1),
-                    y=float(self.c.waypoints_list[index_c][1] + 0.1),
-                    angle=float(self.c.waypoints_list[index_c][2] + 0.01),
+                    x=float(self.c.waypoints_list[index_c][0] + config.simulator.random_start_position_offset),
+                    y=float(self.c.waypoints_list[index_c][1] + config.simulator.random_start_position_offset),
+                    angle=float(self.c.waypoints_list[index_c][2] + config.simulator.random_start_angle_offset),
                 )
                 self.c.twist = TwistEntry(
                     velocity=0,
@@ -1036,8 +1036,8 @@ class WarthogEnv(gym.Env):
                 # 
                 change_in_waypoint_index_c, closest_distance_c = advance_the_index_if_needed(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
-                    x=self.c.pose[0],
-                    y=self.c.pose[1],
+                    x=self.c.pose.x,
+                    y=self.c.pose.y,
                 )
                 # self.c.next_waypoint_index += change_in_waypoint_index
                 
@@ -1067,9 +1067,6 @@ class WarthogEnv(gym.Env):
                 
             pass
         
-        print(f'''self.a.closest_distance = {self.a.closest_distance}''')
-        print(f'''self.b.closest_distance = {self.b.closest_distance}''')
-        print(f'''self.c.closest_distance = {self.c.closest_distance}''')
         self.diff_compare(print_c=True)
         exit()
             
@@ -1173,7 +1170,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
     if grug_test.replay_inputs:
         smoke_test_warthog("real1.csv")
     # exit()
-
+global_a_buffer = []
+global_b_buffer = []
 class SimpleHelpers:
     @staticmethod
     @grug_test(max_io=5, skip=False)
@@ -1188,6 +1186,7 @@ class SimpleHelpers:
     ):
         observation   = [0] * (horizon * 4 + 2)
         index = 0
+        global_a_buffer.clear()
         for horizon_index in range(0, horizon):
             waypoint_index = horizon_index + next_waypoint_index_
             if waypoint_index < number_of_waypoints:
@@ -1200,7 +1199,16 @@ class SimpleHelpers:
                 gap_of_desired_angle_at_next = pi_to_pi(waypoint.angle - current_angle)
                 gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
                 gap_of_velocity = waypoint.velocity - twist.velocity
-                
+                global_a_buffer.append(LazyDict(
+                    waypoint=waypoint,
+                    gap_of_distance=gap_of_distance,
+                    x_diff=x_diff,
+                    y_diff=y_diff,
+                    angle_to_next_point=angle_to_next_point,
+                    current_angle=current_angle,
+                    pose=pose,
+                    gap_of_desired_angle_at_next=gap_of_desired_angle_at_next,
+                ))
                 observation[index]     = gap_of_distance
                 observation[index + 1] = gap_of_angle_directly_towards_next
                 observation[index + 2] = gap_of_desired_angle_at_next
@@ -1228,6 +1236,7 @@ class Helpers:
         mutated_absolute_spin     = current_spacial_info.spin
         
         # observation_length = (config.simulator.horizon*4)+3
+        global_b_buffer.clear()
         observation = []
         for waypoint in remaining_waypoints[0:config.simulator.horizon]:
             x_diff = waypoint.x - current_spacial_info.x
@@ -1240,6 +1249,16 @@ class Helpers:
             gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
             gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
             
+            global_b_buffer.append(LazyDict(
+                waypoint=waypoint,
+                gap_of_distance=gap_of_distance,
+                x_diff=x_diff,
+                y_diff=y_diff,
+                angle_to_next_point=angle_to_next_point,
+                current_angle=current_angle,
+                pose=current_spacial_info,
+                gap_of_desired_angle_at_next=gap_of_desired_angle_at_next,
+            ))
             observation.append(gap_of_distance)
             observation.append(gap_of_angle_directly_towards_next)
             observation.append(gap_of_desired_angle_at_next)
