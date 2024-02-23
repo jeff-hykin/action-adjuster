@@ -192,35 +192,32 @@ class WarthogEnv(gym.Env):
         mutated_absolute_velocity = current_spacial_info.velocity
         mutated_absolute_spin     = current_spacial_info.spin
         
+        # observation_length = (config.simulator.horizon*4)+3
         observation = []
-        for horizon_index in range(0, config.simulator.horizon):
-            waypoint_index = horizon_index + closest_index
-            if waypoint_index < len(remaining_waypoints):
-                waypoint = remaining_waypoints[waypoint_index]
-                
-                x_diff = waypoint.x - current_spacial_info.x
-                y_diff = waypoint.y - current_spacial_info.y
-                angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
-                current_angle       = zero_to_2pi(current_spacial_info.angle)
-                
-                gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
-                gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
-                gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
-                gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
-                
-                observation.append(gap_of_distance)
-                observation.append(gap_of_angle_directly_towards_next)
-                observation.append(gap_of_desired_angle_at_next)
-                observation.append(gap_of_velocity)
-            else:
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
-                observation.append(0.0)
+        for waypoint in remaining_waypoints[0:config.simulator.horizon]:
+            x_diff = waypoint.x - current_spacial_info.x
+            y_diff = waypoint.y - current_spacial_info.y
+            angle_to_next_point = get_angle_from_origin(x_diff, y_diff)
+            current_angle       = zero_to_2pi(current_spacial_info.angle)
+            
+            gap_of_distance                    = get_distance(waypoint.x, waypoint.y, current_spacial_info.x, current_spacial_info.y)
+            gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
+            gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
+            gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
+            
+            observation.append(gap_of_distance)
+            observation.append(gap_of_angle_directly_towards_next)
+            observation.append(gap_of_desired_angle_at_next)
+            observation.append(gap_of_velocity)
+        
+        while len(observation) < (config.simulator.horizon*4):
+            observation.append(0)
         
         observation.append(mutated_absolute_velocity)
         observation.append(mutated_absolute_spin)
-        observation = Observation(observation+[current_spacial_info.timestep])
+        observation.append(current_spacial_info.timestep)
+        
+        observation = Observation(observation)
         return observation
     
     @staticmethod
@@ -304,7 +301,7 @@ class WarthogEnv(gym.Env):
         closest_distance = math.inf
         for index, waypoint in enumerate(remaining_waypoints):
             distance = get_distance(waypoint.x, waypoint.y, x, y)
-            if distance <= closest_distance:
+            if distance < closest_distance:
                 closest_distance = distance
                 closest_index = index
         return closest_index, closest_distance
