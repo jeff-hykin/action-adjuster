@@ -475,7 +475,7 @@ class WarthogEnv(gym.Env):
             self.a.max_number_of_timesteps_per_episode      = config.simulator.max_number_of_timesteps_per_episode
             self.a.save_data              = config.simulator.save_data
             self.a.action_duration        = config.simulator.action_duration  
-            self.a.next_waypoint_index        = 0
+            self.a.next_waypoint_index_new   = 0
             self.a.prev_next_waypoint_index  = 0
             self.a.closest_distance           = math.inf
             self.a.desired_velocities         = []
@@ -514,7 +514,7 @@ class WarthogEnv(gym.Env):
                 spin=0,
                 unknown=0,
             )
-            self.a.next_waypoint_index_ = 0
+            self.a.next_waypoint_index = 0
             self.a.prev_next_waypoint_index = 0
             self.a.closest_distance = math.inf
             self.a.horizon = 10
@@ -954,7 +954,7 @@ class WarthogEnv(gym.Env):
                 # 
                 a.closest_relative_index = 0
                 a.last_waypoint_index = len(self.a.waypoints_list)-1
-                a.next_waypoint          = self.a.waypoints_list[self.a.next_waypoint_index]
+                a.next_waypoint          = self.a.waypoints_list[self.a.next_waypoint_index_new]
                 if len(self.a.waypoints_list) > 1:
                     a.distance_to_waypoint       = get_distance(a.next_waypoint.x, a.next_waypoint.y, self.a.spacial_info.x, self.a.spacial_info.y)
                     a.got_further_away           = self.a.closest_distance < a.distance_to_waypoint
@@ -963,8 +963,8 @@ class WarthogEnv(gym.Env):
                     if a.distance_to_waypoint == 0 or (a.got_further_away and a.was_within_waypoint_radius):
                         a.closest_relative_index  = 1
                     # went past waypoint, but edgecase of getting further away:
-                    elif a.was_within_waypoint_radius and self.a.next_waypoint_index < a.last_waypoint_index:
-                        a.next_next_waypoint         = self.a.waypoints_list[self.a.next_waypoint_index+1]
+                    elif a.was_within_waypoint_radius and self.a.next_waypoint_index_new < a.last_waypoint_index:
+                        a.next_next_waypoint         = self.a.waypoints_list[self.a.next_waypoint_index_new+1]
                         a.waypoint_arm_angle = angle_created_by(
                             start=(self.a.spacial_info.x, self.a.spacial_info.y),
                             midpoint=(a.next_waypoint.x, a.next_waypoint.y),
@@ -975,10 +975,10 @@ class WarthogEnv(gym.Env):
                             a.closest_relative_index  = 1
                             
                 if a.closest_relative_index > 0:
-                    self.a.next_waypoint_index += 1
+                    self.a.next_waypoint_index_new += 1
                     # prevent indexing error
-                    self.a.next_waypoint_index = min(self.a.next_waypoint_index, len(self.a.waypoints_list)-1)
-                    a.next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index]
+                    self.a.next_waypoint_index_new = min(self.a.next_waypoint_index_new, len(self.a.waypoints_list)-1)
+                    a.next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index_new]
                 
                 self.a.closest_distance = get_distance(
                     a.next_waypoint.x,
@@ -1073,12 +1073,12 @@ class WarthogEnv(gym.Env):
                     _,
                     _,
                     _,
-                    self.a.next_waypoint_index_,
+                    self.a.next_waypoint_index,
                     self.a.ep_poses,
                 ), other = pure_step(
                     relative_action=self.a.original_action,
                     absolute_action=self.a.absolute_action,
-                    next_waypoint_index_=self.a.next_waypoint_index_,
+                    next_waypoint_index_=self.a.next_waypoint_index,
                     crosstrack_error=self.a.crosstrack_error,
                     action_duration=self.a.action_duration,
                     ep_poses=self.a.ep_poses,
@@ -1098,7 +1098,7 @@ class WarthogEnv(gym.Env):
                     velocity_reward=self.a.velocity_reward,
                     waypoints_list=self.a.waypoints_list,
                 )
-                self.a.observation, reward, done, additional_info = output
+                self.a.observation, self.a.reward, done, additional_info = output
                 self.a.observation = Observation(self.a.observation+[self.a.global_timestep])
                 self.a.renderer.render_if_needed(
                     prev_next_waypoint_index=self.a.prev_next_waypoint_index,
@@ -1107,7 +1107,7 @@ class WarthogEnv(gym.Env):
                     angle=self.a.pose[2],
                     text_data=f"""
                         velocity_error={self.a.velocity_error:.3f}
-                        closest_index={self.a.next_waypoint_index}
+                        closest_index={self.a.next_waypoint_index_new}
                         crosstrack_error={self.a.crosstrack_error:.3f}
                         reward={self.a.reward:.4f}
                         warthog_vel={self.a.original_relative_velocity:.3f}
@@ -1334,7 +1334,7 @@ class WarthogEnv(gym.Env):
             # A
             # 
             if True:
-                self.a.next_waypoint_index_ = index_a
+                self.a.next_waypoint_index = index_a
                 self.a.prev_next_waypoint_index = index_a
                 self.a.pose = PoseEntry(
                     x=float(self.a.waypoints_list[index_a][0] + config.simulator.random_start_position_offset),
@@ -1353,8 +1353,8 @@ class WarthogEnv(gym.Env):
                 #         self.a.waypoints_list[i][3] = self.a.desired_velocities[i]
                 # self.a.max_vel = 2
                 # self.a.max_vel = self.a.max_vel + 1
-                self.a.observation, self.a.closest_distance, self.a.next_waypoint_index_ = pure_get_observation(
-                    next_waypoint_index_=self.a.next_waypoint_index_,
+                self.a.observation, self.a.closest_distance, self.a.next_waypoint_index = pure_get_observation(
+                    next_waypoint_index_=self.a.next_waypoint_index,
                     horizon=self.a.horizon,
                     number_of_waypoints=self.a.number_of_waypoints,
                     pose=self.a.pose,
@@ -1405,6 +1405,7 @@ class WarthogEnv(gym.Env):
                 #     render_path=f"{config.output_folder}/render/",
                 #     history_size=config.simulator.number_of_trajectories,
                 # )
+                self.b.next_waypoint_index_ = self.b.next_waypoint_index # copy over
             
             # 
             # C
