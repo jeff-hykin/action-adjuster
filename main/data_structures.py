@@ -88,6 +88,7 @@ SpacialInformation = namedtuple(
     "SpacialInformation",
     [ "x", "y", "angle", "velocity", "spin", "timestep" ]
 )
+SpacialInformation.with_timestep = lambda self, timestep: SpacialInformation(x=self.x,y=self.y,angle=self.angle,spin=self.spin,velocity=self.velocity, timestep=timestep)
 ReactionClass = namedtuple(
     "ReactionClass",
     [ "relative_velocity", "relative_spin", ]
