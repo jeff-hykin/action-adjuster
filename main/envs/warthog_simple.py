@@ -22,7 +22,65 @@ from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObs
 from render import Renderer
 from misc import are_equal, scaled_sigmoid, no_duplicates
 
+def pose_and_twist_to_spacial(pose, twist):
+    return SpacialInformation(
+        x=pose.x,
+        y=pose.y,
+        angle=pose.angle,
+        velocity=twist.velocity,
+        spin=twist.spin,
+        timestep=-1,
+    )
 
+def next_spacial_info(absolute_action, prev_spacial_info, action_duration):
+    """
+    # original
+        def sim_warthog(self, v, w):
+            x = self.pose[0]
+            y = self.pose[1]
+            th = self.pose[2]
+            v_ = self.twist[0]
+            w_ = self.twist[1]
+            self.twist[0] = v
+            self.twist[1] = w
+            if self.is_delayed_dynamics:
+                v_ = self.v_delay_data[0]
+                w_ = self.w_delay_data[0]
+                del self.v_delay_data[0]
+                del self.w_delay_data[0]
+                self.v_delay_data.append(v)
+                self.w_delay_data.append(w)
+                self.twist[0] = self.v_delay_data[0]
+                self.twist[1] = self.v_delay_data[1]
+            dt = self.dt
+            self.prev_ang = self.pose[2]
+            self.pose[0] = x + v_ * math.cos(th) * dt
+            self.pose[1] = y + v_ * math.sin(th) * dt
+            self.pose[2] = th + w_ * dt
+            self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
+            self.ep_start = 0
+        
+        # aka:
+        def sim_warthog(v, w, pose, twist, dt):
+            x,y,th = pose
+            v_,w_,*_ = twist
+            twist[0] = v
+            twist[1] = w
+            pose[0] = x + v_ * math.cos(th) * dt
+            pose[1] = y + v_ * math.sin(th) * dt
+            pose[2] = th + w_ * dt
+    """
+    return SpacialInformation(
+        x=prev_spacial_info.x + prev_spacial_info.velocity * math.cos(prev_spacial_info.angle) * action_duration,
+        y=prev_spacial_info.y + prev_spacial_info.velocity * math.sin(prev_spacial_info.angle) * action_duration,
+        angle=prev_spacial_info.angle + prev_spacial_info.spin * action_duration,
+        velocity=absolute_action.velocity,
+        spin=absolute_action.spin,
+        timestep=-1,
+    )
+
+global_a_next_spacial_buffer = []
+global_b_next_spacial_buffer = []
 @grug_test(max_io=5, skip=False)
 def generate_next_spacial_info(
     old_spacial_info,
@@ -32,10 +90,60 @@ def generate_next_spacial_info(
     ep_poses,
     **kwargs,
 ):
+    """
+        # original
+        def sim_warthog(self, v, w):
+            x = self.pose[0]
+            y = self.pose[1]
+            th = self.pose[2]
+            v_ = self.twist[0]
+            w_ = self.twist[1]
+            self.twist[0] = v
+            self.twist[1] = w
+            if self.is_delayed_dynamics:
+                v_ = self.v_delay_data[0]
+                w_ = self.w_delay_data[0]
+                del self.v_delay_data[0]
+                del self.w_delay_data[0]
+                self.v_delay_data.append(v)
+                self.w_delay_data.append(w)
+                self.twist[0] = self.v_delay_data[0]
+                self.twist[1] = self.v_delay_data[1]
+            dt = self.dt
+            self.prev_ang = self.pose[2]
+            self.pose[0] = x + v_ * math.cos(th) * dt
+            self.pose[1] = y + v_ * math.sin(th) * dt
+            self.pose[2] = th + w_ * dt
+            self.ep_poses.append(np.array([x, y, th, v_, w_, v, w]))
+            self.ep_start = 0
+        
+        # aka:
+        def sim_warthog(v, w, pose, twist, dt):
+            x,y,th = pose
+            v_,w_,*_ = twist
+            twist[0] = v
+            twist[1] = w
+            pose[0] = x + v_ * math.cos(th) * dt
+            pose[1] = y + v_ * math.sin(th) * dt
+            pose[2] = th + w_ * dt
+    """
     absolute_action = Action(
         np.clip(relative_velocity, 0, 1) * 4.0,
-        np.clip(relative_spin, -1, 1) * 2.5,
+        np.clip(relative_spin, -1, 1)    * 2.5,
     )
+    running_spacial_info = old_spacial_info
+    for each in range(config.simulator.granularity_of_calculations):
+        running_spacial_info = next_spacial_info(
+            absolute_action=Action(velocity=absolute_action.velocity, spin=absolute_action.spin),
+            prev_spacial_info=running_spacial_info,
+            # NOTE: why the *4? I have no idea. It shouldn't be needed but the driving is slow without it
+            #       Even the original one (no loops) drove too slow
+            #       HOWEVER doing *4 on the original one causes problems for some reason
+            #       TODO / FIXME
+            action_duration=4*(action_duration/config.simulator.granularity_of_calculations),
+        )
+    return running_spacial_info
+    
     effective_action_duration = action_duration/config.simulator.granularity_of_calculations
     pose = PoseEntry(
         x=old_spacial_info.x,
@@ -49,21 +157,59 @@ def generate_next_spacial_info(
     )
     absolute_velocity = absolute_action.velocity
     absolute_spin = absolute_action.spin
+    original_one_shot = sim_warthog(
+        v=absolute_velocity,
+        w=absolute_spin,
+        dt=action_duration,
+        pose=PoseEntry(
+            x=old_spacial_info.x,
+            y=old_spacial_info.y,
+            angle=old_spacial_info.angle,
+        ),
+        twist=TwistEntry(
+            velocity=old_spacial_info.velocity,
+            spin=old_spacial_info.spin,
+            unknown=None,
+        ),
+    )
+    original_one_shot_2 = sim_warthog_2(
+        action=absolute_action,
+        dt=action_duration,
+        spacial_info=old_spacial_info,
+    )
+    original_two_step = sim_warthog_2(
+        action=absolute_action,
+        dt=action_duration,
+        spacial_info=original_one_shot_2,
+    )
     
-    for each in range(config.simulator.granularity_of_calculations):
+    
+    old_v, old_w, *unknown = twist
+    twist = TwistEntry(
+        velocity=float(absolute_velocity),
+        spin=float(absolute_spin),
+        unknown=(None if len(unknown) == 0 else unknown[0]),
+    )
+    one_shot_position = pose_and_twist_to_spacial(
+        pose=PoseEntry(
+            x=float(pose.x + twist.velocity * math.cos(pose.angle) * action_duration),
+            y=float(pose.y + twist.velocity * math.sin(pose.angle) * action_duration),
+            angle=float(zero_to_2pi(pose.angle + twist.spin * action_duration)),
+        ),
+        twist=twist,
+    )
+    old_v, old_w, *unknown = twist
+    for each in range(config.simulator.granularity_of_calculations*4):
         old_x, old_y, prev_angle = pose
-        old_v, old_w, *unknown = twist
-        twist = TwistEntry(
-            velocity=float(absolute_velocity),
-            spin=float(absolute_spin),
-            unknown=(None if len(unknown) == 0 else unknown[0]),
-        )
         pose = PoseEntry(
-            x=float(old_x + old_v * math.cos(prev_angle) * action_duration),
-            y=float(old_y + old_v * math.sin(prev_angle) * action_duration),
-            angle=float(zero_to_2pi(prev_angle + old_w * action_duration)),
+            x=float(old_x + old_v * math.cos(prev_angle) * effective_action_duration),
+            y=float(old_y + old_v * math.sin(prev_angle) * effective_action_duration),
+            angle=float(zero_to_2pi(prev_angle + old_w * effective_action_duration)),
         )
+        global_a_next_spacial_buffer.append(pose_and_twist_to_spacial(pose, twist))
     
+    print(f'''generate_next_spacial_info''')
+    import code; code.interact(banner='',local={**globals(),**locals()})
     ep_poses.append(
         SpacialHistory(
             x=float(old_x),
@@ -478,15 +624,15 @@ class WarthogEnv(gym.Env):
             )
             self.c.observation = None
             
-            self.c.max_number_of_timesteps_per_episode      = config.simulator.max_number_of_timesteps_per_episode
-            self.c.save_data              = config.simulator.save_data
-            self.c.action_duration        = config.simulator.action_duration  
-            self.c.next_waypoint_index        = 0
-            self.c.prev_next_waypoint_index   = 0
-            self.c.closest_distance           = math.inf
-            self.c.episode_steps              = 0
-            self.c.total_episode_reward       = 0
-            self.c.reward                     = 0
+            self.c.max_number_of_timesteps_per_episode = config.simulator.max_number_of_timesteps_per_episode
+            self.c.save_data                           = config.simulator.save_data
+            self.c.action_duration                     = config.simulator.action_duration  
+            self.c.next_waypoint_index                 = 0
+            self.c.prev_next_waypoint_index            = 0
+            self.c.closest_distance                    = math.inf
+            self.c.episode_steps                       = 0
+            self.c.total_episode_reward                = 0
+            self.c.reward                              = 0
             self.c.original_relative_spin           = 0 
             self.c.original_relative_velocity       = 0 
             self.c.prev_original_relative_spin      = 0 
@@ -603,7 +749,6 @@ class WarthogEnv(gym.Env):
     
     # just a wrapper around the pure_step
     def step(self, action, override_next_spacial_info=None):
-        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
         # 
         # part1
         # 
@@ -751,6 +896,7 @@ class WarthogEnv(gym.Env):
                     self.b.mutated_relative_spin     = b.mutated_relative_spin_action
         
         # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+        
         # 
         # part2
         # 
@@ -766,8 +912,15 @@ class WarthogEnv(gym.Env):
                 if type(override_next_spacial_info) != type(None):
                     # this is when the spacial_info is coming from the real world
                     self.a.spacial_info = override_next_spacial_info
+                    # propogate changes to twist
+                    self.a.twist.velocity = self.a.spacial_info.velocity
+                    self.a.twist.spin = self.a.spacial_info.spin
+                    self.a.pose.x = self.a.spacial_info.x
+                    self.a.pose.y = self.a.spacial_info.y
+                    self.a.pose.angle = self.a.spacial_info.angle
                 else:
-                    self.a.spacial_info = SpacialInformation(
+                    # initial
+                    current_spacial_info = SpacialInformation(
                         x=self.a.pose.x,
                         y=self.a.pose.y,
                         angle=self.a.pose.angle,
@@ -776,59 +929,134 @@ class WarthogEnv(gym.Env):
                         timestep=self.a.episode_steps,
                     )
                 
-                self.a.twist, self.a.prev_angle, self.a.pose, ep_poses, _ = generate_next_spacial_info(
-                    old_spacial_info=self.a.spacial_info,
-                    relative_velocity=self.a.original_action.velocity,
-                    relative_spin=self.a.original_action.spin,
-                    action_duration=self.a.action_duration,
-                    ep_poses=self.a.ep_poses,
-                )
-                
-                self.a.spacial_info = SpacialInformation(
-                    x=self.a.pose.x,
-                    y=self.a.pose.y,
-                    angle=self.a.pose.angle,
-                    velocity=self.a.twist.velocity,
-                    spin=self.a.twist.spin,
-                    timestep=self.a.episode_steps,
-                )
-                
-                closest_relative_index = 0
-                last_waypoint_index = len(self.a.waypoints_list)-1
-                next_waypoint          = self.a.waypoints_list[self.a.next_waypoint_index]
+                    self.a.spacial_info = generate_next_spacial_info(
+                        old_spacial_info=current_spacial_info,
+                        relative_velocity=self.a.original_action.velocity,
+                        relative_spin=self.a.original_action.spin,
+                        action_duration=self.a.action_duration,
+                        ep_poses=self.a.ep_poses,
+                    ).with_timestep(self.a.episode_steps)
+                    
+                    self.a.twist = TwistEntry(
+                        velocity=self.a.spacial_info.velocity,
+                        spin=self.a.spacial_info.spin,
+                        unknown=None,
+                    )
+                    self.a.pose = PoseEntry(
+                        x=self.a.spacial_info.x,
+                        y=self.a.spacial_info.y,
+                        angle=self.a.spacial_info.angle,
+                    )
+                    self.a.prev_angle = self.a.spacial_info.angle
+                    self.a.ep_poses.append(self.a.spacial_info)
+                # 
+                # increment waypoints
+                # 
+                a.closest_relative_index = 0
+                a.last_waypoint_index = len(self.a.waypoints_list)-1
+                a.next_waypoint          = self.a.waypoints_list[self.a.next_waypoint_index]
                 if len(self.a.waypoints_list) > 1:
-                    distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.a.spacial_info.x, self.a.spacial_info.y)
-                    got_further_away           = self.a.closest_distance < distance_to_waypoint
-                    was_within_waypoint_radius = min(distance_to_waypoint, self.a.closest_distance) < config.simulator.waypoint_radius
+                    a.distance_to_waypoint       = get_distance(a.next_waypoint.x, a.next_waypoint.y, self.a.spacial_info.x, self.a.spacial_info.y)
+                    a.got_further_away           = self.a.closest_distance < a.distance_to_waypoint
+                    a.was_within_waypoint_radius = min(a.distance_to_waypoint, self.a.closest_distance) < config.simulator.waypoint_radius
                     # went past waypoint? increment the index
-                    if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
-                        closest_relative_index  = 1
+                    if a.distance_to_waypoint == 0 or (a.got_further_away and a.was_within_waypoint_radius):
+                        a.closest_relative_index  = 1
                     # went past waypoint, but edgecase of getting further away:
-                    elif was_within_waypoint_radius and self.a.next_waypoint_index < last_waypoint_index:
-                        next_next_waypoint         = self.a.waypoints_list[self.a.next_waypoint_index+1]
-                        waypoint_arm_angle = angle_created_by(
+                    elif a.was_within_waypoint_radius and self.a.next_waypoint_index < a.last_waypoint_index:
+                        a.next_next_waypoint         = self.a.waypoints_list[self.a.next_waypoint_index+1]
+                        a.waypoint_arm_angle = angle_created_by(
                             start=(self.a.spacial_info.x, self.a.spacial_info.y),
-                            midpoint=(next_waypoint.x, next_waypoint.y),
-                            end=(next_next_waypoint.x, next_next_waypoint.y),
+                            midpoint=(a.next_waypoint.x, a.next_waypoint.y),
+                            end=(a.next_next_waypoint.x, a.next_next_waypoint.y),
                         )
-                        we_passed_the_waypoint = waypoint_arm_angle < abs(math.degrees(90))
-                        if we_passed_the_waypoint:
-                            closest_relative_index  = 1
+                        a.we_passed_the_waypoint = a.waypoint_arm_angle < abs(math.degrees(90))
+                        if a.we_passed_the_waypoint:
+                            a.closest_relative_index  = 1
                             
-                if closest_relative_index > 0:
+                if a.closest_relative_index > 0:
                     self.a.next_waypoint_index += 1
                     # prevent indexing error
                     self.a.next_waypoint_index = min(self.a.next_waypoint_index, len(self.a.waypoints_list)-1)
-                    next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index]
+                    a.next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index]
                 
                 self.a.closest_distance = get_distance(
-                    next_waypoint.x,
-                    next_waypoint.y,
+                    a.next_waypoint.x,
+                    a.next_waypoint.y,
                     self.a.spacial_info.x,
                     self.a.spacial_info.y
                 )
+            # 
+            # B
+            # 
+            if True:
+                # 
+                # modify spacial_info
+                # 
+                self.b.prev_spacial_info = self.b.spacial_info
+                if type(override_next_spacial_info) != type(None):
+                    # this is when the spacial_info is coming from the real world
+                    self.b.spacial_info = override_next_spacial_info
+                else:
+                    # 
+                    # apply action
+                    # 
+                    self.b.spacial_info = Helpers.generate_next_spacial_info(
+                        old_spacial_info=SpacialInformation(*self.b.spacial_info),
+                        relative_velocity=self.b.mutated_relative_velocity,
+                        relative_spin=self.b.mutated_relative_spin,
+                        action_duration=4*self.b.action_duration,
+                    )
                 
-                omega_reward = None
+                # 
+                # increment waypoints
+                # 
+                if True:
+                    b.closest_relative_index = 0
+                    b.last_waypoint_index = len(self.b.waypoints_list)-1
+                    b.next_waypoint          = self.b.waypoints_list[self.b.next_waypoint_index]
+                    if len(self.b.waypoints_list) > 1:
+                        b.distance_to_waypoint       = get_distance(b.next_waypoint.x, b.next_waypoint.y, self.b.spacial_info.x, self.b.spacial_info.y)
+                        b.got_further_away           = self.b.closest_distance < b.distance_to_waypoint
+                        b.was_within_waypoint_radius = min(b.distance_to_waypoint, self.b.closest_distance) < config.simulator.waypoint_radius
+                        # went past waypoint? increment the index
+                        if b.distance_to_waypoint == 0 or (b.got_further_away and b.was_within_waypoint_radius):
+                            b.closest_relative_index  = 1
+                        # went past waypoint, but edgecase of getting further away:
+                        elif b.was_within_waypoint_radius and self.b.next_waypoint_index < b.last_waypoint_index:
+                            b.next_next_waypoint         = self.b.waypoints_list[self.b.next_waypoint_index+1]
+                            b.waypoint_arm_angle = angle_created_by(
+                                start=(self.b.spacial_info.x, self.b.spacial_info.y),
+                                midpoint=(b.next_waypoint.x, b.next_waypoint.y),
+                                end=(b.next_next_waypoint.x, b.next_next_waypoint.y),
+                            )
+                            b.we_passed_the_waypoint = b.waypoint_arm_angle < abs(math.degrees(90))
+                            if b.we_passed_the_waypoint:
+                                b.closest_relative_index  = 1
+                                
+                    if b.closest_relative_index > 0:
+                        self.b.next_waypoint_index += 1
+                        # prevent indexing error
+                        self.b.next_waypoint_index = min(self.b.next_waypoint_index, len(self.b.waypoints_list)-1)
+                        b.next_waypoint = self.b.waypoints_list[self.b.next_waypoint_index]
+                    self.b.closest_distance = get_distance(
+                        b.next_waypoint.x,
+                        b.next_waypoint.y,
+                        self.b.spacial_info.x,
+                        self.b.spacial_info.y
+                    )
+        
+        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])        
+        exit()
+        # 
+        # part3
+        # 
+        if True:
+            # 
+            # A
+            # 
+            if True:
+                omega_reward = (-2 * math.fabs(self.a.original_relative_spin))
                 output, (
                     _,
                     self.a.crosstrack_error,
@@ -887,7 +1115,7 @@ class WarthogEnv(gym.Env):
                         phi_error={self.a.phi_error*180/math.pi:.4f}
                         ep_reward={self.a.total_episode_reward:.4f}
                         
-                        omega_reward={(-2 * math.fabs(self.a.original_relative_spin)):.4f}
+                        omega_reward={omega_reward:.4f}
                         velocity_reward={self.a.velocity_error:.4f}
                     """.replace("\n                ","\n"),
                 )
@@ -896,62 +1124,6 @@ class WarthogEnv(gym.Env):
             # B
             # 
             if False:
-                # 
-                # modify spacial_info
-                # 
-                self.b.prev_spacial_info = self.b.spacial_info
-                if type(override_next_spacial_info) != type(None):
-                    # this is when the spacial_info is coming from the real world
-                    self.b.spacial_info = override_next_spacial_info
-                else:
-                    # 
-                    # apply action
-                    # 
-                    self.b.spacial_info = Helpers.generate_next_spacial_info(
-                        old_spacial_info=SpacialInformation(*self.b.spacial_info),
-                        relative_velocity=self.b.mutated_relative_velocity,
-                        relative_spin=self.b.mutated_relative_spin,
-                        action_duration=self.b.action_duration,
-                    )
-                
-                # 
-                # increment waypoints
-                # 
-                if True:
-                    closest_relative_index = 0
-                    last_waypoint_index = len(self.b.waypoints_list)-1
-                    next_waypoint          = self.b.waypoints_list[self.b.next_waypoint_index]
-                    if len(self.b.waypoints_list) > 1:
-                        distance_to_waypoint       = get_distance(next_waypoint.x, next_waypoint.y, self.b.spacial_info.x, self.b.spacial_info.y)
-                        got_further_away           = self.b.closest_distance < distance_to_waypoint
-                        was_within_waypoint_radius = min(distance_to_waypoint, self.b.closest_distance) < config.simulator.waypoint_radius
-                        # went past waypoint? increment the index
-                        if distance_to_waypoint == 0 or (got_further_away and was_within_waypoint_radius):
-                            closest_relative_index  = 1
-                        # went past waypoint, but edgecase of getting further away:
-                        elif was_within_waypoint_radius and self.b.next_waypoint_index < last_waypoint_index:
-                            next_next_waypoint         = self.b.waypoints_list[self.b.next_waypoint_index+1]
-                            waypoint_arm_angle = angle_created_by(
-                                start=(self.b.spacial_info.x, self.b.spacial_info.y),
-                                midpoint=(next_waypoint.x, next_waypoint.y),
-                                end=(next_next_waypoint.x, next_next_waypoint.y),
-                            )
-                            we_passed_the_waypoint = waypoint_arm_angle < abs(math.degrees(90))
-                            if we_passed_the_waypoint:
-                                closest_relative_index  = 1
-                                
-                    if closest_relative_index > 0:
-                        self.b.next_waypoint_index += 1
-                        # prevent indexing error
-                        self.b.next_waypoint_index = min(self.b.next_waypoint_index, len(self.b.waypoints_list)-1)
-                        next_waypoint = self.b.waypoints_list[self.b.next_waypoint_index]
-                    self.b.closest_distance = get_distance(
-                        next_waypoint.x,
-                        next_waypoint.y,
-                        self.b.spacial_info.x,
-                        self.b.spacial_info.y
-                    )
-                
                 # 
                 # Reward Calculation
                 # 
@@ -962,8 +1134,8 @@ class WarthogEnv(gym.Env):
                     prev_relative_velocity=self.b.prev_mutated_relative_velocity,
                     relative_spin=self.b.mutated_relative_spin,
                     prev_relative_spin=self.b.prev_mutated_relative_spin,
-                    closest_waypoint=next_waypoint,
-                    closest_relative_index=closest_relative_index,
+                    closest_waypoint=b.next_waypoint,
+                    closest_relative_index=b.closest_relative_index,
                 )
                 
                 # 
@@ -1412,8 +1584,8 @@ if not grug_test.fully_disable and (grug_test.replay_inputs or grug_test.record_
     if grug_test.replay_inputs:
         smoke_test_warthog("real1.csv")
     # exit()
-global_a_buffer = []
-global_b_buffer = []
+global_a_observation_buffer = []
+global_b_observation_buffer = []
 class SimpleHelpers:
     @staticmethod
     @grug_test(max_io=5, skip=False)
@@ -1428,7 +1600,7 @@ class SimpleHelpers:
     ):
         observation   = [0] * (horizon * 4 + 2)
         index = 0
-        global_a_buffer.clear()
+        global_a_observation_buffer.clear()
         for horizon_index in range(0, horizon):
             waypoint_index = horizon_index + next_waypoint_index_
             if waypoint_index < number_of_waypoints:
@@ -1441,7 +1613,7 @@ class SimpleHelpers:
                 gap_of_desired_angle_at_next = pi_to_pi(waypoint.angle - current_angle)
                 gap_of_angle_directly_towards_next = pi_to_pi(angle_to_next_point - current_angle)
                 gap_of_velocity = waypoint.velocity - twist.velocity
-                global_a_buffer.append(LazyDict(
+                global_a_observation_buffer.append(LazyDict(
                     waypoint=waypoint,
                     gap_of_distance=gap_of_distance,
                     x_diff=x_diff,
@@ -1478,7 +1650,7 @@ class Helpers:
         mutated_absolute_spin     = current_spacial_info.spin
         
         # observation_length = (config.simulator.horizon*4)+3
-        global_b_buffer.clear()
+        global_b_observation_buffer.clear()
         observation = []
         for waypoint in remaining_waypoints[0:config.simulator.horizon]:
             x_diff = waypoint.x - current_spacial_info.x
@@ -1491,7 +1663,7 @@ class Helpers:
             gap_of_desired_angle_at_next       = pi_to_pi(waypoint.angle      - current_angle)
             gap_of_velocity                    = waypoint.velocity - mutated_absolute_velocity
             
-            global_b_buffer.append(LazyDict(
+            global_b_observation_buffer.append(LazyDict(
                 waypoint=waypoint,
                 gap_of_distance=gap_of_distance,
                 x_diff=x_diff,
@@ -1577,7 +1749,8 @@ class Helpers:
                 y        = old_y + old_absolute_velocity * math.sin(old_angle) * effective_action_duration,
                 angle    = zero_to_2pi(old_angle + old_absolute_spin           * effective_action_duration),
                 timestep = next_spacial_info.timestep,
-            )    
+            )
+            global_b_next_spacial_buffer.append(next_spacial_info)
             
             # repeat the process
             old_spacial_info = next_spacial_info
