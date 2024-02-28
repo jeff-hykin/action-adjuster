@@ -22,6 +22,8 @@ from data_structures import Unknown, Action, StepOutput, StepSideEffects, GetObs
 from render import Renderer
 from misc import are_equal, scaled_sigmoid, no_duplicates
 
+global_a = LazyDict()
+global_b = LazyDict()
 def pose_and_twist_to_spacial(pose, twist):
     return SpacialInformation(
         x=pose.x,
@@ -246,12 +248,13 @@ def pure_get_observation(
     waypoints_list,
     **kwargs,
 ):
-    change_in_waypoint_index, closest_distance = advance_the_index_if_needed(
+    print(f'''next_waypoint_index_ = {next_waypoint_index_}''')
+    print(f'''len(waypoints_list[next_waypoint_index_:]) = {len(waypoints_list[next_waypoint_index_:])}''')
+    _, closest_distance = advance_the_index_if_needed(
         remaining_waypoints=waypoints_list[next_waypoint_index_:],
         x=pose[0],
         y=pose[1],
     )
-    next_waypoint_index_ += change_in_waypoint_index
     
     obs = SimpleHelpers.generate_observation_array(
         next_waypoint_index_,
@@ -291,6 +294,24 @@ def pure_reward(
         - math.fabs(action[0] - prev_absolute_action[0])
         - 2 * math.fabs(action[1])
     )
+    global_a.reward = LazyDict(
+        closest_waypoint=closest_waypoint,
+        spacial_information=pose_and_twist_to_spacial(pose, twist),
+        waypoint_x=waypoint_x,
+        waypoint_y=waypoint_y,
+        waypoint_phi=waypoint_phi,
+        waypoint_velocity=waypoint_velocity,
+        pose_x=pose_x,
+        pose_y=pose_y,
+        pose_phi=pose_phi,
+        x_diff=x_diff,
+        y_diff=y_diff,
+        yaw_error=yaw_error,
+        phi_error=phi_error,
+        velocity_error=velocity_error,
+        crosstrack_error=crosstrack_error,
+        reward=reward,
+    )
     if waypoint_velocity >= 2.5 and math.fabs(velocity_error) > 1.5:
         reward = 0
     elif waypoint_velocity < 2.5 and math.fabs(velocity_error) > 0.5:
@@ -313,9 +334,9 @@ def pure_reward_wrapper(
     done,
     **kwargs,
 ):
-    xdiff         = waypoints_list[next_waypoint_index_][0] - pose[0]
-    ydiff         = waypoints_list[next_waypoint_index_][1] - pose[1]
-    yaw_error     = pi_to_pi(get_angle_from_origin(xdiff, ydiff) - pose[2])
+    x_diff         = waypoints_list[next_waypoint_index_][0] - pose[0]
+    y_diff         = waypoints_list[next_waypoint_index_][1] - pose[1]
+    yaw_error     = pi_to_pi(get_angle_from_origin(x_diff, y_diff) - pose[2])
     omega_reward  = -2 * math.fabs(action[1])
     velocity_reward    = -math.fabs(action[0] - prev_absolute_action[0])
     
@@ -338,7 +359,7 @@ def pure_reward_wrapper(
     total_episode_reward = total_episode_reward + reward
     prev_absolute_action = action
     
-    return reward, crosstrack_error, xdiff, ydiff, yaw_error, phi_error, velocity_error, done, episode_steps, omega_reward, velocity_reward, prev_absolute_action, total_episode_reward
+    return reward, crosstrack_error, x_diff, y_diff, yaw_error, phi_error, velocity_error, done, episode_steps, omega_reward, velocity_reward, prev_absolute_action, total_episode_reward
 
 
 @grug_test(max_io=10, skip=False)
@@ -375,6 +396,7 @@ def pure_step(
         twist=twist,
         waypoints_list=waypoints_list,
     )
+    
     done = False
     if next_waypoint_index_ >= number_of_waypoints - 1:
         done = True
@@ -721,7 +743,6 @@ class WarthogEnv(gym.Env):
                 "mutated_relative_velocity",
                 "prev_mutated_relative_spin",
                 "prev_mutated_relative_velocity",
-                "prev_observation",
                 "is_episode_start",
                 "trajectory_file",
                 "global_timestep",
@@ -732,7 +753,6 @@ class WarthogEnv(gym.Env):
                 "phi_error",
                 "pose",
                 "twist",
-                "next_waypoint_index_",
                 "horizon",
                 "number_of_waypoints",
                 "max_vel",
@@ -749,6 +769,8 @@ class WarthogEnv(gym.Env):
     
     # just a wrapper around the pure_step
     def step(self, action, override_next_spacial_info=None):
+        print(f'''STEP start: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
+        print(f'''STEP start: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
         # 
         # part1
         # 
@@ -894,8 +916,80 @@ class WarthogEnv(gym.Env):
                     # 
                     self.b.mutated_relative_velocity = b.mutated_relative_velocity_action
                     self.b.mutated_relative_spin     = b.mutated_relative_spin_action
-        
-        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+                    
+            # 
+            # C
+            # 
+            if True:
+                c = LazyDict()
+                #  
+                # push new action
+                # 
+                self.c.prev_original_relative_velocity = self.c.original_relative_velocity
+                self.c.prev_original_relative_spin     = self.c.original_relative_spin
+                self.c.prev_mutated_relative_velocity  = self.c.mutated_relative_velocity
+                self.c.prev_mutated_relative_spin      = self.c.mutated_relative_spin
+                self.c.original_relative_velocity, self.c.original_relative_spin = action
+                self.c.original_action = Action(velocity=self.c.original_relative_velocity, spin=self.c.original_relative_spin)
+                self.c.absolute_action = Action(
+                    velocity=clip(self.c.original_relative_velocity, min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity) * config.vehicle.controller_max_velocity,
+                    spin=clip(self.c.original_relative_spin    , min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    ) * config.vehicle.controller_max_spin,
+                )
+                
+                # 
+                # logging and counter-increments
+                # 
+                if self.c.save_data and self.c.trajectory_file is not None:
+                    self.c.trajectory_file.writelines(f"{self.c.spacial_info.x}, {self.c.spacial_info.y}, {self.c.spacial_info.angle}, {self.c.spacial_info.velocity}, {self.c.spacial_info.spin}, {self.c.original_relative_velocity}, {self.c.original_relative_spin}, {self.c.is_episode_start}\n")
+                self.c.global_timestep += 1
+                self.c.episode_steps = self.c.episode_steps + 1
+                self.c.is_episode_start = 0
+                
+                # 
+                # modify action
+                # 
+                if True:
+                    # first force them to be within normal ranges
+                    a.mutated_relative_velocity_action = clip(self.c.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+                    a.mutated_relative_spin_action     = clip(self.c.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
+                    
+                    # 
+                    # ADVERSITY
+                    # 
+                    if True:
+                        # battery adversity
+                        if config.simulator.battery_adversity_enabled:
+                            self.c.simulated_battery_level *= 1-config.simulator.battery_decay_rate
+                            self.c.recorder.add(timestep=self.c.global_timestep, simulated_battery_level=self.c.simulated_battery_level)
+                            self.c.recorder.commit()
+                            a.mutated_relative_velocity_action *= self.c.simulated_battery_level
+                            # make sure velocity never goes negative (treat low battery as resistance)
+                            a.mutated_relative_velocity_action = clip(a.mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+                        
+                        # additive adversity
+                        a.mutated_relative_velocity_action += config.simulator.velocity_offset
+                        a.mutated_relative_spin_action     += config.simulator.spin_offset
+                
+                    # 
+                    # add noise
+                    # 
+                    if config.simulator.use_gaussian_action_noise:
+                        a.mutated_relative_velocity_action += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+                        a.mutated_relative_spin_action     += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
+                    
+                    # 
+                    # action delay
+                    # 
+                    self.c.action_buffer.append((a.mutated_relative_velocity_action, a.mutated_relative_spin_action))
+                    a.mutated_relative_velocity_action, a.mutated_relative_spin_action = self.c.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
+                    
+                    # 
+                    # save
+                    # 
+                    self.c.mutated_relative_velocity = a.mutated_relative_velocity_action
+                    self.c.mutated_relative_spin     = a.mutated_relative_spin_action
+        print(f'''step stage1 done''')
+        self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode", "trajectory_file"])
         
         # 
         # part2
@@ -919,6 +1013,7 @@ class WarthogEnv(gym.Env):
                     self.a.pose.y = self.a.spacial_info.y
                     self.a.pose.angle = self.a.spacial_info.angle
                 else:
+                    
                     # initial
                     current_spacial_info = SpacialInformation(
                         x=self.a.pose.x,
@@ -952,33 +1047,13 @@ class WarthogEnv(gym.Env):
                 # 
                 # increment waypoints
                 # 
-                a.closest_relative_index = 0
-                a.last_waypoint_index = len(self.a.waypoints_list)-1
-                a.next_waypoint          = self.a.waypoints_list[self.a.next_waypoint_index_new]
-                if len(self.a.waypoints_list) > 1:
-                    a.distance_to_waypoint       = get_distance(a.next_waypoint.x, a.next_waypoint.y, self.a.spacial_info.x, self.a.spacial_info.y)
-                    a.got_further_away           = self.a.closest_distance < a.distance_to_waypoint
-                    a.was_within_waypoint_radius = min(a.distance_to_waypoint, self.a.closest_distance) < config.simulator.waypoint_radius
-                    # went past waypoint? increment the index
-                    if a.distance_to_waypoint == 0 or (a.got_further_away and a.was_within_waypoint_radius):
-                        a.closest_relative_index  = 1
-                    # went past waypoint, but edgecase of getting further away:
-                    elif a.was_within_waypoint_radius and self.a.next_waypoint_index_new < a.last_waypoint_index:
-                        a.next_next_waypoint         = self.a.waypoints_list[self.a.next_waypoint_index_new+1]
-                        a.waypoint_arm_angle = angle_created_by(
-                            start=(self.a.spacial_info.x, self.a.spacial_info.y),
-                            midpoint=(a.next_waypoint.x, a.next_waypoint.y),
-                            end=(a.next_next_waypoint.x, a.next_next_waypoint.y),
-                        )
-                        a.we_passed_the_waypoint = a.waypoint_arm_angle < abs(math.degrees(90))
-                        if a.we_passed_the_waypoint:
-                            a.closest_relative_index  = 1
-                            
-                if a.closest_relative_index > 0:
-                    self.a.next_waypoint_index_new += 1
-                    # prevent indexing error
-                    self.a.next_waypoint_index_new = min(self.a.next_waypoint_index_new, len(self.a.waypoints_list)-1)
-                    a.next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index_new]
+                change_in_waypoint_index, _ = advance_the_index_if_needed(
+                    remaining_waypoints=self.a.waypoints_list[self.a.next_waypoint_index:],
+                    x=self.a.spacial_info.x,
+                    y=self.a.spacial_info.y,
+                )
+                self.a.next_waypoint_index += change_in_waypoint_index
+                self.a.next_waypoint = a.next_waypoint = self.a.waypoints_list[self.a.next_waypoint_index]
                 
                 self.a.closest_distance = get_distance(
                     a.next_waypoint.x,
@@ -1039,6 +1114,8 @@ class WarthogEnv(gym.Env):
                         # prevent indexing error
                         self.b.next_waypoint_index = min(self.b.next_waypoint_index, len(self.b.waypoints_list)-1)
                         b.next_waypoint = self.b.waypoints_list[self.b.next_waypoint_index]
+                    
+                    self.b.next_waypoint = b.next_waypoint
                     self.b.closest_distance = get_distance(
                         b.next_waypoint.x,
                         b.next_waypoint.y,
@@ -1070,11 +1147,12 @@ class WarthogEnv(gym.Env):
                 # 
                 # increment waypoints
                 # 
-                change_in_waypoint_index, _ = advance_the_index_if_needed(
+                change_in_waypoint_index, _ = advance_the_index_if_needed(#C
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                     x=self.c.spacial_info.x,
                     y=self.c.spacial_info.y,
                 )
+                self.c.prev_next_waypoint_index = self.c.next_waypoint_index
                 self.c.next_waypoint_index += change_in_waypoint_index
                 self.c.next_waypoint = c.next_waypoint = self.c.waypoints_list[self.c.next_waypoint_index]
                 self.c.closest_distance = get_distance(
@@ -1083,9 +1161,9 @@ class WarthogEnv(gym.Env):
                     self.c.spacial_info.x,
                     self.c.spacial_info.y
                 )
-        
-        self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])        
-        exit()
+        print(f'''step stage2 done''')
+        self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode","trajectory_file"])        
+                    
         # 
         # part3
         # 
@@ -1094,6 +1172,11 @@ class WarthogEnv(gym.Env):
             # A
             # 
             if True:
+                self.a.prev_spacial_info_with_noise = self.a.spacial_info_with_noise
+                self.a.spacial_info_with_noise = self.a.spacial_info
+                
+                print(f'''pure_get_observation:self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
+                print(f'''pure_get_observation:self.a.prev_next_waypoint_index = {self.a.prev_next_waypoint_index}''')
                 omega_reward = (-2 * math.fabs(self.a.original_relative_spin))
                 output, (
                     _,
@@ -1248,7 +1331,7 @@ class WarthogEnv(gym.Env):
             # 
             # C
             # 
-            if True:
+            if False:
                 # 
                 # Reward Calculation
                 # 
@@ -1284,10 +1367,12 @@ class WarthogEnv(gym.Env):
                     
                     # generate observation off potentially incorrect (noisey) spacial info
                     prev_observation = self.c.observation
-                    print(f'''self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+                    print(f'''generate_observation:self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+                    print(f'''generate_observation:self.c.prev_next_waypoint_index = {self.c.prev_next_waypoint_index}''')
+                    print(f'''len(self.c.waypoints_list[self.c.prev_next_waypoint_index:]) = {len(self.c.waypoints_list[self.c.prev_next_waypoint_index:])}''')
+                    print(f'''len(self.c.waypoints_list[self.c.next_waypoint_index:]) = {len(self.c.waypoints_list[self.c.next_waypoint_index:])}''')
                     self.c.observation = Helpers.generate_observation(
-                        closest_index=self.c.next_waypoint_index,
-                        remaining_waypoints=self.c.waypoints_list[self.c.prev_next_waypoint_index:],
+                        remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                         current_spacial_info=self.c.spacial_info_with_noise,
                     )
                 
@@ -1334,8 +1419,23 @@ class WarthogEnv(gym.Env):
                 
                 output = self.c.observation, self.c.reward, done, additional_info
         
-        # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
+        print(f'''step stage3 done''')
+        self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode","trajectory_file"])
+        # print(f'''global_a.reward = {global_a.reward}''')
+        # print(f'''global_b.reward = {global_b.reward}''')
+        print(f'''observation_buffer''')
+        with print.indent:
+            for index, (each_a, each_b) in enumerate(zip(global_a_observation_buffer, global_b_observation_buffer)):
+                print(f'''{index}''')
+                with print.indent:
+                    for (key_a, value_a), (key_b, value_b) in zip(each_a.items(),each_b.items()):
+                        print(f'''a:{key_a} = {value_a}''')
+                        print(f'''b:{key_b} = {value_b}''')
+        
+        # import code; code.interact(banner='',local={**globals(),**locals()})
         # exit()
+        print(f'''STEP end: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
+        print(f'''STEP end: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
         return output
     
     def reset(self, override_next_spacial_info=None):
@@ -1515,7 +1615,6 @@ class WarthogEnv(gym.Env):
                 self.b.prev_next_waypoint_index = self.b.next_waypoint_index
                 
                 output = self.b.observation = Helpers.generate_observation(
-                    closest_index=self.b.next_waypoint_index,
                     remaining_waypoints=self.b.waypoints_list[self.b.next_waypoint_index:],
                     current_spacial_info=self.b.spacial_info,
                 )
@@ -1531,7 +1630,6 @@ class WarthogEnv(gym.Env):
                 #     render_path=f"{config.output_folder}/render/",
                 #     history_size=config.simulator.number_of_trajectories,
                 # )
-                self.b.next_waypoint_index_ = self.b.next_waypoint_index # copy over
             
             # 
             # C
@@ -1549,16 +1647,17 @@ class WarthogEnv(gym.Env):
                     spin=0,
                     unknown=0,
                 )
+                self.c.spacial_info = pose_and_twist_to_spacial(self.c.pose, self.c.twist).with_timestep(0)
                 
                 # 
                 # calculate closest index
                 # 
-                change_in_waypoint_index_c, closest_distance_c = advance_the_index_if_needed(
-                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
-                    x=self.c.pose.x,
-                    y=self.c.pose.y,
-                )
-                # self.c.next_waypoint_index += change_in_waypoint_index
+                    # change_in_waypoint_index_c, closest_distance_c = advance_the_index_if_needed(
+                    #     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    #     x=self.c.pose.x,
+                    #     y=self.c.pose.y,
+                    # )
+                    # self.c.next_waypoint_index += change_in_waypoint_index
                 
                 closest_relative_index, self.c.closest_distance = Helpers.get_closest(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
@@ -1569,17 +1668,16 @@ class WarthogEnv(gym.Env):
                 self.c.next_waypoint_index += closest_relative_index
                 self.c.prev_next_waypoint_index = self.c.next_waypoint_index
                 
-                obs_c = SimpleHelpers.generate_observation_array(
-                    self.c.next_waypoint_index,
-                    config.simulator.horizon,
-                    len(self.c.waypoints_list),
-                    self.c.pose,
-                    self.c.twist,
-                    self.c.waypoints_list,
-                )
+                # obs_c = SimpleHelpers.generate_observation_array(
+                #     self.c.next_waypoint_index,
+                #     config.simulator.horizon,
+                #     len(self.c.waypoints_list),
+                #     self.c.pose,
+                #     self.c.twist,
+                #     self.c.waypoints_list,
+                # )
                 
-                output = self.c.prev_observation = Helpers.generate_observation(
-                    closest_index=self.c.next_waypoint_index,
+                output = self.c.observation = Helpers.generate_observation(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                     current_spacial_info=self.c.spacial_info,
                 )
@@ -1768,7 +1866,7 @@ class SimpleHelpers:
 class Helpers:
     @staticmethod
     @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
-    def generate_observation(closest_index, remaining_waypoints, current_spacial_info):
+    def generate_observation(remaining_waypoints, current_spacial_info):
         """
             Note:
                 This function should be fully deterministic.
@@ -1915,7 +2013,6 @@ class Helpers:
         crosstrack_error = closest_distance * math.sin(yaw_error)
         phi_error        = pi_to_pi(zero_to_2pi(closest_waypoint.angle) - spacial_info.angle)
         
-        
         max_expected_crosstrack_error = config.reward_parameters.max_expected_crosstrack_error # meters
         max_expected_velocity_error   = config.reward_parameters.max_expected_velocity_error * config.vehicle.controller_max_velocity # meters per second
         max_expected_angle_error      = config.reward_parameters.max_expected_angle_error # 60° but in radians
@@ -1934,6 +2031,25 @@ class Helpers:
         # direct energy consumption
         running_reward -= config.reward_parameters.direct_velocity_cost * math.fabs(relative_velocity)
         running_reward -= config.reward_parameters.direct_spin_cost     * math.fabs(relative_spin)
+        
+        global_b.reward = LazyDict(
+            closest_waypoint=closest_waypoint,
+            spacial_info=spacial_info,
+            x_diff=x_diff,
+            y_diff=y_diff,
+            angle_diff=angle_diff,
+            yaw_error=yaw_error,
+            velocity_error=velocity_error,
+            crosstrack_error=crosstrack_error,
+            phi_error=phi_error,
+            max_expected_crosstrack_error=max_expected_crosstrack_error,
+            max_expected_velocity_error=max_expected_velocity_error,
+            max_expected_angle_error=max_expected_angle_error,
+            crosstrack_reward=crosstrack_reward,
+            velocity_reward=velocity_reward,
+            angle_reward=angle_reward,
+            reward=running_reward,
+        )
         
         if config.reward_parameters.velocity_caps_enabled:
             abs_velocity_error = math.fabs(velocity_error)
