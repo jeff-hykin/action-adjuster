@@ -146,23 +146,9 @@ class WarthogEnv(gym.Env):
                 self.trajectory_file = open(trajectory_output_path, "w+")
                 self.trajectory_file.writelines(f"x, y, angle, velocity, spin, velocity_action, spin_action, is_episode_start\n")
             
-            self.pose = PoseEntry(
-                x=0,
-                y=0,
-                angle=0,
-            )
-            self.twist = TwistEntry(
-                velocity=0,
-                spin=0,
-                unknown=0,
-            )
-            self.max_vel = 1
-            self.prev_angle              = 0
-            self.original_action         = [0.0, 0.0]
-            self.absolute_action         = [0.0, 0.0]
-            self.prev_absolute_action    = [0.0, 0.0]
-            self.velocity_reward         = 0
-            self.ep_poses                = []
+            self.original_action         = Action(velocity=0, spin=0)
+            self.absolute_action         = Action(velocity=0, spin=0)
+            self.prev_absolute_action    = Action(velocity=0, spin=0)
             
             self.global_timestep = 0
     
