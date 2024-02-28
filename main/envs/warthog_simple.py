@@ -1045,6 +1045,44 @@ class WarthogEnv(gym.Env):
                         self.b.spacial_info.x,
                         self.b.spacial_info.y
                     )
+            # 
+            # C
+            # 
+            if True:
+                # 
+                # modify spacial_info
+                # 
+                self.c.prev_spacial_info = self.c.spacial_info
+                if type(override_next_spacial_info) != type(None):
+                    # this is when the spacial_info is coming from the real world
+                    self.c.spacial_info = override_next_spacial_info
+                else:
+                    # 
+                    # apply action
+                    # 
+                    self.c.spacial_info = Helpers.generate_next_spacial_info(
+                        old_spacial_info=SpacialInformation(*self.c.spacial_info),
+                        relative_velocity=self.c.mutated_relative_velocity,
+                        relative_spin=self.c.mutated_relative_spin,
+                        action_duration=4*self.c.action_duration,
+                    )
+                
+                # 
+                # increment waypoints
+                # 
+                change_in_waypoint_index, _ = advance_the_index_if_needed(
+                    remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    x=self.c.spacial_info.x,
+                    y=self.c.spacial_info.y,
+                )
+                self.c.next_waypoint_index += change_in_waypoint_index
+                self.c.next_waypoint = c.next_waypoint = self.c.waypoints_list[self.c.next_waypoint_index]
+                self.c.closest_distance = get_distance(
+                    c.next_waypoint.x,
+                    c.next_waypoint.y,
+                    self.c.spacial_info.x,
+                    self.c.spacial_info.y
+                )
         
         self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])        
         exit()
@@ -1207,6 +1245,94 @@ class WarthogEnv(gym.Env):
                         done = True
                 
                 output = self.b.observation, self.b.reward, done, additional_info
+            # 
+            # C
+            # 
+            if True:
+                # 
+                # Reward Calculation
+                # 
+                self.c.reward, self.c.velocity_error, self.c.crosstrack_error, self.c.phi_error = Helpers.almost_original_reward_function(
+                    spacial_info=self.c.spacial_info,
+                    closest_distance=self.c.closest_distance,
+                    relative_velocity=self.c.mutated_relative_velocity,
+                    prev_relative_velocity=self.c.prev_mutated_relative_velocity,
+                    relative_spin=self.c.mutated_relative_spin,
+                    prev_relative_spin=self.c.prev_mutated_relative_spin,
+                    closest_waypoint=b.next_waypoint,
+                    closest_relative_index=b.closest_relative_index,
+                )
+                
+                # 
+                # make mutated observation
+                # 
+                if True:
+                    self.c.prev_spacial_info_with_noise = self.c.spacial_info_with_noise
+                    self.c.spacial_info_with_noise = self.c.spacial_info
+                    # 
+                    # add spacial noise
+                    # 
+                    if config.simulator.use_gaussian_spacial_noise:
+                        self.c.spacial_info_with_noise = SpacialInformation(
+                            self.c.spacial_info_with_noise.x        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       , ),
+                            self.c.spacial_info_with_noise.y        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , ),
+                            self.c.spacial_info_with_noise.angle    + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , ),
+                            self.c.spacial_info_with_noise.velocity + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , ),
+                            self.c.spacial_info_with_noise.spin     + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, ),
+                            self.c.spacial_info_with_noise.timestep ,
+                        )
+                    
+                    # generate observation off potentially incorrect (noisey) spacial info
+                    prev_observation = self.c.observation
+                    print(f'''self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+                    self.c.observation = Helpers.generate_observation(
+                        closest_index=self.c.next_waypoint_index,
+                        remaining_waypoints=self.c.waypoints_list[self.c.prev_next_waypoint_index:],
+                        current_spacial_info=self.c.spacial_info_with_noise,
+                    )
+                
+                # 
+                # render
+                # 
+                # self.c.renderer.render_if_needed(
+                #     prev_next_waypoint_index=self.c.prev_next_waypoint_index,
+                #     x_point=self.c.spacial_info.x, # self.c.spacial_info.x
+                #     y_point=self.c.spacial_info.y, # self.c.spacial_info.y
+                #     angle=self.c.spacial_info.angle,   # self.c.spacial_info.angle
+                #     text_data=f"vel_error={self.c.velocity_error:.3f}\nclosest_index={self.c.next_waypoint_index}\ncrosstrack_error={self.c.crosstrack_error:.3f}\nReward={self.c.reward:.4f}\nwarthog_vel={self.c.spacial_info.velocity:.3f}\nphi_error={self.c.phi_error*180/math.pi:.4f}\nep_reward={self.c.total_episode_reward:.4f}\n\nomega_reward={(-2 * math.fabs(self.c.original_relative_spin)):.4f}\nvel_reward={self.c.velocity_error:.4f}",
+                # )
+                
+                additional_info = AdditionalInfo(
+                    timestep_index=Unknown,
+                    action_duration=self.c.action_duration,
+                    spacial_info=self.c.prev_spacial_info,
+                    spacial_info_with_noise=self.c.prev_spacial_info_with_noise,
+                    observation_from_spacial_info_with_noise=prev_observation,
+                    historic_transform=Unknown,
+                    original_reaction=ReactionClass(self.c.original_relative_velocity, self.c.original_relative_spin ),
+                    mutated_reaction=ReactionClass(self.c.mutated_relative_velocity, self.c.mutated_relative_spin ),
+                    next_spacial_info=self.c.spacial_info,
+                    next_spacial_info_spacial_info_with_noise=self.c.spacial_info_with_noise,
+                    next_observation_from_spacial_info_with_noise=self.c.observation,
+                    next_closest_index=self.c.next_waypoint_index,
+                    reward=self.c.reward,
+                )
+                
+                # 
+                # done Calculation
+                #
+                done = False
+                if self.c.next_waypoint_index >= len(self.c.waypoints_list) - 1:
+                    done = True 
+                if self.c.episode_steps == self.c.max_number_of_timesteps_per_episode:
+                    done = True
+                    self.c.episode_steps = 0
+                # immediate end due to too much loss
+                if config.simulator.allow_cut_short_episode:
+                    if math.fabs(self.c.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.c.phi_error) > magic_number_1_point_4:
+                        done = True
+                
+                output = self.c.observation, self.c.reward, done, additional_info
         
         # self.diff_compare(print_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode"])
         # exit()
