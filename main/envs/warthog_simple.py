@@ -1217,7 +1217,15 @@ class WarthogEnv(gym.Env):
                 self.a.observation, self.a.reward, done, additional_info = a.output
                 self.a.observation = Observation(self.a.observation+[self.a.global_timestep])
                 a.output = list(a.output)
-                # a.output[0] = self.a.observation
+                # print(f'''output''')
+                # with print.indent:
+                #     for index, (new, old) in enumerate(zip(self.a.observation.to_numpy(), a.output[0])):
+                #         print(f'''index: {index}''')
+                #         with print.indent:
+                #             print(f'''new = {new}''')
+                #             print(f'''old = {old}''')
+                # import code; code.interact(banner='',local={**globals(),**locals()})
+                a.output[0] = self.a.observation
                 a.output[2] = False # FIXME: debugging only; force prevent reset
                 self.a.renderer.render_if_needed(
                     prev_next_waypoint_index=self.a.next_waypoint_index,
@@ -1330,7 +1338,7 @@ class WarthogEnv(gym.Env):
             # 
             # C
             # 
-            if False:# part3 C
+            if True:# part3 C
                 # 
                 # Reward Calculation
                 # 
@@ -1440,7 +1448,7 @@ class WarthogEnv(gym.Env):
         # # exit()
         # print(f'''STEP end: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
         # print(f'''STEP end: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
-        return a.output
+        return output
     
     def reset(self, override_next_spacial_info=None):
         print(f'''resetting''')

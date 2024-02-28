@@ -1,0 +1,1 @@
+find where step is consumed. Figure out why an array is treated differently than the Observation object

@@ -192,11 +192,11 @@ class Observation:
     
     def __json__(self):
         output = []
-        for each_waypoint_gap in self.waypoint_gaps:
+        for each_waypoint_gap in reversed(self.waypoint_gaps):
             for each_value in each_waypoint_gap:
                 output.append(each_value)
-        output.append(self.absolute_velocity)
         output.append(self.absolute_spin)
+        output.append(self.absolute_velocity)
         output.append(self.timestep)
         return output
     
