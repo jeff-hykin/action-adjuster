@@ -387,7 +387,6 @@ def pure_step(
     waypoints_list,
     **kwargs,
 ):
-    prev_next_waypoint_index_ = next_waypoint_index_
     obs, closest_distance, next_waypoint_index_ = pure_get_observation(
         next_waypoint_index_=next_waypoint_index_,
         horizon=horizon,
@@ -429,7 +428,7 @@ def pure_step(
             omega_reward,
             phi_error,
             prev_absolute_action,
-            prev_next_waypoint_index_,
+            None,
             reward,
             total_episode_reward,
             velocity_error,
@@ -498,7 +497,6 @@ class WarthogEnv(gym.Env):
             self.a.save_data              = config.simulator.save_data
             self.a.action_duration        = config.simulator.action_duration  
             self.a.next_waypoint_index_new   = 0
-            self.a.prev_next_waypoint_index  = 0
             self.a.closest_distance           = math.inf
             self.a.desired_velocities         = []
             self.a.episode_steps              = 0
@@ -537,7 +535,6 @@ class WarthogEnv(gym.Env):
                 unknown=0,
             )
             self.a.next_waypoint_index = 0
-            self.a.prev_next_waypoint_index = 0
             self.a.closest_distance = math.inf
             self.a.horizon = 10
             self.a.action_duration = 0.06
@@ -769,8 +766,7 @@ class WarthogEnv(gym.Env):
     
     # just a wrapper around the pure_step
     def step(self, action, override_next_spacial_info=None):
-        print(f'''STEP start: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
-        print(f'''STEP start: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+        output = [None,None,None,None]
         # 
         # part1
         # 
@@ -1171,21 +1167,20 @@ class WarthogEnv(gym.Env):
             # 
             # A
             # 
-            if True:
+            if True: # part3:A
                 self.a.prev_spacial_info_with_noise = self.a.spacial_info_with_noise
                 self.a.spacial_info_with_noise = self.a.spacial_info
                 
                 print(f'''pure_get_observation:self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
-                print(f'''pure_get_observation:self.a.prev_next_waypoint_index = {self.a.prev_next_waypoint_index}''')
                 omega_reward = (-2 * math.fabs(self.a.original_relative_spin))
-                output, (
+                a.output, (
                     _,
                     self.a.crosstrack_error,
                     self.a.episode_steps,
                     omega_reward,
                     self.a.phi_error,
                     self.a.prev_absolute_action,
-                    self.a.prev_next_waypoint_index,
+                    _,
                     self.a.reward,
                     self.a.total_episode_reward,
                     self.a.velocity_error,
@@ -1219,10 +1214,13 @@ class WarthogEnv(gym.Env):
                     velocity_reward=self.a.velocity_reward,
                     waypoints_list=self.a.waypoints_list,
                 )
-                self.a.observation, self.a.reward, done, additional_info = output
+                self.a.observation, self.a.reward, done, additional_info = a.output
                 self.a.observation = Observation(self.a.observation+[self.a.global_timestep])
+                a.output = list(a.output)
+                # a.output[0] = self.a.observation
+                a.output[2] = False # FIXME: debugging only; force prevent reset
                 self.a.renderer.render_if_needed(
-                    prev_next_waypoint_index=self.a.prev_next_waypoint_index,
+                    prev_next_waypoint_index=self.a.next_waypoint_index,
                     x_point=self.a.pose[0],
                     y_point=self.a.pose[1],
                     angle=self.a.pose[2],
@@ -1240,6 +1238,7 @@ class WarthogEnv(gym.Env):
                         velocity_reward={self.a.velocity_error:.4f}
                     """.replace("\n                ","\n"),
                 )
+                print(f'''END pure_get_observation:self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
             
             # 
             # B
@@ -1331,7 +1330,7 @@ class WarthogEnv(gym.Env):
             # 
             # C
             # 
-            if False:
+            if False:# part3 C
                 # 
                 # Reward Calculation
                 # 
@@ -1419,24 +1418,29 @@ class WarthogEnv(gym.Env):
                 
                 output = self.c.observation, self.c.reward, done, additional_info
         
-        print(f'''step stage3 done''')
-        self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode","trajectory_file"])
-        # print(f'''global_a.reward = {global_a.reward}''')
-        # print(f'''global_b.reward = {global_b.reward}''')
-        print(f'''observation_buffer''')
-        with print.indent:
-            for index, (each_a, each_b) in enumerate(zip(global_a_observation_buffer, global_b_observation_buffer)):
-                print(f'''{index}''')
-                with print.indent:
-                    for (key_a, value_a), (key_b, value_b) in zip(each_a.items(),each_b.items()):
-                        print(f'''a:{key_a} = {value_a}''')
-                        print(f'''b:{key_b} = {value_b}''')
+        # print(f'''step stage3 done''')
+        # self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode","trajectory_file"])
+        # print(f'''output''')
+        # for index, (each_a, each_c) in enumerate(zip(a.output, output)):
+        #     print(f'''index = {index}''')
+        #     with print.indent:
+        #         print(f'''each_a = {each_a}''')
+        #         print(f'''each_c = {each_c}''')
         
-        # import code; code.interact(banner='',local={**globals(),**locals()})
-        # exit()
-        print(f'''STEP end: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
-        print(f'''STEP end: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
-        return output
+        # # print(f'''observation_buffer''')
+        # # with print.indent:
+        # #     for index, (each_a, each_b) in enumerate(zip(global_a_observation_buffer, global_b_observation_buffer)):
+        # #         print(f'''{index}''')
+        # #         with print.indent:
+        # #             for (key_a, value_a), (key_b, value_b) in zip(each_a.items(),each_b.items()):
+        # #                 print(f'''a:{key_a} = {value_a}''')
+        # #                 print(f'''b:{key_b} = {value_b}''')
+        
+        # # import code; code.interact(banner='',local={**globals(),**locals()})
+        # # exit()
+        # print(f'''STEP end: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
+        # print(f'''STEP end: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+        return a.output
     
     def reset(self, override_next_spacial_info=None):
         print(f'''resetting''')
@@ -1463,12 +1467,10 @@ class WarthogEnv(gym.Env):
                     # this is when the spacial_info is coming from the real world
                     self.a.spacial_info = override_next_spacial_info
                     self.a.next_waypoint_index = index_a
-                    self.a.prev_next_waypoint_index = index_a
                 # simulator position
                 else:
                     waypoint = self.a.waypoints_list[index_a]
                     self.a.next_waypoint_index = index_a
-                    self.a.prev_next_waypoint_index = index_a
                     
                     self.a.spacial_info = SpacialInformation(
                         x=waypoint.x + config.simulator.random_start_position_offset,
@@ -1561,7 +1563,6 @@ class WarthogEnv(gym.Env):
             # 
             if True:
                 self.a.next_waypoint_index = index_a
-                self.a.prev_next_waypoint_index = index_a
                 self.a.pose = PoseEntry(
                     x=float(self.a.waypoints_list[index_a][0] + config.simulator.random_start_position_offset),
                     y=float(self.a.waypoints_list[index_a][1] + config.simulator.random_start_position_offset),
