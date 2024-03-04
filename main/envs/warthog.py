@@ -260,10 +260,7 @@ class WarthogEnv(gym.Env):
             running_spacial_info = one_step(
                 absolute_action=Action(velocity=absolute_velocity, spin=absolute_spin),
                 prev_spacial_info=running_spacial_info,
-                action_duration=(action_duration/config.simulator.granularity_of_calculations),
-                # NOTE: why the *4? I have no idea. It shouldn't be needed but the behavior is wrong without it
-                #       even the original one (no loops) drove too slow if dt (delta time) was not *4
-                # action_duration=4*(action_duration/config.simulator.granularity_of_calculations),
+                action_duration=action_duration/config.simulator.granularity_of_calculations,
             )
         
         return running_spacial_info
@@ -479,7 +476,7 @@ class WarthogEnv(gym.Env):
                 old_spacial_info=SpacialInformation(*self.spacial_info),
                 relative_velocity=self.mutated_relative_velocity,
                 relative_spin=self.mutated_relative_spin,
-                action_duration=4*self.action_duration,
+                action_duration=self.action_duration,
             )
         
         # 

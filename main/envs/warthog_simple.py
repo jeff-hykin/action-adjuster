@@ -138,11 +138,7 @@ def generate_next_spacial_info(
         running_spacial_info = next_spacial_info(
             absolute_action=Action(velocity=absolute_action.velocity, spin=absolute_action.spin),
             prev_spacial_info=running_spacial_info,
-            # NOTE: why the *4? I have no idea. It shouldn't be needed but the driving is slow without it
-            #       Even the original one (no loops) drove too slow
-            #       HOWEVER doing *4 on the original one causes problems for some reason
-            #       TODO / FIXME
-            action_duration=4*(action_duration/config.simulator.granularity_of_calculations),
+            action_duration=action_duration/config.simulator.granularity_of_calculations,
         )
     return running_spacial_info
     
