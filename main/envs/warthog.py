@@ -640,8 +640,3 @@ class WarthogEnv(gym.Env):
         )
         
         return self.observation
-
-    @property
-    def number_of_waypoints(self):
-        return len(self.waypoints_list)
-    

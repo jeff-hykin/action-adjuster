@@ -682,10 +682,23 @@ class WarthogEnv(gym.Env):
                 self.c.trajectory_file = open(trajectory_output_path, "w+")
                 self.c.trajectory_file.writelines(f"x, y, angle, velocity, spin, velocity_action, spin_action, is_episode_start\n")
             
+            self.c.pose = PoseEntry(
+                x=0,
+                y=0,
+                angle=0,
+            )
+            self.c.twist = TwistEntry(
+                velocity=0,
+                spin=0,
+                unknown=0,
+            )
+            self.c.max_vel = 1
+            self.c.prev_angle              = 0
             self.c.original_action         = [0.0, 0.0]
             self.c.absolute_action         = [0.0, 0.0]
             self.c.prev_absolute_action    = [0.0, 0.0]
             self.c.velocity_reward         = 0
+            self.c.ep_poses                = []
             
             self.c.global_timestep = 0
 
@@ -933,8 +946,8 @@ class WarthogEnv(gym.Env):
                 # 
                 if True:
                     # first force them to be within normal ranges
-                    c.mutated_relative_velocity_action = clip(self.c.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
-                    c.mutated_relative_spin_action     = clip(self.c.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
+                    a.mutated_relative_velocity_action = clip(self.c.original_relative_velocity,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+                    a.mutated_relative_spin_action     = clip(self.c.original_relative_spin    ,  min=WarthogEnv.min_relative_spin    , max=WarthogEnv.max_relative_spin    )
                     
                     # 
                     # ADVERSITY
@@ -945,32 +958,32 @@ class WarthogEnv(gym.Env):
                             self.c.simulated_battery_level *= 1-config.simulator.battery_decay_rate
                             self.c.recorder.add(timestep=self.c.global_timestep, simulated_battery_level=self.c.simulated_battery_level)
                             self.c.recorder.commit()
-                            c.mutated_relative_velocity_action *= self.c.simulated_battery_level
+                            a.mutated_relative_velocity_action *= self.c.simulated_battery_level
                             # make sure velocity never goes negative (treat low battery as resistance)
-                            c.mutated_relative_velocity_action = clip(c.mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
+                            a.mutated_relative_velocity_action = clip(a.mutated_relative_velocity_action,  min=WarthogEnv.min_relative_velocity, max=WarthogEnv.max_relative_velocity)
                         
                         # additive adversity
-                        c.mutated_relative_velocity_action += config.simulator.velocity_offset
-                        c.mutated_relative_spin_action     += config.simulator.spin_offset
+                        a.mutated_relative_velocity_action += config.simulator.velocity_offset
+                        a.mutated_relative_spin_action     += config.simulator.spin_offset
                 
                     # 
                     # add noise
                     # 
                     if config.simulator.use_gaussian_action_noise:
-                        c.mutated_relative_velocity_action += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
-                        c.mutated_relative_spin_action     += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
+                        a.mutated_relative_velocity_action += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, )
+                        a.mutated_relative_spin_action     += random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation    , )
                     
                     # 
                     # action delay
                     # 
-                    self.c.action_buffer.append((c.mutated_relative_velocity_action, c.mutated_relative_spin_action))
-                    c.mutated_relative_velocity_action, c.mutated_relative_spin_action = self.c.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
+                    self.c.action_buffer.append((a.mutated_relative_velocity_action, a.mutated_relative_spin_action))
+                    a.mutated_relative_velocity_action, a.mutated_relative_spin_action = self.c.action_buffer.pop(0) # ex: if 0 delay, this pop() will get what was just appended
                     
                     # 
                     # save
                     # 
-                    self.c.mutated_relative_velocity = c.mutated_relative_velocity_action
-                    self.c.mutated_relative_spin     = c.mutated_relative_spin_action
+                    self.c.mutated_relative_velocity = a.mutated_relative_velocity_action
+                    self.c.mutated_relative_spin     = a.mutated_relative_spin_action
         print(f'''step stage1 done''')
         self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode", "trajectory_file"])
         
@@ -1325,7 +1338,7 @@ class WarthogEnv(gym.Env):
             # 
             # C
             # 
-            if True:# part3 C
+            if False:# part3 C
                 # 
                 # Reward Calculation
                 # 
@@ -1413,7 +1426,29 @@ class WarthogEnv(gym.Env):
                 
                 output = self.c.observation, self.c.reward, done, additional_info
         
-        return output
+        # print(f'''step stage3 done''')
+        # self.diff_compare(print_c=True, against_c=True, ignore=["recorder","action_duration","waypoints_list","waypoint_file_path","simulated_battery_level","trajectory_output_path","max_number_of_timesteps_per_episode","trajectory_file"])
+        # print(f'''output''')
+        # for index, (each_a, each_c) in enumerate(zip(a.output, output)):
+        #     print(f'''index = {index}''')
+        #     with print.indent:
+        #         print(f'''each_a = {each_a}''')
+        #         print(f'''each_c = {each_c}''')
+        
+        # # print(f'''observation_buffer''')
+        # # with print.indent:
+        # #     for index, (each_a, each_b) in enumerate(zip(global_a_observation_buffer, global_b_observation_buffer)):
+        # #         print(f'''{index}''')
+        # #         with print.indent:
+        # #             for (key_a, value_a), (key_b, value_b) in zip(each_a.items(),each_b.items()):
+        # #                 print(f'''a:{key_a} = {value_a}''')
+        # #                 print(f'''b:{key_b} = {value_b}''')
+        
+        # # import code; code.interact(banner='',local={**globals(),**locals()})
+        # # exit()
+        # print(f'''STEP end: self.a.next_waypoint_index = {self.a.next_waypoint_index}''')
+        # print(f'''STEP end: self.c.next_waypoint_index = {self.c.next_waypoint_index}''')
+        return a.output
     
     def reset(self, override_next_spacial_info=None):
         print(f'''resetting''')
@@ -1553,7 +1588,14 @@ class WarthogEnv(gym.Env):
                 #         self.a.waypoints_list[i][3] = self.a.desired_velocities[i]
                 # self.a.max_vel = 2
                 # self.a.max_vel = self.a.max_vel + 1
-                self.a.observation, self.a.closest_distance, self.a.next_waypoint_index = pure_get_observation(
+                change_in_waypoint_index, _ = advance_the_index_if_needed(
+                    remaining_waypoints=self.a.waypoints_list[self.a.next_waypoint_index:],
+                    x=self.a.spacial_info.x,
+                    y=self.a.spacial_info.y,
+                )
+                self.a.next_waypoint_index += change_in_waypoint_index
+                
+                self.a.observation, self.a.closest_distance, _ = pure_get_observation(
                     next_waypoint_index_=self.a.next_waypoint_index,
                     horizon=self.a.horizon,
                     number_of_waypoints=self.a.number_of_waypoints,
@@ -1608,21 +1650,31 @@ class WarthogEnv(gym.Env):
             # 
             # C
             # 
-            if True:
+            if False:
                 self.c.next_waypoint_index = index_c
                 self.c.prev_next_waypoint_index = index_c
-                self.c.spacial_info = SpacialInformation(
+                self.c.pose = PoseEntry(
                     x=float(self.c.waypoints_list[index_c][0] + config.simulator.random_start_position_offset),
                     y=float(self.c.waypoints_list[index_c][1] + config.simulator.random_start_position_offset),
                     angle=float(self.c.waypoints_list[index_c][2] + config.simulator.random_start_angle_offset),
+                )
+                self.c.twist = TwistEntry(
                     velocity=0,
                     spin=0,
-                    timestep=0,
+                    unknown=0,
                 )
+                self.c.spacial_info = pose_and_twist_to_spacial(self.c.pose, self.c.twist).with_timestep(0)
                 
                 # 
                 # calculate closest index
                 # 
+                    # change_in_waypoint_index_c, closest_distance_c = advance_the_index_if_needed(
+                    #     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
+                    #     x=self.c.pose.x,
+                    #     y=self.c.pose.y,
+                    # )
+                    # self.c.next_waypoint_index += change_in_waypoint_index
+                
                 closest_relative_index, self.c.closest_distance = Helpers.get_closest(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                     x=self.c.spacial_info.x,
@@ -1632,12 +1684,24 @@ class WarthogEnv(gym.Env):
                 self.c.next_waypoint_index += closest_relative_index
                 self.c.prev_next_waypoint_index = self.c.next_waypoint_index
                 
+                # obs_c = SimpleHelpers.generate_observation_array(
+                #     self.c.next_waypoint_index,
+                #     config.simulator.horizon,
+                #     len(self.c.waypoints_list),
+                #     self.c.pose,
+                #     self.c.twist,
+                #     self.c.waypoints_list,
+                # )
+                
                 output = self.c.observation = Helpers.generate_observation(
                     remaining_waypoints=self.c.waypoints_list[self.c.next_waypoint_index:],
                     current_spacial_info=self.c.spacial_info,
                 )
                 
             pass
+        
+        print(f'''index_c = {index_c}''')
+        self.diff_compare(print_c=True, against_c=True,)
         
         return output
     

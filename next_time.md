@@ -1,1 +1,2 @@
-find where step is consumed. Figure out why an array is treated differently than the Observation object
+Figure out why `next_waypoint_index` is different on first step
+- maybe start with .reset()
