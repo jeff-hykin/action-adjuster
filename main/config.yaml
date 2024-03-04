@@ -12,7 +12,7 @@
         default_waypoints: "./waypoint_paths/real1.csv"
         # default_waypoints: "./waypoint_paths/straight_line.csv"
         # default_waypoints: "./waypoint_paths/concrete1.csv"
-        waypoints_for_real1: "./waypoint_paths/real1.csv"
+        # waypoints_for_real1: "./waypoint_paths/real1.csv"
         waypoints_for_straight_line: "./waypoint_paths/straight_line.csv"
         waypoints_for_straight_concrete1: "./waypoint_paths/concrete1.csv"
         saved_policies: "./saved_policies"
@@ -180,16 +180,18 @@
                 # 
                 # action adversity
                 # 
-                sudden_flat_tire_enabled: False
-                sudden_flat_tire_on_timestep: 500
-                battery_adversity_enabled: False # Battery performs linearly decreasing velocity
-                battery_decay_rate: 0.0006 # 0.0005
                 velocity_offset: 0 # will be added to the relative_velocity value every step (which is then scaled by controller_max_velocity)
                                    # relative_velocity will be between 0 and 1
                 
                 spin_offset: 0     # will be added to the relative_spin value every step (which is then scaled by controller_max_spin)
                                    # relative_spin will be between -1 and 1
                                    # with controller_max_spin=2.5, and spin_offset=0.2, the offset will be 28.6 degrees
+                
+                battery_adversity_enabled: False # Battery performs linearly decreasing velocity
+                battery_decay_rate: 0.0006 # 0.0005
+                # these are not implemented:
+                sudden_flat_tire_enabled: False
+                sudden_flat_tire_on_timestep: 500
                 
                 # 
                 # action noise
@@ -270,24 +272,27 @@
             # 
             # action offset 
             # 
-            velocity_offset: 0
-            spin_offset: 0
-            battery_adversity_enabled: False
-            sudden_flat_tire_enabled: False
+            simulator:
+                velocity_offset: 0
+                spin_offset: 0
+                battery_adversity_enabled: False
+                sudden_flat_tire_enabled: False
             
         ADVERSITY=WEAK:
             # 
             # action offset 
             # 
-            velocity_offset: 0
-            spin_offset: 0.20
+            simulator:
+                velocity_offset: 0
+                spin_offset: 0.20
         
         ADVERSITY=STRONG:
             # 
             # action offset 
             # 
-            velocity_offset: 0.5
-            spin_offset: 0.75
+            simulator:
+                velocity_offset: 0.5
+                spin_offset: 0.75
         
         BATTERY_DRAIN:
             dynamic_adversity: 'battery' # one of [ null, 'battery', ]. Battery performs decreasing velocity in exponential fashion (later=more extreme dropoff)
@@ -373,19 +378,19 @@
                     "spin":
                         standard_deviation: 0 # radians per action_duration (default 15 hertz)
         
-        NO_ADJUSTER:
+        ADJUSTER=NONE:
             action_adjuster:
                 disabled: True
                 use_transform: False
                 
-        NORMAL_ADJUSTER:
+        ADJUSTER=NORMAL:
             action_adjuster:
                 disabled: False
                 default_to_perfect: False
                 always_perfect: False
                 use_transform: True
         
-        PERFECT_ADJUSTER:
+        ADJUSTER=PERFECT:
             action_adjuster:
                 disabled: False
                 default_to_perfect: True
@@ -429,14 +434,15 @@
                 disabled: True
                 use_transform: False
         
-            # ADVERSITY=NONE:
-            velocity_offset: 0
-            spin_offset: 0
-            battery_adversity_enabled: False
-            sudden_flat_tire_enabled: False
             
             # NOISE=NONE
             simulator:
+            
+                velocity_offset: 0
+                spin_offset: 0
+                battery_adversity_enabled: False
+                sudden_flat_tire_enabled: False
+                
                 # 
                 # action noise
                 # 
