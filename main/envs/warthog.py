@@ -482,7 +482,7 @@ class WarthogEnv(gym.Env):
         # 
         # increment waypoints
         # 
-        change_in_waypoint_index, self.closest_distance = advance_the_index_if_needed(#C
+        change_in_waypoint_index, self.closest_distance = advance_the_index_if_needed(
             remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
             x=self.spacial_info.x,
             y=self.spacial_info.y,

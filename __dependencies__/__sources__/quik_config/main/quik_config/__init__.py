@@ -2,10 +2,15 @@ import os
 from collections import namedtuple
 import json
 import re
+import sys
 
 from .__dependencies__.walk_up import walk_up_until
 from .__dependencies__.super_map import Map, LazyDict
 from .__dependencies__ import ez_yaml
+
+# effectively just rename the class to make errors more helpful/obvious
+class Config(LazyDict):
+    pass
 
 def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=None, defaults_for_local_data=[], cd_to_filepath=True, show_help_for_no_args=False):
     """
@@ -98,8 +103,8 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             return os.path.relpath(absolute_path, root_path)
         
         def recursive_convert(a_dict):
-            relative_paths = LazyDict()
-            absolute_paths = LazyDict()
+            relative_paths = Config()
+            absolute_paths = Config()
             for each_key, each_value in a_dict.items():
                 if isinstance(each_value, dict):
                     relative_paths[each_key], absolute_paths[each_key] = recursive_convert(each_value)
@@ -187,6 +192,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
         looking_for_double_dash = parse_args and not args_were_given and not fully_parse_args
         
         # for error messages:
+        import sys
         command_prefix = f'python {sys.argv[0]} '
         if looking_for_double_dash:
             command_prefix += "-- "
@@ -487,7 +493,7 @@ def find_and_load(file_name, *, fully_parse_args=False, parse_args=False, args=N
             config = recursive_update(config, each_dict)
     
     # convert everything recursively
-    recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else LazyDict({ key: recursive_lazy_dict(value) for key, value in arg.items() })
+    recursive_lazy_dict = lambda arg: arg if not isinstance(arg, dict) else Config({ key: recursive_lazy_dict(value) for key, value in arg.items() })
     dict_output = recursive_lazy_dict(dict(
         config=config,
         path_to=path_to,
