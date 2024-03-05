@@ -372,7 +372,7 @@ class WarthogEnv(gym.Env):
         if len(action_buffer)-1 < with_delay:
             raise Exception(f'''\n\nRe-run the code with `action_delay` in config.yaml set to {with_delay}''')
         
-        original_action = action_buffer[with_delay]
+        original_action = action_buffer[-(with_delay+1)]
         output_action = original_action
         
         if with_additive_adversity:
@@ -452,8 +452,8 @@ class WarthogEnv(gym.Env):
             self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
             
             # action
-            self.action_buffer.insert(0, Action(velocity=action[0], spin=action[1]))
-            self.action_buffer = self.action_buffer[0:(config.simulator.action_delay + 1 + 1)] # the second +1 (e.g. +1) is so that we effectively have prev_action even when delay = 0
+            self.action_buffer.append( Action(velocity=action[0], spin=action[1]) )
+            self.action_buffer = self.action_buffer[-max(config.simulator.action_delay,2):] # 2 is so that we effectively have prev_action even when delay = 0
             # cap the size (remove oldest), but never let size fall below 1 (should always contain the most-recent desired action)
         
         # 
@@ -502,7 +502,7 @@ class WarthogEnv(gym.Env):
         # increment waypoints
         # 
         # FIXME: make it so that waypoints can't be skipped (e.g. shortcuts)
-        change_in_waypoint_index, self.closest_distance = advance_the_index_if_needed(
+        change_in_waypoint_index, step_data.closest_distance = advance_the_index_if_needed(
             remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
             x=self.spacial_info.x,
             y=self.spacial_info.y,
@@ -515,7 +515,7 @@ class WarthogEnv(gym.Env):
         # 
         step_data.reward, step_data.velocity_error, step_data.crosstrack_error, step_data.phi_error = WarthogEnv.almost_original_reward_function(
             spacial_info=self.spacial_info,
-            closest_distance=self.closest_distance,
+            closest_distance=step_data.closest_distance,
             relative_action=mutated_action_relative,
             prev_relative_action=self.reaction(
                 self.action_buffer,
@@ -548,7 +548,7 @@ class WarthogEnv(gym.Env):
             x_point=self.spacial_info.x, # self.spacial_info.x
             y_point=self.spacial_info.y, # self.spacial_info.y
             angle=self.spacial_info.angle,   # self.spacial_info.angle
-            text_data=f"vel_error={step_data.velocity_error:.3f}\nclosest_index={self.next_waypoint_index}\ncrosstrack_error={step_data.crosstrack_error:.3f}\nReward={step_data.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={step_data.phi_error*180/math.pi:.4f}\nep_reward={self.total_episode_reward:.4f}\n\nomega_reward={(-2 * math.fabs(self.action_buffer[0].spin)):.4f}\nvel_reward={step_data.velocity_error:.4f}",
+            text_data=f"vel_error={step_data.velocity_error:.3f}\nclosest_index={self.next_waypoint_index}\ncrosstrack_error={step_data.crosstrack_error:.3f}\nReward={step_data.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={step_data.phi_error*180/math.pi:.4f}\nep_reward={self.total_episode_reward:.4f}\n\nomega_reward={(-2 * math.fabs(self.action_buffer[-1].spin)):.4f}\nvel_reward={step_data.velocity_error:.4f}",
         )
         
         additional_info = AdditionalInfo(
@@ -558,7 +558,7 @@ class WarthogEnv(gym.Env):
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
             observation_from_spacial_info_with_noise=self.prev_observation,
             historic_transform=Unknown,
-            original_reaction=self.action_buffer[0],
+            original_reaction=self.action_buffer[-1],
             mutated_relative_reaction=mutated_action_relative,
             next_spacial_info=self.spacial_info,
             next_spacial_info_spacial_info_with_noise=self.spacial_info_with_noise,
@@ -570,18 +570,18 @@ class WarthogEnv(gym.Env):
         # 
         # done Calculation
         #
-        done = False
+        step_data.done = False
         if self.next_waypoint_index >= len(self.waypoints_list) - 1:
-            done = True 
+            step_data.done = True 
         if self.episode_timestep == config.simulator.max_number_of_timesteps_per_episode:
-            done = True
+            step_data.done = True
             self.episode_timestep = 0
         # immediate end due to too much loss
         if config.simulator.allow_cut_short_episode:
             if math.fabs(step_data.crosstrack_error) > magic_number_1_point_5 or math.fabs(step_data.phi_error) > magic_number_1_point_4:
-                done = True
+                step_data.done = True
         
-        return self.observation, step_data.reward, done, additional_info
+        return self.observation, step_data.reward, step_data.done, additional_info
 
     def reset(self, override_next_spacial_info=None):
         assert len(self.waypoints_list) > config.simulator.min_number_of_remaining_waypoints, f"There's less than {config.simulator.min_number_of_remaining_waypoints} waypoints, and I think that indicates a problem"
@@ -625,7 +625,7 @@ class WarthogEnv(gym.Env):
             history_size=config.simulator.number_of_trajectories,
         )
         self.spacial_info_with_noise = self.spacial_info
-        closest_relative_index, self.closest_distance = WarthogEnv.get_closest(
+        closest_relative_index, _closest_distance = WarthogEnv.get_closest(
             remaining_waypoints=self.waypoints_list[self.prev_next_waypoint_index:],
             x=self.spacial_info.x,
             y=self.spacial_info.y,
