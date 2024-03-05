@@ -15,7 +15,7 @@ from data_structures import *
 if config.use_simple:
     from envs.warthog_simple import WarthogEnv
 else:
-    from envs.warthog2 import WarthogEnv
+    from envs.warthog import WarthogEnv
 from action_adjuster import ActionAdjustedAgent, NormalAgent
 from generic_tools.functions import cache_outputs
 from generic_tools.universe.agent import Skeleton
