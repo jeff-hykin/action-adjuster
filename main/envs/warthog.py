@@ -515,6 +515,7 @@ class WarthogEnv(gym.Env):
             closest_waypoint=self.waypoints_list[self.next_waypoint_index],
             closest_relative_index=1 if change_in_waypoint_index > 0 else 0,
         )
+        self.total_episode_reward += step_data.reward
         
         # 
         # make mutated observation
