@@ -173,14 +173,14 @@ class Solver:
         def objective_function(numpy_array):
             hypothetical_transform = Transform(numpy_array)
             losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
+            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_relative_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
                 # each.timestep_index
                 # each.spacial_info
                 # each.spacial_info_with_noise
                 # each.observation_from_spacial_info_with_noise
                 # each.original_reaction
                 # each.historic_transform
-                # each.mutated_reaction
+                # each.mutated_relative_reaction
                 # each.next_spacial_info
                 # each.next_spacial_info_spacial_info_with_noise
                 # each.next_observation_from_spacial_info_with_noise
@@ -424,6 +424,8 @@ class ActionAdjustedAgent(Skeleton):
             adjusted_action = self.active_transform.adjust_action(
                 adjusted_action
             )
+        debug.vanilla_action = vanilla_action
+        debug.adjusted_action = adjusted_action
         self.timestep.reaction = adjusted_action
     
     def when_timestep_ends(self):
@@ -461,7 +463,7 @@ class ActionAdjustedAgent(Skeleton):
                     observation_from_spacial_info_with_noise=additional_info.observation_from_spacial_info_with_noise,
                     original_reaction=additional_info.original_reaction,
                     historic_transform=deepcopy(self.active_transform),
-                    mutated_reaction=additional_info.mutated_reaction,
+                    mutated_relative_reaction=additional_info.mutated_relative_reaction,
                     next_spacial_info=additional_info.next_spacial_info,
                     next_spacial_info_spacial_info_with_noise=additional_info.next_spacial_info_spacial_info_with_noise,
                     next_observation_from_spacial_info_with_noise=additional_info.next_observation_from_spacial_info_with_noise,

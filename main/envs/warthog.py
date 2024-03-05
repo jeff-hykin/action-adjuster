@@ -68,6 +68,19 @@ def advance_the_index_if_needed(remaining_waypoints,x,y):
     return  change_in_waypoint_index, closest_distance
 
 class WarthogEnv(gym.Env):
+    """
+        self.get.action:        defaults to original action, RELATIVE units for speed and velocity
+        self.get.spacial_info:  no noise, ABSOLUTE units for speed and velocity are 
+        self.get.observation:   by end of any method, self.get.observation is AFTER self.get.action
+                                by end of any method, it is based on self.get.spacial_info_with_noise
+                                ABSOLUTE units for speed and velocity
+        time sequence:
+        - action
+        - spacial_info (uses action)
+        - next_waypoint_index
+        - reward (uses next_waypoint_index)
+        - observation (uses next_waypoint_index, uses spacial_info_with_noise)
+    """
     random_start_position_offset = config.simulator.random_start_position_offset
     random_start_angle_offset    = config.simulator.random_start_angle_offset
     max_relative_velocity = 1

@@ -149,7 +149,7 @@
             
             simulator:
                 starting_waypoint: 2 # integer or 'random' <- a string
-                min_number_of_remaining_waypoints: 21
+                min_number_of_remaining_waypoints: 21 # when randomly choosing a waypoint, ensure that there are at least this many waypoints remaining
                 waypoint_radius: 3 # meters
                 save_data: True
                 should_render: True
