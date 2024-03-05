@@ -428,7 +428,7 @@ class WarthogEnv(gym.Env):
                 allows for most of the code to stay as-is while throwing away simulated data
                 in favor of real-world data.
         """
-        c = LazyDict()
+        step_data = LazyDict()
         # 
         # logging
         # 
@@ -495,12 +495,11 @@ class WarthogEnv(gym.Env):
         )
         self.prev_next_waypoint_index = self.next_waypoint_index
         self.next_waypoint_index += change_in_waypoint_index
-        self.next_waypoint = self.waypoints_list[self.next_waypoint_index]
         
         # 
         # Reward Calculation
         # 
-        self.reward, self.velocity_error, self.crosstrack_error, self.phi_error = WarthogEnv.almost_original_reward_function(
+        step_data.reward, step_data.velocity_error, step_data.crosstrack_error, step_data.phi_error = WarthogEnv.almost_original_reward_function(
             spacial_info=self.spacial_info,
             closest_distance=self.closest_distance,
             relative_action=mutated_action_relative,
@@ -513,7 +512,7 @@ class WarthogEnv(gym.Env):
                 clipped=True,
                 absolute_units=False,
             ),
-            closest_waypoint=self.next_waypoint,
+            closest_waypoint=self.waypoints_list[self.next_waypoint_index],
             closest_relative_index=1 if change_in_waypoint_index > 0 else 0,
         )
         
@@ -551,7 +550,7 @@ class WarthogEnv(gym.Env):
             x_point=self.spacial_info.x, # self.spacial_info.x
             y_point=self.spacial_info.y, # self.spacial_info.y
             angle=self.spacial_info.angle,   # self.spacial_info.angle
-            text_data=f"vel_error={self.velocity_error:.3f}\nclosest_index={self.next_waypoint_index}\ncrosstrack_error={self.crosstrack_error:.3f}\nReward={self.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={self.phi_error*180/math.pi:.4f}\nep_reward={self.total_episode_reward:.4f}\n\nomega_reward={(-2 * math.fabs(self.action_buffer[0].spin)):.4f}\nvel_reward={self.velocity_error:.4f}",
+            text_data=f"vel_error={step_data.velocity_error:.3f}\nclosest_index={self.next_waypoint_index}\ncrosstrack_error={step_data.crosstrack_error:.3f}\nReward={step_data.reward:.4f}\nwarthog_vel={self.spacial_info.velocity:.3f}\nphi_error={step_data.phi_error*180/math.pi:.4f}\nep_reward={self.total_episode_reward:.4f}\n\nomega_reward={(-2 * math.fabs(self.action_buffer[0].spin)):.4f}\nvel_reward={step_data.velocity_error:.4f}",
         )
         
         additional_info = AdditionalInfo(
@@ -567,7 +566,7 @@ class WarthogEnv(gym.Env):
             next_spacial_info_spacial_info_with_noise=self.spacial_info_with_noise,
             next_observation_from_spacial_info_with_noise=self.observation,
             next_closest_index=self.next_waypoint_index,
-            reward=self.reward,
+            reward=step_data.reward,
         )
         
         # 
@@ -581,10 +580,10 @@ class WarthogEnv(gym.Env):
             self.episode_timestep = 0
         # immediate end due to too much loss
         if config.simulator.allow_cut_short_episode:
-            if math.fabs(self.crosstrack_error) > magic_number_1_point_5 or math.fabs(self.phi_error) > magic_number_1_point_4:
+            if math.fabs(step_data.crosstrack_error) > magic_number_1_point_5 or math.fabs(step_data.phi_error) > magic_number_1_point_4:
                 done = True
         
-        return self.observation, self.reward, done, additional_info
+        return self.observation, step_data.reward, done, additional_info
 
     def reset(self, override_next_spacial_info=None):
         assert len(self.waypoints_list) > config.simulator.min_number_of_remaining_waypoints, f"There's less than {config.simulator.min_number_of_remaining_waypoints} waypoints, and I think that indicates a problem"
@@ -641,10 +640,6 @@ class WarthogEnv(gym.Env):
         self.action_buffer                       = [ Action(velocity=0,spin=0) ] * (config.simulator.action_delay+1) # seed so that prev_action effectively works
         self.simulated_battery_level             = 1.0 # proportion 
         self.random_seed_table_for_actions       = {}
-        self.crosstrack_error                    = 0
-        self.velocity_error                      = 0
-        self.phi_error                           = 0
-        self.reward                              = 0
         self.total_episode_reward                = 0
         
         return self.observation
