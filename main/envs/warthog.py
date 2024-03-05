@@ -433,9 +433,6 @@ class WarthogEnv(gym.Env):
         # increment things
         # 
         if True:
-            # waypoint
-            self.prev_next_waypoint_index = self.next_waypoint_index
-            
             # timestep 
             self.global_timestep  += 1
             self.episode_timestep += 1
@@ -497,6 +494,7 @@ class WarthogEnv(gym.Env):
             x=self.spacial_info.x,
             y=self.spacial_info.y,
         )
+        self.prev_next_waypoint_index = self.next_waypoint_index
         self.next_waypoint_index += change_in_waypoint_index
         self.next_waypoint = self.waypoints_list[self.next_waypoint_index]
         
