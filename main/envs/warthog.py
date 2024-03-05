@@ -429,6 +429,16 @@ class WarthogEnv(gym.Env):
                 in favor of real-world data.
         """
         c = LazyDict()
+        # 
+        # logging
+        # 
+        if config.simulator.save_data:
+            if self.trajectory_file is not None:
+                self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_buffer[0].velocity}, {self.action_buffer[0].spin}, {self.is_episode_start}\n")
+            
+            if config.simulator.battery_adversity_enabled:
+                self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
+                self.recorder.commit()
         #  
         # increment things
         # 
@@ -445,17 +455,6 @@ class WarthogEnv(gym.Env):
             self.action_buffer.insert(0, Action(velocity=action[0], spin=action[1]))
             self.action_buffer = self.action_buffer[0:(config.simulator.action_delay + 1 + 1)] # the second +1 (e.g. +1) is so that we effectively have prev_action even when delay = 0
             # cap the size (remove oldest), but never let size fall below 1 (should always contain the most-recent desired action)
-            
-            # 
-            # logging
-            # 
-            if config.simulator.save_data:
-                if self.trajectory_file is not None:
-                    self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_buffer[0].velocity}, {self.action_buffer[0].spin}, {self.is_episode_start}\n")
-                
-                if config.simulator.battery_adversity_enabled:
-                    self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
-                    self.recorder.commit()
         
         # 
         # modify action
