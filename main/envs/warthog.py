@@ -436,9 +436,6 @@ class WarthogEnv(gym.Env):
             # waypoint
             self.prev_next_waypoint_index = self.next_waypoint_index
             
-            # observation
-            self.prev_observation = self.observation
-            
             # timestep 
             self.global_timestep  += 1
             self.episode_timestep += 1
@@ -543,7 +540,7 @@ class WarthogEnv(gym.Env):
                 )
             
             # generate observation off potentially incorrect (noisey) spacial info
-            prev_observation = self.observation
+            self.prev_observation = self.observation
             self.observation = WarthogEnv.generate_observation(
                 remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
                 current_spacial_info=self.spacial_info_with_noise,
@@ -565,7 +562,7 @@ class WarthogEnv(gym.Env):
             action_duration=config.simulator.action_duration,
             spacial_info=self.prev_spacial_info,
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
-            observation_from_spacial_info_with_noise=prev_observation,
+            observation_from_spacial_info_with_noise=self.prev_observation,
             historic_transform=Unknown,
             original_reaction=self.action_buffer[0],
             mutated_relative_reaction=mutated_action_relative,
