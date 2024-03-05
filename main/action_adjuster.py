@@ -134,57 +134,6 @@ class Transform:
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
-
-def full_objective_function(numpy_array, inputs_for_predictions):
-    hypothetical_transform = Transform(numpy_array)
-    losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-    for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
-        # each.timestep_index
-        # each.spacial_info
-        # each.spacial_info_with_noise
-        # each.observation_from_spacial_info_with_noise
-        # each.original_reaction
-        # each.historic_transform
-        # each.mutated_reaction
-        # each.next_spacial_info
-        # each.next_spacial_info_spacial_info_with_noise
-        # each.next_observation_from_spacial_info_with_noise
-        # each.reward
-        
-        # action + nothing            = predicted_observation -1.0
-        # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
-        # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
-        #                                                               is only there because the historic transform was doing part of the work
-        # so we need to do action - historic_transform + best transform
-        if historic_transform:
-            # vanilla_action = self.policy(observation_from_spacial_info_with_noise)
-            recreated_vanilla_action = historic_transform.adjust_action(
-                action=original_reaction,
-                mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
-            )
-        
-        # this part is trying to guess/recreate the advesarial part of the .step() function
-        relative_velocity_action, relative_spin_action = hypothetical_transform.adjust_action(
-            action=recreated_vanilla_action,
-            mimic_adversity=True, # we want to undo the adversity when projecting into the future
-        )
-        predicted_next_spacial_info = WarthogEnv.generate_next_spacial_info(
-            old_spacial_info=spacial_info_with_noise,
-            relative_velocity=relative_velocity_action,
-            relative_spin=relative_spin_action,
-            action_duration=action_duration,
-        )
-        
-        x1, y1, angle1, velocity1, spin1, *_ = next_spacial_info
-        x2, y2, angle2, velocity2, spin2, *_ = predicted_next_spacial_info
-        losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-        losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-        losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-        losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-        losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
-    
-    return -sum(losses)
-
 class Solver:
     self = None
     def __init__(self, policy, waypoints_list):
