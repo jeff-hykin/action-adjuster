@@ -483,6 +483,20 @@ class WarthogEnv(gym.Env):
                         action_duration=config.simulator.action_duration,
                     )
         )
+        # 
+        # add spacial noise
+        #
+        self.prev_spacial_info_with_noise = self.spacial_info_with_noise
+        self.spacial_info_with_noise = self.spacial_info
+        if config.simulator.use_gaussian_spacial_noise:
+            self.spacial_info_with_noise = SpacialInformation(
+                self.spacial_info.x        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       , ),
+                self.spacial_info.y        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , ),
+                self.spacial_info.angle    + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , ),
+                self.spacial_info.velocity + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , ),
+                self.spacial_info.spin     + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, ),
+                self.spacial_info.timestep ,
+            )
         
         # 
         # increment waypoints
@@ -520,28 +534,11 @@ class WarthogEnv(gym.Env):
         # 
         # make mutated observation
         # 
-        if True:
-            # 
-            # add spacial noise
-            #
-            self.prev_spacial_info_with_noise = self.spacial_info_with_noise
-            self.spacial_info_with_noise = self.spacial_info
-            if config.simulator.use_gaussian_spacial_noise:
-                self.spacial_info_with_noise = SpacialInformation(
-                    self.spacial_info.x        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.x.standard_deviation       , ),
-                    self.spacial_info.y        + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.y.standard_deviation       , ),
-                    self.spacial_info.angle    + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.angle.standard_deviation   , ),
-                    self.spacial_info.velocity + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.spin.standard_deviation    , ),
-                    self.spacial_info.spin     + random.normalvariate(mu=0, sigma=config.simulator.gaussian_spacial_noise.velocity.standard_deviation, ),
-                    self.spacial_info.timestep ,
-                )
-            
-            # generate observation off potentially incorrect (noisey) spacial info
-            self.prev_observation = self.observation
-            self.observation = WarthogEnv.generate_observation(
-                remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
-                current_spacial_info=self.spacial_info_with_noise,
-            )
+        self.prev_observation = self.observation
+        self.observation = WarthogEnv.generate_observation(
+            remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
+            current_spacial_info=self.spacial_info_with_noise,
+        )
         
         # 
         # render
