@@ -241,7 +241,7 @@ AdditionalInfo = namedtuple(
         "observation_from_spacial_info_with_noise",
         "historic_transform",
         "original_reaction",
-        "mutated_reaction",
+        "mutated_relative_reaction",
         "next_spacial_info",
         "next_spacial_info_spacial_info_with_noise",
         "next_observation_from_spacial_info_with_noise",
