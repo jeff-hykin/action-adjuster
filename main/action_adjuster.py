@@ -152,18 +152,6 @@ exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
 def objective_function(numpy_array, inputs_for_predictions, exponent):
     hypothetical_transform = Transform(numpy_array)
     losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-    logging = LazyDict(
-        spacial_gap=[],
-        action_gap=[],
-        mutated_relative_reaction=[],
-        re_adjusted_action=[],
-        unadjusted_action=[],
-        adjusted_action=[],
-        spacial_info=[],
-        next_spacial_info=[],
-        predicted_next_spacial_info=[],
-        hypothetical_transform=[],
-    )
     for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_relative_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
         # each.timestep_index
         # each.spacial_info
@@ -204,29 +192,6 @@ def objective_function(numpy_array, inputs_for_predictions, exponent):
         losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
         losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent
         
-        if len(inputs_for_predictions) > 50:
-            logging.spacial_info.append(spacial_info)
-            logging.adjusted_action.append(original_reaction)
-            logging.unadjusted_action.append("")
-            logging.re_adjusted_action.append(action_after_adversity)
-            logging.mutated_relative_reaction.append(mutated_relative_reaction)
-            logging.action_gap.append(Action(velocity=action_after_adversity[0]-mutated_relative_reaction[0], spin=action_after_adversity[1]-mutated_relative_reaction[1], ))
-            logging.next_spacial_info.append(next_spacial_info)
-            logging.predicted_next_spacial_info.append(predicted_next_spacial_info)
-            logging.spacial_gap.append(SpacialInformation(
-                x=predicted_next_spacial_info.x-next_spacial_info.x,
-                y=predicted_next_spacial_info.y-next_spacial_info.y,
-                angle=predicted_next_spacial_info.angle-next_spacial_info.angle,
-                velocity=predicted_next_spacial_info.velocity-next_spacial_info.velocity,
-                spin=predicted_next_spacial_info.spin-next_spacial_info.spin,
-                timestep=next_spacial_info.timestep,
-            ))
-            logging.hypothetical_transform.append(hypothetical_transform)
-    
-    if len(inputs_for_predictions) > 50:
-        import pandas
-        pandas.DataFrame(logging).to_csv("temp.ignore.csv")
-    
     return -sum(losses)
 
 class Solver:
@@ -464,7 +429,6 @@ class ActionAdjustedAgent(Skeleton):
         write: self.reaction = something
         """
         vanilla_action = self.policy(self.timestep.observation)
-        print(f"policy: {self.timestep.index},{vanilla_action}")
         adjusted_action = vanilla_action
         if config.action_adjuster.use_transform:
             adjusted_action = self.active_transform.adjust_action(
@@ -586,7 +550,6 @@ class NormalAgent(Skeleton):
         write: self.timestep.reaction = something
         """
         self.timestep.reaction = self.policy(self.timestep.observation)
-        print(f"policy: {self.timestep.index},{self.timestep.reaction}")
     
     def when_timestep_ends(self):
         """
