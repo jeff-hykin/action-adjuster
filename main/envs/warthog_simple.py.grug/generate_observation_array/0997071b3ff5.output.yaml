@@ -1,0 +1,46 @@
+error_output: None
+traceback: ''
+normal_output:
+- 0.1409073893287418
+- !<python/numpy/float64> -1.9455848873594936
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.6697122983932493
+- 0.15183518840970125
+- !<python/numpy/float64> -1.3975327244332174
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.5769084625244139
+- 0.20086142067442259
+- !<python/numpy/float64> -1.0004490513051936
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.5665968589782713
+- 0.26864872033804194
+- !<python/numpy/float64> -0.7787313555816189
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.5408180885314939
+- 0.34537755887411586
+- !<python/numpy/float64> -0.6485354908370811
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.5305064849853514
+- 0.4262981184445704
+- !<python/numpy/float64> -0.5661373210810057
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.46863722133636454
+- 0.5121603995552578
+- !<python/numpy/float64> -0.5086265610542924
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.4325468473434446
+- 0.6009837613759605
+- !<python/numpy/float64> -0.46702494459190014
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.38614522743225077
+- 0.692851254096545
+- !<python/numpy/float64> -0.4354991779241182
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.32427596378326395
+- 0.7882903579156085
+- !<python/numpy/float64> -0.41067565921021565
+- !<python/numpy/float64> -0.23278749999999995
+- !<python/numpy/float64> -0.29334127235412577
+- !<python/numpy/float64> 2.268
+- !<python/numpy/float64> 1.4175
+...

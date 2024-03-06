@@ -1,0 +1,6 @@
+error_output: None
+traceback: ''
+normal_output: !<python/numpy/ndarray>
+- 0.3488517999649048
+- 1.3931374549865723
+...

@@ -1,10 +1,6 @@
-error_output: None
-traceback: ''
-normal_output: !python/named_tuple/SpacialInformation
-   x: 108.72820271212453
-   y: 0.10854277937034174
-   angle: 0.1225
-   velocity: 4
-   spin: 2.5
-   timestep: 2
+error_output: "TypeError(\"generate_next_spacial_info() missing 1 required positional argument: 'action_relative'\")"
+traceback: |-
+   File "/Users/jeffhykin/repos/action-adjuster/__dependencies__/grug_test/__init__.py", line 558, in record_output
+       output = func(*args, **kwargs)
+normal_output: null
 ...

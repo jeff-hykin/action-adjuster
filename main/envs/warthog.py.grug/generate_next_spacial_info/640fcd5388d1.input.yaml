@@ -1,0 +1,15 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: 108.54849000640368
+      y: 0.1
+      angle: 0.01
+      velocity: 0
+      spin: 0
+      timestep: 0
+   action_relative: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 0.7777866423130035
+      spin: !<python/numpy/float64> 0.2861332893371582
+   action_duration: 0.06
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x15\x11\x02\0\0\r\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\x0Fdata_s\0tructur\0es\x14\f\x12Sp\facialIn\0formati\0on\x14\x13\x14(G\x1C@[#\x1AuSk`rG?9\x19\x19\x19y\x19\x19\x1AG?\x04z'aG.\x14{K\0\x05K\0K\0t\x14\x01`\x14\f\x0Facti\x03on_rela\0tive\x14h\x02\x10\f\x06Actio\x01n\x14\x13\x14\f\x15n\x1Eumpy.co\0re.mult\0iarray\x14@\f\x06scala\x01r\x14\x13\x14\f\x05n\x1Eumpy\x14\f\x050dtype\x14\x13`\x14\f\x02f8\x14\tc\b\a\x14R\x14(K\x17\x03\f\x01<\x14NN\x12NJ\x7F\x7F\x7F\x7FJ<\x7F\x7F\x7F\x7FK\0t\x0F\x14bC\b\0\0\0\x01P ch?\x14\x06o\x14R\x14h\fh\x12\x05C\b\0\0\0\0\x02\0PR?\x14\x06\x14R:\x14\x06\x14\x01\x14\f\x0F?action_\0duratio\0n\x14\f^__d\x06ependen\0cies__.\0quik_co\0nfig.__\0depende\0ncies__\0.ez_yam\0l.__dep\0endenci\0es__.ru\0amel.ya\0ml.scal\0arfloat\0\x14\f\vScal\x03arFloat\0\x14\x13\x14G?.8gQk\x05\x1E8\x05\x14v\x01\x14}\x14(\f\x06+_width\x14@K\x04\f\x05_pr\x04ec\x14K\x01\f\a$_m_sign\0\x14\t\f\b_m_\alead0\x14K \x02\f\x04_exp\x02\x14N\f\b_e_\x05width\x14N \f\a_e_si\x01gn\x14N\f\v_\x14undersc\0ore\x14N\f\f(_yaml_a\0nchor\x14\f`Y__depe\0ndencie\0s__.qui\0k_confi\0g.__dep\0endenci\0es__.ez\0_yaml._\0_depend\0encies_\0_.ruame\0l.yaml.\0anchor\x14@\f\x06Ancho\x01r\x14\x13\x14)\x01\x14nN}\x14(\f\x05v\x14alue\x14N\fP\valways\0_dump\x14\t`u\x06\x14bubu\x06\x06\x14.\0\0\0\0\x03\x04"
+...

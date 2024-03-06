@@ -137,7 +137,7 @@ class SimpleHelpers:
 
 class Helpers:
     @staticmethod
-    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
+    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=False)
     def generate_observation(remaining_waypoints, current_spacial_info):
         """
             Note:
@@ -258,7 +258,7 @@ class Helpers:
         return next_spacial_info
     
     @staticmethod
-    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
+    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=False)
     def get_closest(remaining_waypoints, x, y):
         """
             Note:
@@ -274,7 +274,7 @@ class Helpers:
         return closest_index, closest_distance
     
     @staticmethod
-    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
+    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=False)
     def original_reward_function(*, spacial_info, closest_distance, relative_velocity, prev_relative_velocity, relative_spin, prev_relative_spin, closest_waypoint, closest_relative_index,):
         x_diff     = closest_waypoint.x - spacial_info.x
         y_diff     = closest_waypoint.y - spacial_info.y
@@ -339,7 +339,7 @@ class Helpers:
         return running_reward, velocity_error, crosstrack_error, phi_error
     
     @staticmethod
-    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=True)
+    @grug_test(max_io=30, record_io=None, additional_io_per_run=None, skip=False)
     def almost_original_reward_function(**kwargs):
         closest_relative_index = kwargs["closest_relative_index"]
         running_reward, *other = Helpers.original_reward_function(**kwargs)

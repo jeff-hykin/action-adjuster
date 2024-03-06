@@ -1,0 +1,20 @@
+args: []
+kwargs:
+   spacial_info: !python/named_tuple/SpacialInformation
+      x: !<python/numpy/float64> 110.83668358408035
+      y: !<python/numpy/float64> 0.18999726345429102
+      angle: !<python/numpy/float64> 0.2200755453109742
+      velocity: !<python/numpy/float64> 3.2850719690322876
+      spin: !<python/numpy/float64> 1.2873071432113647
+      timestep: -1
+   closest_distance: 0.1016710748680419
+   relative_action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 0.8212679922580719
+      spin: !<python/numpy/float64> 0.5149228572845459
+   prev_relative_action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 0.8169894814491272
+      spin: !<python/numpy/float64> 0.36697548627853394
+   closest_waypoint: !python/warthog/Waypoint '{"x": 110.86210479209068, "y": 0.0915555566013591, "angle": 0.294909864664074, "velocity": 1.9901260137557983}'
+   closest_relative_index: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x152\x02\0\0\x05\0\0\0\0)}\x14@(\f\fspac\x02ial_inf\0o\x14\f\x0Fdat\x06a_struc\0tures\x14\f`\x12Spacia\0lInform\0ation\x14\x13`\x14(\f\x15num\x05py.core\0.multia\0rray\x14\f\x060scalar\x14@\x13\x14\f\x05num\apy\x14\f\x05dt\fype\x14\x13\x14\fx\x02f8\x14\t\b\ax\x14R\x14(K\x03\fE\x01<\x14NNNJ\x04\x7F\x7F\x7F\x7FJ\x7F\x7Fo\x7F\x7FK\0t\x14b#C\bi.M9\fH5[@\x14\x06\x14R9\x14h\ah\rC\b\x01xNn\x10TQHZ?\x14\x06\x14R\x14h.\ah\rC\b1G azo+L?\x14Q\x06\x14R\x14h\ah\v\rC\b\0\0\0P@SG\n@\x14\x06\x14qR\x14h\ah\rC\x02\b\0\0\0`O\x18`t?\x14\x06\x14R\x14]J\x7F\x7F\x7F\x7Ft\x14^\x01\x14\f\x10clo\asest_di\0stance\x14@G?:\a\x1D\x15\x01deu\f\x0Frel\x05ative_a\0ction\x14h \x02\f\x06Acti\x02on\x14\x13\x14h\a\x1Ch\rC\b\0\0\0\0PSGj?\x14\x06k\x14R\x14h\ah\r\x05C\b\0\0\0\0? z`?\x14\x06\x14R:\x14\x06\x14\x01\x14\f\x14?prev_re\0lative_\0action\x14@h$h\ah\rC\0\b\0\0\0 G$ j?\x14\x06\x14R\x14]h\ah\rC\b\0\0\0\0@\x06|W?,\x14\x06\x14R\x14\x06\x14w\x01\x14\f\x10clo\asest_wa\0ypoint\x14@h\x05\f\f_re\x04constru\0ct\x14\x13\x14h\x02\x1C\f\bWaypo\x01int\x14\x13\x14K8\0\x05\x14C\x01b\x14F\a\x14R\x14(K\x01\vK\x04\x05\x14h\r\tLC Gp\x139,87[@32^Y\x19/p7?<\x7F\x7Ft\x1FM_R?\0\0\x0F\0`\x0EW\x7F?\x14\\t\x14b\f\x16cl\nosest_r\0elative\0_index\x14@K\x01u\x06\x14.\0\x18\x01"
+...

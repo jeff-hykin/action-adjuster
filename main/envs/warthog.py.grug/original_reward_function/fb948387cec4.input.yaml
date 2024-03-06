@@ -1,0 +1,20 @@
+args: []
+kwargs:
+   spacial_info: !python/named_tuple/SpacialInformation
+      x: !<python/numpy/float64> 109.49138846498049
+      y: !<python/numpy/float64> 0.12308549232180498
+      angle: !<python/numpy/float64> -0.03600404426455496
+      velocity: !<python/numpy/float64> 2.9513354897499084
+      spin: !<python/numpy/float64> -0.2450983226299286
+      timestep: -1
+   closest_distance: 0.12317845762023613
+   relative_action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 0.7378338724374771
+      spin: !<python/numpy/float64> -0.09803932905197144
+   prev_relative_action: !python/named_tuple/Action
+      velocity: !<python/numpy/float64> 0.7026431113481522
+      spin: !<python/numpy/float64> -0.22648388147354126
+   closest_waypoint: !python/warthog/Waypoint '{"x": 109.48660369731641, "y": 0.0, "angle": 0.0, "velocity": 1.881854772567749}'
+   closest_relative_index: 1
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x152\x02\0\0\x05\0\0\0\0)}\x14@(\f\fspac\x02ial_inf\0o\x14\f\x0Fdat\x06a_struc\0tures\x14\f`\x12Spacia\0lInform\0ation\x14\x13`\x14(\f\x15num\x05py.core\0.multia\0rray\x14\f\x060scalar\x14@\x13\x14\f\x05num\apy\x14\f\x05dt\fype\x14\x13\x14\fx\x02f8\x14\t\b\ax\x14R\x14(K\x03\fE\x01<\x14NNNJ\x04\x7F\x7F\x7F\x7FJ\x7F\x7Fo\x7F\x7FK\0t\x14b#C\bC.\x1Ahr8_[@\x14\x06\x14R8\x14h\ah\rC\b\x01/[\"d\a\x02?y?\x14\x06\x14R\x14h.\ah\rC\b\x12.@GA\x1Fo\"?\x14p\x06\x14R\x14h\ah\v\rC\b\0\0\0H@U\x1C\a@\x14\x06\x14rR\x14h\ah\rC\x02\b\0\0\0@a_\x10O?\x14\x06\x14R\x14_J\x7F\x7F\x7F\x7Ft\x14^\x01\x14\f\x10clo\asest_di\0stance\x14@G??\b\x1F\x17\f<v~\f\x0Frel\x05ative_a\0ction\x14h \x02\f\x06Acti\x02on\x14\x13\x14h\a\x1Ch\rC\b\0\0\0\0HU\x1Cg?\x14\x06m\x14R\x14h\ah\r\x05C\b\0\0\0\0\e\0\x199?\x14\x06\x14R>\x14\x06\x14\x01\x14\f\x14?prev_re\0lative_\0action\x14@h$h\ah\rC\0\b\0\0\0h\r|\0f?\x14\x06\x14R\x14]h\ah\rC\b\0\0\0\0\0l}L?t\x14\x06\x14R\x14\x06\x14w\x01\x14\f\x10clo\asest_wa\0ypoint\x14@h\x05\f\f_re\x04constru\0ct\x14\x13\x14h\x02\x1C\f\bWaypo\x01int\x14\x13\x14K8\0\x05\x14C\x01b\x14F\a\x14R\x14(K\x01\vK\x04\x05\x14h\r\tLC \f\x05U\x03$<_[@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\x13\x1C~?\x14Rt\x14b\f\x16cl\nosest_r\0elative\0_index\x14@K\x01u\x06\x14.\0\x18\x01"
+...

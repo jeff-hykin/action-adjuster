@@ -1,0 +1,14 @@
+args: []
+kwargs:
+   old_spacial_info: !python/named_tuple/SpacialInformation
+      x: !<python/numpy/float64> 110.25385372467633
+      y: !<python/numpy/float64> 1.720865436901503
+      angle: !<python/numpy/float64> 1.6599999999999997
+      velocity: 4
+      spin: 2.5
+      timestep: 3
+   relative_velocity: 1.0678
+   relative_spin: 1.3178
+   action_duration: 0.24
+pickled_args_and_kwargs: !python/pickled "tuple:\0\x04\x155\x01\0\0\x05\0\0\0\0)}\x14@(\f\x10old_\x02spacial\0_info\x14\f`\x0Fdata_s\0tructur\0es\x14\f\x12Sp\facialIn\0formati\0on\x14\x13\x14(\f\\\x15numpy.\0core.mu\0ltiarra\0y\x14\f\x06sca\x06lar\x14\x13\x14\fx\x05numpy\x14@\f\x05dtype\x01\x14\x13\x14\f\x02f8\x0F\x14\t\b\a\x14R\x14_(K\x03\f\x01<\x14HNNNJ\x7F\x7F\x7Fp\x7FJ\x7F\x7F\x7F\x7FK=\0t\x14bC\bxD\\1#?\x10[@\x12\x14\x06\x14R\x14h\a\x17h\rC\bwpD 2*\b{?\x14\x06n\x14R\x14h\ah\r\x05C\b\x0EBu(\\\x1C\x0Fz?\x14\x06\x14R;\x14K\x04G@\x04\0\x01\0\0\0\0\0K\x03\0t\x14\x01\x14\f\x11r\x1Eelative\0_veloci\0ty\x14G?q\x15$5sj3h\f\r-relativ\0e_spin\x14@G?u\x155sjT3h\f\x0Fact\x05ion_dur\0ation\x14G ?N8Qk\x05\x1E68u\x06\x14.\0\0\r\x02"
+...
