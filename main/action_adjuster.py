@@ -16,7 +16,7 @@ from __dependencies__.trivial_torch_tools import to_tensor
 from __dependencies__.super_hash import super_hash
 from __dependencies__.rigorous_recorder import RecordKeeper
 
-from config import config, path_to, debug
+from config import config, path_to, grug_test, debug
 from envs.warthog import WarthogEnv
 from generic_tools.geometry import get_distance, get_angle_from_origin, zero_to_2pi, pi_to_pi, abs_angle_difference
 from generic_tools.for_numpy import shift_towards
@@ -134,6 +134,101 @@ class Transform:
     def __hash__(self):
         return hash((id(numpy.ndarray), self._transform.shape, tuple(each for each in self._transform.flat)))
 
+# register with serializer
+from __dependencies__.grug_test import ez_yaml
+ez_yaml.yaml.Representer.add_representer(
+    Transform,
+    lambda dumper, data: dumper.represent_sequence(tag='python/action_adjuster/Transform', sequence=data.__json__()), 
+)
+
+ez_yaml.ruamel.yaml.RoundTripConstructor.add_constructor(
+    'python/action_adjuster/Transform',
+    lambda loader, node: Transform.from_json(loader.construct_sequence(node, deep=True)),
+)
+
+exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
+
+@grug_test(max_io=10, skip=False)
+def objective_function(numpy_array, inputs_for_predictions, exponent):
+    hypothetical_transform = Transform(numpy_array)
+    losses = [0,0,0,0,0] # x, y, angle, velocity, spin
+    logging = LazyDict(
+        spacial_gap=[],
+        action_gap=[],
+        mutated_relative_reaction=[],
+        re_adjusted_action=[],
+        unadjusted_action=[],
+        adjusted_action=[],
+        spacial_info=[],
+        next_spacial_info=[],
+        predicted_next_spacial_info=[],
+        hypothetical_transform=[],
+    )
+    for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_relative_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
+        # each.timestep_index
+        # each.spacial_info
+        # each.spacial_info_with_noise
+        # each.observation_from_spacial_info_with_noise
+        # each.original_reaction
+        # each.historic_transform
+        # each.mutated_relative_reaction
+        # each.next_spacial_info
+        # each.next_spacial_info_spacial_info_with_noise
+        # each.next_observation_from_spacial_info_with_noise
+        # each.reward
+        
+        # the following assert is only commented out for performance reasons (it should alwoys pass, and there's a problem if it doesn't)
+        # assert next_spacial_info == WarthogEnv.generate_next_spacial_info(
+        #     old_spacial_info=spacial_info,
+        #     action_relative=mutated_relative_reaction,
+        #     action_duration=action_duration,
+        # )
+        
+        # this part is trying to guess/recreate the advesarial part of the .step() function
+        # "what action would have made the prediction correct"
+        action_after_adversity = Action(*hypothetical_transform.adjust_action(
+            action=original_reaction,
+            mimic_adversity=True, # we want to undo the adversity when projecting into the future
+        ))
+        predicted_next_spacial_info = WarthogEnv.generate_next_spacial_info(
+            old_spacial_info=spacial_info_with_noise,
+            action_relative=action_after_adversity,
+            action_duration=action_duration,
+        )
+        
+        x1, y1, angle1, velocity1, spin1, *_ = next_spacial_info
+        x2, y2, angle2, velocity2, spin2, *_ = predicted_next_spacial_info
+        losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
+        losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
+        losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
+        losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
+        losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent
+        
+        if len(inputs_for_predictions) > 50:
+            logging.spacial_info.append(spacial_info)
+            logging.adjusted_action.append(original_reaction)
+            logging.unadjusted_action.append("")
+            logging.re_adjusted_action.append(action_after_adversity)
+            logging.mutated_relative_reaction.append(mutated_relative_reaction)
+            logging.action_gap.append(Action(velocity=action_after_adversity[0]-mutated_relative_reaction[0], spin=action_after_adversity[1]-mutated_relative_reaction[1], ))
+            logging.next_spacial_info.append(next_spacial_info)
+            logging.predicted_next_spacial_info.append(predicted_next_spacial_info)
+            logging.spacial_gap.append(SpacialInformation(
+                x=predicted_next_spacial_info.x-next_spacial_info.x,
+                y=predicted_next_spacial_info.y-next_spacial_info.y,
+                angle=predicted_next_spacial_info.angle-next_spacial_info.angle,
+                velocity=predicted_next_spacial_info.velocity-next_spacial_info.velocity,
+                spin=predicted_next_spacial_info.spin-next_spacial_info.spin,
+                timestep=next_spacial_info.timestep,
+            ))
+            logging.hypothetical_transform.append(hypothetical_transform)
+    
+    if len(inputs_for_predictions) > 50:
+        import pandas
+        pandas.DataFrame(logging).to_csv("temp.ignore.csv")
+    
+    return -sum(losses)
+
 class Solver:
     self = None
     def __init__(self, policy, waypoints_list):
@@ -169,70 +264,18 @@ class Solver:
         
         duration = 0
         inputs_for_predictions = timestep_data[-config.action_adjuster.max_history_size:]
-        exponent = 2 if config.curve_fitting_loss == 'mean_squared_error' else 1
-        def objective_function(numpy_array):
-            hypothetical_transform = Transform(numpy_array)
-            losses = [0,0,0,0,0] # x, y, angle, velocity, spin
-            for timestep_index, action_duration, spacial_info, spacial_info_with_noise, observation_from_spacial_info_with_noise, historic_transform, original_reaction, mutated_relative_reaction, next_spacial_info, next_spacial_info_spacial_info_with_noise, next_observation_from_spacial_info_with_noise, next_closest_index, reward in inputs_for_predictions:
-                # each.timestep_index
-                # each.spacial_info
-                # each.spacial_info_with_noise
-                # each.observation_from_spacial_info_with_noise
-                # each.original_reaction
-                # each.historic_transform
-                # each.mutated_relative_reaction
-                # each.next_spacial_info
-                # each.next_spacial_info_spacial_info_with_noise
-                # each.next_observation_from_spacial_info_with_noise
-                # each.reward
-                
-                # action + nothing            = predicted_observation -1.0
-                # action + historic transform = predicted_observation -0.7 # <- this is the "what we recorded" and the "what we have to compare against"
-                # action + best transform     = predicted_observation  0.3 # <- bad b/c it'll be penalized for the 0.3, (should be 0.0) but the 0.3 
-                #                                                               is only there because the historic transform was doing part of the work
-                # so we need to do action - historic_transform + best transform
-                if historic_transform:
-                    # vanilla_action = self.policy(observation_from_spacial_info_with_noise)
-                    recreated_vanilla_action = historic_transform.adjust_action(
-                        action=original_reaction,
-                        mimic_adversity=True, # undo the historic transformation so that the current transformation is doing ALL the work
-                    )
-                
-                # this part is trying to guess/recreate the advesarial part of the .step() function
-                relative_velocity_action, relative_spin_action = hypothetical_transform.adjust_action(
-                    action=recreated_vanilla_action,
-                    mimic_adversity=True, # we want to undo the adversity when projecting into the future
-                )
-                predicted_next_spacial_info = WarthogEnv.generate_next_spacial_info(
-                    old_spacial_info=spacial_info_with_noise,
-                    action_relative=Action(
-                        velocity=relative_velocity_action,
-                        spin=relative_spin_action,
-                    ),
-                    action_duration=action_duration,
-                )
-                
-                x1, y1, angle1, velocity1, spin1, *_ = next_spacial_info
-                x2, y2, angle2, velocity2, spin2, *_ = predicted_next_spacial_info
-                losses[0] += spacial_coefficients.x        * (abs((x1        - x2       ))          )**exponent   
-                losses[1] += spacial_coefficients.y        * (abs((y1        - y2       ))          )**exponent   
-                losses[2] += spacial_coefficients.angle    * ((abs_angle_difference(angle1, angle2)))**exponent # angle is different cause it wraps (0 == 2π)
-                losses[3] += spacial_coefficients.velocity * (abs((velocity1 - velocity2))          )**exponent   
-                losses[4] += spacial_coefficients.spin     * (abs((spin1     - spin2    ))          )**exponent   
-            
-            return -sum(losses)
         
         # 
         # overfitting protection (validate the canidate)
         # 
         new_data_invalidated_recent_best = None
-        if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
+        if not config.action_adjuster.disabled: # and not config.action_adjuster.always_perfect
             solutions = tuple(set(list(self.selected_solutions) + [ self.unconfirmed_transform ]))
-            perfect_score = objective_function(perfect_transform_input)
+            perfect_score = objective_function(perfect_transform_input, inputs_for_predictions, exponent)
             print("")
             print(f'''perfect objective value: {perfect_score}''')
             scores = tuple(
-                objective_function(each_transform.as_numpy)
+                objective_function(each_transform.as_numpy, inputs_for_predictions, exponent)
                     for each_transform in solutions
             )
             distances_from_perfect = tuple(
@@ -261,8 +304,8 @@ class Solver:
             else:
                 print(f'''canidate passed inspection: {self.unconfirmed_transform}''')
                 print(f'''prev transform            : {self.latest_confirmed_transform}''')
-                print(f'''canidate score: {objective_function(self.unconfirmed_transform.as_numpy)}''')
-                print(f'''prev score    : {objective_function(self.latest_confirmed_transform.as_numpy)}''')
+                print(f'''canidate score: {objective_function(self.unconfirmed_transform.as_numpy, inputs_for_predictions, exponent)}''')
+                print(f'''prev score    : {objective_function(self.latest_confirmed_transform.as_numpy, inputs_for_predictions, exponent)}''')
                 self.selected_solutions.add(self.unconfirmed_transform)
                 # use the canidate transform as the base for finding new answers
                 self.latest_confirmed_transform = self.unconfirmed_transform
@@ -271,7 +314,7 @@ class Solver:
         # record data
         # 
         if True:
-            score_before = objective_function(self.latest_confirmed_transform.as_numpy)
+            score_before = objective_function(self.latest_confirmed_transform.as_numpy, inputs_for_predictions, exponent)
             # kill this process once the limit is reaced
             with print.indent: 
                 if shared_thread_data["timestep"] > config.simulator.max_number_of_timesteps_per_episode:
@@ -318,7 +361,7 @@ class Solver:
             with print.indent: 
                 shared_thread_data["records_to_log"] = shared_thread_data["records_to_log"] + [dict(timestep=shared_thread_data["timestep"], canidate_transform=self.unconfirmed_transform,)]
             
-            score_after = objective_function(self.unconfirmed_transform.as_numpy)
+            score_after = objective_function(self.unconfirmed_transform.as_numpy, inputs_for_predictions, exponent)
             print(f'''new canidate transform = {self.unconfirmed_transform}''')
             print(f'''score_before   = {score_before}''')
             print(f'''canidate score = {score_after}''')
@@ -421,6 +464,7 @@ class ActionAdjustedAgent(Skeleton):
         write: self.reaction = something
         """
         vanilla_action = self.policy(self.timestep.observation)
+        print(f"policy: {self.timestep.index},{vanilla_action}")
         adjusted_action = vanilla_action
         if config.action_adjuster.use_transform:
             adjusted_action = self.active_transform.adjust_action(
@@ -542,6 +586,7 @@ class NormalAgent(Skeleton):
         write: self.timestep.reaction = something
         """
         self.timestep.reaction = self.policy(self.timestep.observation)
+        print(f"policy: {self.timestep.index},{self.timestep.reaction}")
     
     def when_timestep_ends(self):
         """

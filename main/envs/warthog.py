@@ -202,6 +202,7 @@ class WarthogEnv(gym.Env):
                 in favor of real-world data.
         """
         step_data = LazyDict()
+        original_action = action
         # 
         # logging
         # 
@@ -336,7 +337,7 @@ class WarthogEnv(gym.Env):
             spacial_info_with_noise=self.prev_spacial_info_with_noise,
             observation_from_spacial_info_with_noise=self.prev_observation,
             historic_transform=Unknown,
-            original_reaction=self.action_buffer[-1],
+            original_reaction=original_action,
             mutated_relative_reaction=mutated_action_relative,
             next_spacial_info=self.spacial_info,
             next_spacial_info_spacial_info_with_noise=self.spacial_info_with_noise,

@@ -256,7 +256,7 @@
             
             grug_test:
                 disable: False
-                replay_inputs: True
+                replay_inputs: False
                 record_io: True
                 verbose: True
                 
