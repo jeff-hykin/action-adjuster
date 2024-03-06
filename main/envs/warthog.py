@@ -242,6 +242,11 @@ class WarthogEnv(gym.Env):
                 clipped=True,
                 absolute_units=False,
             )
+            # print(f'''action@{self.global_timestep}''')
+            # with print.indent:
+            #     print(f'''debug.vanilla_action = {debug.vanilla_action}''')
+            #     print(f'''debug.adjusted_action = {debug.adjusted_action}''')
+            #     print(f'''mutated_action_relative = {mutated_action_relative}''')
         
         # 
         # modify spacial_info

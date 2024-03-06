@@ -205,8 +205,10 @@ class Solver:
                 )
                 predicted_next_spacial_info = WarthogEnv.generate_next_spacial_info(
                     old_spacial_info=spacial_info_with_noise,
-                    relative_velocity=relative_velocity_action,
-                    relative_spin=relative_spin_action,
+                    action_relative=Action(
+                        velocity=relative_velocity_action,
+                        spin=relative_spin_action,
+                    ),
                     action_duration=action_duration,
                 )
                 
@@ -487,7 +489,7 @@ class ActionAdjustedAgent(Skeleton):
             # otherwise check on thread task
             else:
                 if not self.thread.is_alive():
-                    raise Exception(f'''Solver thread died''')
+                    print(f'''Solver thread died''')
             
             # pull in any records that need logging
             with print.indent: 
