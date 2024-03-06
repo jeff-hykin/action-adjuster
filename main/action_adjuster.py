@@ -308,7 +308,7 @@ class Solver:
             # find next best
             best_new_transform = Transform(
                 guess_to_maximize(
-                    objective_function,
+                    lambda array: objective_function(array, inputs_for_predictions, exponent),
                     initial_guess=self.latest_confirmed_transform.as_numpy,
                     stdev=self.stdev,
                     max_iterations=config.action_adjuster.solver_max_iterations,
