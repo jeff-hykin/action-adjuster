@@ -1,0 +1,1 @@
+python ./main/main.py @ADJUSTER=PERFECT @WARTHOG @NOISE=NONE @ADVERSITY=STRONG grug_test:disable:True
