@@ -234,7 +234,7 @@ class Solver:
         # overfitting protection (validate the canidate)
         # 
         new_data_invalidated_recent_best = None
-        if not config.action_adjuster.disabled: # and not config.action_adjuster.always_perfect
+        if not config.action_adjuster.disabled and not config.action_adjuster.always_perfect:
             solutions = tuple(set(list(self.selected_solutions) + [ self.unconfirmed_transform ]))
             perfect_score = objective_function(perfect_transform_input, inputs_for_predictions, exponent)
             print("")
