@@ -96,8 +96,8 @@
                 use_transform: False # when true, this means it will modify the policies actions
                 update_rate: 1 # kinda similar to alpha/step-size
                 future_projection_length: 1 # timesteps
-                update_frequency: 10 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
-                max_history_size: 250 # timesteps
+                update_frequency: 2 # timesteps # when multithreading this is just the min number, the processing time will effectively take longer than 10 timesteps in reality
+                max_history_size: 30 # timesteps
                 solver_max_iterations: 10000
                 use_threading: True
             
@@ -193,7 +193,8 @@
                 battery_decay_rate: 0.0006 # 0.0005
                 # these are not implemented:
                 sudden_flat_tire_enabled: False
-                sudden_flat_tire_on_timestep: 500
+                sudden_flat_tire_on_timestep: 20 
+                sudden_flat_tire_pull_direction: 15 # degrees (negative is left, positive is right)
                 
                 # 
                 # action noise
