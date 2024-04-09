@@ -208,7 +208,7 @@ class WarthogEnv(gym.Env):
         # 
         if config.simulator.save_data:
             if self.trajectory_file is not None:
-                self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_buffer[0].velocity}, {self.action_buffer[0].spin}, {self.is_episode_start}\n")
+                self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_buffer[-1].velocity}, {self.action_buffer[-1].spin}, {self.is_episode_start}\n")
             
             if config.simulator.battery_adversity_enabled:
                 self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
