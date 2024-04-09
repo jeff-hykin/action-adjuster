@@ -331,9 +331,9 @@ class Solver:
             print(f'''score_before   = {score_before}''')
             print(f'''canidate score = {score_after}''')
             # if no improvement at all, then shrink the stdev
-            if score_after < score_before:
-                self.stdev = self.stdev/config.cmaes.reduction_rate
-                print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
+            # if (score_after+0.001) < score_before:
+            #     self.stdev = self.stdev/config.cmaes.reduction_rate
+            #     print(f'''NO IMPROVEMENT: stdev is now: {self.stdev}''')
     
     def project(
         self,
