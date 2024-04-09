@@ -184,10 +184,14 @@ class WarthogEnv(gym.Env):
             remaining_waypoints=self.waypoints_list[self.next_waypoint_index:],
             current_spacial_info=self.spacial_info,
         )
-        self.action_buffer                       = [ Action(velocity=0,spin=0) ] * (config.simulator.action_delay+1) # seed so that prev_action effectively works
-        self.simulated_battery_level             = 1.0 # proportion 
-        self.random_seed_table_for_actions       = {}
-        self.total_episode_reward                = 0
+        # last element = just happened, first element = oldest action
+        self.action_buffer        = [ Action(velocity=0,spin=0) ] * (config.simulator.action_delay+1) # seed so that prev_action effectively works
+        self.total_episode_reward = 0
+        self.mutation_state = LazyDict(
+            action_buffer=self.action_buffer,
+            random_seed_table_for_actions={},
+            simulated_battery_level=1.0,
+        )
         
         return self.observation
     
@@ -211,7 +215,7 @@ class WarthogEnv(gym.Env):
                 self.trajectory_file.writelines(f"{self.spacial_info.x}, {self.spacial_info.y}, {self.spacial_info.angle}, {self.spacial_info.velocity}, {self.spacial_info.spin}, {self.action_buffer[-1].velocity}, {self.action_buffer[-1].spin}, {self.is_episode_start}\n")
             
             if config.simulator.battery_adversity_enabled:
-                self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.simulated_battery_level)
+                self.recorder.add(timestep=self.global_timestep, simulated_battery_level=self.mutation_state.simulated_battery_level)
                 self.recorder.commit()
         #  
         # increment things
@@ -223,22 +227,26 @@ class WarthogEnv(gym.Env):
             self.is_episode_start = False
             
             # battery level
-            self.simulated_battery_level *= 1-config.simulator.battery_decay_rate
+            self.mutation_state.simulated_battery_level *= 1-config.simulator.battery_decay_rate
             
             # action
             self.action_buffer.append( Action(velocity=action[0], spin=action[1]) )
-            self.action_buffer = self.action_buffer[-max(config.simulator.action_delay,2):] # 2 is so that we effectively have prev_action even when delay = 0
-            # cap the size (remove oldest), but never let size fall below 1 (should always contain the most-recent desired action)
+            # when action_delay=2, then the LAST two elements (prev action and current action) will be kept
+            self.action_buffer = self.action_buffer[-max(config.simulator.action_delay,2):] # the 2 is so that we effectively have prev_action even when delay = 0
+            
         
         # 
         # modify action
         # 
         if True:
-            mutated_action_relative = self.reaction(
+            mutated_action_relative = self.get_mutated_action(
                 self.action_buffer,
+                mutation_state=self.mutation_state,
+                episode_timestep=self.episode_timestep,
                 with_delay=config.simulator.action_delay,
                 with_additive_adversity=config.simulator.additive_adversity_enabled,
                 with_battery_adversity=config.simulator.battery_adversity_enabled,
+                with_sudden_flat_tire=config.simulator.sudden_flat_tire_enabled,
                 with_gaussian_noise=config.simulator.use_gaussian_action_noise,
                 clipped=True,
                 absolute_units=False,
@@ -296,11 +304,14 @@ class WarthogEnv(gym.Env):
             spacial_info=self.spacial_info,
             closest_distance=step_data.closest_distance,
             relative_action=mutated_action_relative,
-            prev_relative_action=self.reaction(
+            prev_relative_action=self.get_mutated_action(
                 self.action_buffer,
+                mutation_state=self.mutation_state,
+                episode_timestep=self.episode_timestep,
                 with_delay=1, # this is what makes it "previous"
                 with_additive_adversity=config.simulator.additive_adversity_enabled,
                 with_battery_adversity=config.simulator.battery_adversity_enabled,
+                with_sudden_flat_tire=config.simulator.sudden_flat_tire_enabled,
                 with_gaussian_noise=config.simulator.use_gaussian_action_noise,
                 clipped=True,
                 absolute_units=False,
@@ -361,28 +372,37 @@ class WarthogEnv(gym.Env):
                 step_data.done = True
         
         return self.observation, step_data.reward, step_data.done, additional_info
-
-    def reaction(
-        self,
+    
+    @staticmethod
+    def get_mutated_action(
         action_buffer,
+        mutation_state,
+        episode_timestep,
         with_delay=0,
         with_additive_adversity=False,
         with_battery_adversity=False,
+        with_sudden_flat_tire=False,
         with_gaussian_noise=False,
         clipped=False,
-        absolute_units=False
+        absolute_units=False,
     ):
         """
-        Needs:
-            1. self.action_buffer needs to contain the most recent action as the first element
-               and needs to contain relative-original actions
-               and the buffer needs to be updated each .step()
-            2. self.simulated_battery_level to be changed each .step()
-            3. self.random_seed_table_for_actions just needs to be available
+        Summary:
+            This function handles ALL changes to the action, including clipping for max/min values.
+        Note:
+            Random noise is generated once, even if the function is called twice on the same action.
+            This intentionally done, although it should be modified to be based on the action+timestep_index instead
+            of the action values.
+        This function needs:
+            1. action_buffer needs to contain the most-recent-action as the last element
+               and the actions in the buffer need to be relative-original actions (not absolute or mutated actions)
+               and the buffer needs to maintained (e.g. popping elements out each .step) by something else (not this function)
+                       Needs:
+            2. mutation_state.simulated_battery_level needs to be changed externally with each .step()
         """
         # check
         if len(action_buffer)-1 < with_delay:
-            raise Exception(f'''\n\nRe-run the code with `action_delay` in config.yaml set to {with_delay}''')
+            raise Exception(f'''\n\nWhen calling get_mutated_action() there were only {len(action_buffer)} actions in the action buffer. However, the code tried to get the action {with_delay} timesteps in the past.\n\nYou probably just need to set `action_delay` in config.yaml set to {with_delay} to avoid this error.''')
         
         original_action = action_buffer[-(with_delay+1)]
         output_action = original_action
@@ -394,19 +414,26 @@ class WarthogEnv(gym.Env):
                 spin=output_action.spin + config.simulator.spin_offset,
             )
         
+        if with_sudden_flat_tire:
+            if episode_timestep > config.simulator.sudden_flat_tire_on_timestep:
+                output_action = Action(
+                    velocity=output_action.velocity,
+                    spin=output_action.spin + config.simulator.sudden_flat_tire_pull_direction,
+                )
+        
         if with_battery_adversity:
             output_action = Action(
                 # clipping is mostly to ensure the velocity never goes negative
-                velocity=clip(output_action.velocity*self.simulated_battery_level, min=0),
+                velocity=clip(output_action.velocity*mutation_state.simulated_battery_level, min=0),
                 spin=output_action.spin,
             )
         
         if with_gaussian_noise:
             noise = None
-            if original_action in self.random_seed_table_for_actions:
-                noise = self.random_seed_table_for_actions[original_action]
+            if original_action in mutation_state.random_seed_table_for_actions:
+                noise = mutation_state.random_seed_table_for_actions[original_action]
             else:
-                noise = self.random_seed_table_for_actions[original_action] = Action(
+                noise = mutation_state.random_seed_table_for_actions[original_action] = Action(
                     velocity=random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.velocity_action.standard_deviation, ),
                     spin=random.normalvariate(mu=0, sigma=config.simulator.gaussian_action_noise.spin_action.standard_deviation, ),
                 )
