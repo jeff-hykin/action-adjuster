@@ -917,7 +917,7 @@ if True:
                 except Exception as error:
                     pass
     except Exception as error:
-        print(f"Error when setting up StorageDict: {error}")
+        print(f"Warning: Error when setting up StorageDict: {error}")
 
 class ObjectInspector:
     def __init__(self, obj):
