@@ -902,7 +902,7 @@ if True:
         assert quantity > -1
         if quantity != 0:
             quantity = math.ceil(quantity)
-            if round(start) == round(end):
+            if start == end:
                 for each in range(quantity):
                     yield start
             else:
@@ -910,9 +910,10 @@ if True:
                 x1 = quantity
                 y0 = start
                 y1 = end
-                generator = lambda x: y0 if (x1 - x0) == 0 else y0 + (y1 - y0) / (x1 - x0) * (x - x0)
-                for x in range(quantity):
-                    yield round(generator(x+1))
+                interpolater = lambda x: y0 if (x1 - x0) == 0 else y0 + (y1 - y0) / (x1 - x0) * (x - x0)
+                for x in range(quantity-1):
+                    yield interpolater(x+1)
+                yield end
 
     def product(iterable):
         from functools import reduce
