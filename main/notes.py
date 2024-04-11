@@ -54,6 +54,7 @@ if True:
 
 
     mpc = do_mpc.estimator.MHE(model, ['additive_velocity', 'additive_angle'])
+    mpc.settings.supress_ipopt_output()
 
     mpc.set_param(
         t_step=0.25,
@@ -87,21 +88,20 @@ if True:
         # P_w,
     )
     
-    p_template = mpc.get_p_template()
+    mpc_p_template = mpc.get_p_template()
     @mpc.set_p_fun
     def p_fun_mhe(t_now):
         print(f'''t_now = {t_now}''')
-        return p_template
-
+        return mpc_p_template
 
     mpc.bounds['lower','_u', 'desired_total_velocity'] = 0
     mpc.bounds['upper','_u', 'desired_total_velocity'] = 100
     mpc.bounds['lower','_u', 'desired_absolute_angle'] = -math.radians(90)
     mpc.bounds['upper','_u', 'desired_absolute_angle'] = math.radians(90)
-    # mpc.bounds['lower','_p_est', 'additive_velocity'] = -100 # AttributeError: 'MPC' object has no attribute '_p_est_lb' , 'parameter' also give error
-    # mpc.bounds['upper','_p_est', 'additive_velocity'] = 50
-    # mpc.bounds['lower','_p_est', 'additive_angle'] = -math.pi
-    # mpc.bounds['upper','_p_est', 'additive_angle'] = math.pi
+    mpc.bounds['lower','_p_est', 'additive_velocity'] = -100 # AttributeError: 'MPC' object has no attribute '_p_est_lb' , 'parameter' also give error
+    mpc.bounds['upper','_p_est', 'additive_velocity'] = 50
+    mpc.bounds['lower','_p_est', 'additive_angle'] = -math.pi
+    mpc.bounds['upper','_p_est', 'additive_angle'] = math.pi
 
     # provide Uncertainity possibilities
         # mpc.set_uncertainty_values(
@@ -132,6 +132,9 @@ if True:
     p_template = simulator.get_p_template()
     def p_fun(t_now):
         print(f'''t_now = {t_now}''')
+        # value = np.random.uniform(-100,50)
+        # print(f'''value = {value}''')
+        # p_template['additive_velocity'] = value
         return p_template
 
     simulator.set_p_fun(p_fun)
@@ -141,6 +144,8 @@ if True:
 
 initial_x_position = 0
 initial_y_position = 0
+initial_velocity = 2
+initial_angle = math.radians(90)
 initial_additive_velocity = 0
 initial_additive_angle = 0
 inital_state = np.array([initial_x_position, initial_y_position,])
@@ -149,17 +154,40 @@ mpc.x0 = inital_state
 mpc.p_est0 = numpy.array([initial_additive_velocity,initial_additive_angle])
 mpc.set_initial_guess()
 
-# mpc.set_inital_guess() # AttributeError: 'MPC' object has no attribute 'set_inital_guess'
 
-velocity = 2
-angle = math.radians(30)
-new_x, new_y = simulator.make_step(numpy.array([[velocity],[angle],]))
+# 
+# start simulation
+# 
+
+mpc.reset_history()
+simulator.reset_history()
+number_of_timesteps = 50
+actions = [ (1,0), ] * number_of_timesteps
+positions = [ ([2],[0]) ] * number_of_timesteps
+for each_next_action, each_current_position in zip(actions, positions):
+    y0 = simulator.make_step(numpy.array(each_next_action).reshape(2,1), v0=numpy.array([0,0]).reshape(2,1))
+    x0 = mpc.make_step(numpy.array(each_current_position)) # MPC estimation step
+    print(f'''x0 = {x0}''')
+
+new_x, new_y = simulator.make_step(numpy.array([[initial_velocity],[initial_angle],]))
 
 # 
 # simulate data
 # 
-number_of_timesteps = 20
-actions = [ (1,0), ] * number_of_timesteps
 # simulate not moving
-positions = [ ([1],[0]) ] * number_of_timesteps
-output = simulator.make_step(numpy.array([[velocity],[angle],]), v0=numpy.array(positions[0]))
+# output = positions[0]
+
+# output = np.array(output)
+# output[0] += 1
+# output = simulator.make_step(
+#     numpy.array([
+#         [actions[0][0]],
+#         [actions[0][1]],
+#     ]),
+#     v0=output,
+# )
+
+simulator.data['_p','additive_velocity']
+simulator.data['_p','additive_angle']
+mpc.data['_p','additive_velocity']
+mpc.data['_p','additive_angle']
