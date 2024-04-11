@@ -47,8 +47,8 @@ if True:
     
     
     # link var with its deriviative
-    model.set_rhs('x_position', (desired_total_velocity+additive_velocity) * cos(desired_absolute_angle+additive_angle))
-    model.set_rhs('y_position', (desired_total_velocity+additive_velocity) * sin(desired_absolute_angle+additive_angle))
+    model.set_rhs('x_position', x_position + (desired_total_velocity+additive_velocity) * cos(desired_absolute_angle+additive_angle))
+    model.set_rhs('y_position', y_position + (desired_total_velocity+additive_velocity) * sin(desired_absolute_angle+additive_angle))
     # model.set_rhs('actual_absolute_angle', y_velocity)
     model.setup()
 
@@ -70,8 +70,8 @@ if True:
     number_of_parameters = len(model.p.labels())
     number_of_variables = len(model.x.labels())
     number_of_measured = len(model._y.labels())
-    P_v = np.diag(np.array([1]*number_of_measured))
     P_x = np.eye(number_of_variables)
+    P_v = np.diag(np.array([1]*(number_of_measured)))
     P_p = 1*np.eye(number_of_inputs)
     # P_w = ???
     
@@ -82,10 +82,10 @@ if True:
         # P_w (State regularization weighting matrix): This matrix penalizes changes in states from one time step to the next. It encourages smoothness in state trajectories and helps to avoid overfitting noisy measurements. It is usually a lower triangular matrix with non-negative values on the diagonal and zeros above the diagonal.
     
     mpc.set_default_objective(
-        P_v,
-        P_x,
-        P_p,
-        # P_w,
+        P_x=P_x,
+        P_v=P_v,
+        P_p=P_p,
+        # P_w=P_w,
     )
     
     mpc_p_template = mpc.get_p_template()
@@ -98,8 +98,8 @@ if True:
     mpc.bounds['upper','_u', 'desired_total_velocity'] = 100
     mpc.bounds['lower','_u', 'desired_absolute_angle'] = -math.radians(90)
     mpc.bounds['upper','_u', 'desired_absolute_angle'] = math.radians(90)
-    mpc.bounds['lower','_p_est', 'additive_velocity'] = -100 # AttributeError: 'MPC' object has no attribute '_p_est_lb' , 'parameter' also give error
-    mpc.bounds['upper','_p_est', 'additive_velocity'] = 50
+    mpc.bounds['lower','_p_est', 'additive_velocity'] = -15
+    mpc.bounds['upper','_p_est', 'additive_velocity'] = 0
     mpc.bounds['lower','_p_est', 'additive_angle'] = -math.pi
     mpc.bounds['upper','_p_est', 'additive_angle'] = math.pi
 
@@ -162,12 +162,15 @@ mpc.set_initial_guess()
 mpc.reset_history()
 simulator.reset_history()
 number_of_timesteps = 50
-actions = [ (1,0), ] * number_of_timesteps
-positions = [ ([2],[0]) ] * number_of_timesteps
-for each_next_action, each_current_position in zip(actions, positions):
-    y0 = simulator.make_step(numpy.array(each_next_action).reshape(2,1), v0=numpy.array([0,0]).reshape(2,1))
-    x0 = mpc.make_step(numpy.array(each_current_position)) # MPC estimation step
-    print(f'''x0 = {x0}''')
+actions = [ (1,0), ] * (number_of_timesteps-1)
+positions = [ ([0],[0]) ] + [ ([1],[0]) ] + [ ([2],[0]) ] * number_of_timesteps
+# get pairwise elements
+for each_next_action, each_current_position, next_position in zip(actions, positions[0:-1], positions[1:]):
+    # y0 = simulator.make_step(numpy.array(each_next_action).reshape(2,1), v0=numpy.array(each_current_position).reshape(2,1))
+    # measured variables
+    y0 = numpy.array(each_current_position)
+    x, y = mpc.make_step(y0) # MPC estimation step
+    print(f'''(x, y) = {(x, y)}, next_position={next_position}, 'additive_velocity'={mpc.data['_p','additive_velocity'][-1]}''')
 
 new_x, new_y = simulator.make_step(numpy.array([[initial_velocity],[initial_angle],]))
 
@@ -191,3 +194,5 @@ simulator.data['_p','additive_velocity']
 simulator.data['_p','additive_angle']
 mpc.data['_p','additive_velocity']
 mpc.data['_p','additive_angle']
+mpc.data['_x',]
+simulator.data['_x',]
