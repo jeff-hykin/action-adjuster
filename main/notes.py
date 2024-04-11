@@ -34,20 +34,18 @@ if True:
     model_type = 'continuous' # either 'discrete' or 'continuous'
     model = do_mpc.model.Model(model_type)
 
-    # x_velocity = model.set_variable(var_type='_x', var_name='x_velocity', shape=(1,1))
-    # y_velocity = model.set_variable(var_type='_x', var_name='y_velocity', shape=(1,1))
     x_position = model.set_variable(var_type='_x', var_name='x_position', shape=(1,1))
     y_position = model.set_variable(var_type='_x', var_name='y_position', shape=(1,1))
-    # actual_total_velocity = model.set_variable(var_type='_x', var_name='actual_total_velocity', shape=(1,1))
-    # actual_absolute_angle = model.set_variable(var_type='_x', var_name='actual_absolute_angle', shape=(1,1))
+    x_measured = model.set_meas('x_measured', x_position, meas_noise=True)
+    y_measured = model.set_meas('y_measured', y_position, meas_noise=True)
     # Two states for the desired (set) motor position:
     desired_total_velocity = model.set_variable(var_type='_u', var_name='desired_total_velocity', shape=(1,1))
     desired_absolute_angle = model.set_variable(var_type='_u', var_name='desired_absolute_angle', shape=(1,1))
     # Uncertainity
     additive_velocity = model.set_variable(var_type='parameter', var_name='additive_velocity', shape=(1,1))
     additive_angle    = model.set_variable(var_type='parameter', var_name='additive_angle', shape=(1,1))
-
-    from casadi import cos, sin
+    
+    
     # link var with its deriviative
     model.set_rhs('x_position', (desired_total_velocity+additive_velocity) * cos(desired_absolute_angle+additive_angle))
     model.set_rhs('y_position', (desired_total_velocity+additive_velocity) * sin(desired_absolute_angle+additive_angle))
@@ -55,21 +53,46 @@ if True:
     model.setup()
 
 
-    mpc = do_mpc.controller.MPC(model)
+    mpc = do_mpc.estimator.MHE(model, ['additive_velocity', 'additive_angle'])
 
     mpc.set_param(
-        n_horizon=10,
         t_step=0.25,
-        n_robust=1,
+        n_horizon=10,
+        # n_robust=1,
         store_full_solution=True,
+        meas_from_data=True,
     )
+    
+    
+    # I don't understand this part at all
+    number_of_inputs = len(model.u.labels())
+    number_of_parameters = len(model.p.labels())
+    number_of_variables = len(model.x.labels())
+    number_of_measured = len(model._y.labels())
+    P_v = np.diag(np.array([1]*number_of_measured))
+    P_x = np.eye(number_of_variables)
+    P_p = 1*np.eye(number_of_inputs)
+    # P_w = ???
+    
+    # FWIW, chatGPT says:
+        # P_v (Measurement error weighting matrix): This matrix penalizes the difference between predicted outputs and measured outputs. It is diagonal and contains weights for each measured output. Larger values in this matrix indicate higher confidence in the measurements for corresponding outputs.
+        # P_x (State error weighting matrix): This matrix penalizes the difference between predicted states and estimated states. Similar to P_v, it is diagonal and contains weights for each state variable. Larger values in this matrix indicate higher confidence in the initial state estimate for corresponding states.
+        # P_p (Input error weighting matrix): This matrix penalizes deviations of the predicted inputs from the actual inputs. It is also diagonal and contains weights for each input variable. Larger values in this matrix indicate higher confidence in the inputs for corresponding input variables.
+        # P_w (State regularization weighting matrix): This matrix penalizes changes in states from one time step to the next. It encourages smoothness in state trajectories and helps to avoid overfitting noisy measurements. It is usually a lower triangular matrix with non-negative values on the diagonal and zeros above the diagonal.
+    
+    mpc.set_default_objective(
+        P_v,
+        P_x,
+        P_p,
+        # P_w,
+    )
+    
+    p_template = mpc.get_p_template()
+    @mpc.set_p_fun
+    def p_fun_mhe(t_now):
+        print(f'''t_now = {t_now}''')
+        return p_template
 
-    # I don't fully understand this part, I believe it is minimizing these functions
-    # but I don't think it is the objective function that optimizes the unknowns
-    mpc.set_objective(
-        mterm=additive_velocity**2 + additive_angle**2,
-        lterm=additive_velocity**2 + additive_angle**2,
-    )
 
     mpc.bounds['lower','_u', 'desired_total_velocity'] = 0
     mpc.bounds['upper','_u', 'desired_total_velocity'] = 100
@@ -81,22 +104,22 @@ if True:
     # mpc.bounds['upper','_p_est', 'additive_angle'] = math.pi
 
     # provide Uncertainity possibilities
-    mpc.set_uncertainty_values(
-        additive_velocity=numpy.array(tuple(
-            linear_steps(
-                start=-100,
-                end=50,
-                quantity=16
-            )
-        )),
-        additive_angle=numpy.array(tuple(
-            linear_steps(
-                start=-math.radians(90),
-                end=math.radians(90),
-                quantity=16
-            )
-        )),
-    )
+        # mpc.set_uncertainty_values(
+        #     additive_velocity=numpy.array(tuple(
+        #         linear_steps(
+        #             start=-100,
+        #             end=50,
+        #             quantity=6,
+        #         )
+        #     )),
+        #     additive_angle=numpy.array(tuple(
+        #         linear_steps(
+        #             start=-math.radians(90),
+        #             end=math.radians(90),
+        #             quantity=6,
+        #         )
+        #     )),
+        # )
 
     mpc.setup()
 
@@ -116,11 +139,15 @@ if True:
     simulator.setup()
 
 
-x_position = 0
-y_position = 0
-inital_state = np.array([x_position, y_position,])
+initial_x_position = 0
+initial_y_position = 0
+initial_additive_velocity = 0
+initial_additive_angle = 0
+inital_state = np.array([initial_x_position, initial_y_position,])
 simulator.x0 = inital_state
 mpc.x0 = inital_state
+mpc.p_est0 = numpy.array([initial_additive_velocity,initial_additive_angle])
+mpc.set_initial_guess()
 
 # mpc.set_inital_guess() # AttributeError: 'MPC' object has no attribute 'set_inital_guess'
 
@@ -128,67 +155,11 @@ velocity = 2
 angle = math.radians(30)
 new_x, new_y = simulator.make_step(numpy.array([[velocity],[angle],]))
 
-
-mpc.make_step(numpy.array([[velocity],[angle],]))
-# x,y (position)
-# velocity
-# theta (angle)
-
-
-# new position after give velocity, and angle
-
-# deriviative(x) = velocity * cos(theta)
-# deriviative(y) = velocity * sin(theta)
-# deriviative(theta) = ?
-# deriviative(velocity) = ?
-
-
-# input_values = [ (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0) ]
-# output_positions = [ (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0), (0,0) ]
-
-# def predict_function(x_prev, y_prev, velocity, angle, unknown1, unknown2):
-#     velocity = velocity + unknown  
-#     angle = angle + unknown2
-#     return (x_prev + velocity * np.cos(angle), y_prev + velocity * np.sin(angle))
-
-
-
-# # # Create an LTI system
-# # # example: second-order system
-# # xi = 0.5  # Damping ratio
-# # omega_n = 2.0  # Natural frequency
-# # system = lti([1], [1, 2 * xi * omega_n, omega_n**2])
-
-
-# # time_values = np.linspace(0, 10, 1000)
-# # response = np.zeros_like(time_values)
-# # # Compute and accumulate responses to each impulse
-# # impulse_times = [1.0, 3.0, 5.0]
-# # for impulse_time in impulse_times:
-# #     _, h = impulse(system, T=time_values)
-# #     response += np.roll(h, int(impulse_time * 1000))
-# #     import code; code.interact(banner='',local={**globals(),**locals()})
-    
-    
-# # for time_index in range(200):
-    
-# #     if time_index == 30:
-# #         system = impulse(system, magnitude=1)
-    
-# #     if time_index == 50:
-# #         system = impulse(system, magnitude=0.5)
-    
-# #     if time_index == 120:
-# #         system = impulse(system, magnitude=0.2)
-    
-    
-        
-
-# # # Plot impulse response
-# # plt.figure()
-# # plt.plot(time_values, response)
-# # plt.title('Impulse Response Function')
-# # plt.xlabel('Time')
-# # plt.ylabel('Response')
-# # plt.grid(True)
-# # plt.show()
+# 
+# simulate data
+# 
+number_of_timesteps = 20
+actions = [ (1,0), ] * number_of_timesteps
+# simulate not moving
+positions = [ ([1],[0]) ] * number_of_timesteps
+output = simulator.make_step(numpy.array([[velocity],[angle],]), v0=numpy.array(positions[0]))
