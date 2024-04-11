@@ -1,11 +1,31 @@
 import numpy
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import lti, impulse
 import math
-from __dependencies__ import blissful_basics as bb
-
+from casadi import cos, sin
 import do_mpc
+
+def linear_steps(*, start, end, quantity):
+    """
+        Example:
+            assert [4, 11, 18, 24, 31] == list(linear_steps(start=4, end=31, quantity=5))
+    """
+    import math
+    assert quantity > -1
+    if quantity != 0:
+        quantity = math.ceil(quantity)
+        if start == end:
+            for each in range(quantity):
+                yield start
+        else:
+            x0 = 1
+            x1 = quantity
+            y0 = start
+            y1 = end
+            interpolater = lambda x: y0 if (x1 - x0) == 0 else y0 + (y1 - y0) / (x1 - x0) * (x - x0)
+            for x in range(quantity-1):
+                yield interpolater(x+1)
+            yield end
 
 # 
 # model
